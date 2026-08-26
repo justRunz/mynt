@@ -1,0 +1,64 @@
+/* Design tokens.
+ *
+ * Direction: "album", light first -- warm off-white, hairline rules, dense.
+ * Light leads because the app gets used at flea markets, in daylight.
+ *
+ * The palette comes from the subject rather than a brand: euro coins have
+ * three fixed metal families, and those occupy the screen as soon as a grid
+ * renders. Everything else stays near-monochrome so they read instantly.
+ * The greys are deliberately warm; neutral greys turn blue next to copper.
+ *
+ * Colours are in OKLCH because the space is perceptually uniform: a lighter
+ * copper actually looks lighter, and scales can be computed instead of
+ * guessed.
+ */
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-surface: oklch(0.985 0.004 85);
+  --color-raised: oklch(1 0 0);
+  --color-ink: oklch(0.25 0.01 60);
+  --color-muted: oklch(0.55 0.01 60);
+  --color-rule: oklch(0.9 0.005 80);
+  --color-accent: oklch(0.5 0.09 250);
+  --color-danger: oklch(0.52 0.16 25);
+
+  --color-copper: oklch(0.62 0.11 45);
+  --color-nordic: oklch(0.78 0.1 85);
+  --color-silver: oklch(0.8 0.015 250);
+}
+
+/* Utilities keyed on the token names keep working in dark mode because the
+   token values swap, not the class names. */
+@layer base {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --color-surface: oklch(0.18 0.008 70);
+      --color-raised: oklch(0.22 0.008 70);
+      --color-ink: oklch(0.94 0.006 85);
+      --color-muted: oklch(0.66 0.01 75);
+      --color-rule: oklch(0.32 0.008 75);
+      --color-accent: oklch(0.72 0.1 250);
+      --color-danger: oklch(0.68 0.15 25);
+
+      --color-copper: oklch(0.66 0.11 45);
+      --color-nordic: oklch(0.8 0.1 85);
+      --color-silver: oklch(0.78 0.015 250);
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --color-surface: oklch(0.18 0.008 70);
+    --color-raised: oklch(0.22 0.008 70);
+    --color-ink: oklch(0.94 0.006 85);
+    --color-muted: oklch(0.66 0.01 75);
+    --color-rule: oklch(0.32 0.008 75);
+    --color-accent: oklch(0.72 0.1 250);
+    --color-danger: oklch(0.68 0.15 25);
+
+    --color-copper: oklch(0.66 0.11 45);
+    --color-nordic: oklch(0.8 0.1 85);
+    --color-silver: oklch(0.78 0.015 250);
+  }
+}

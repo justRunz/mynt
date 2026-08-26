@@ -1,0 +1,80 @@
+{
+  "app": {
+    "name": "Mynt",
+    "tagline": "Votre collection de pièces euro"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "cancel": "Annuler",
+    "signOut": "Se déconnecter",
+    "retry": "Réessayer"
+  },
+  "nav": {
+    "collection": "Collection",
+    "add": "Ajouter",
+    "completeness": "Complétude",
+    "binders": "Classeurs"
+  },
+  "auth": {
+    "fields": {
+      "email": "Adresse email",
+      "password": "Mot de passe",
+      "newPassword": "Nouveau mot de passe",
+      "nickname": "Pseudo"
+    },
+    "signIn": {
+      "title": "Connexion",
+      "submit": "Se connecter",
+      "forgot": "Mot de passe oublié ?",
+      "noAccount": "Pas encore de compte ?",
+      "createAccount": "Créer un compte"
+    },
+    "signUp": {
+      "title": "Créer un compte",
+      "submit": "Créer le compte",
+      "haveAccount": "Déjà un compte ?",
+      "signIn": "Se connecter",
+      "checkEmail": "Un email de confirmation vient d'être envoyé à {{email}}. Ouvrez le lien qu'il contient pour activer votre compte."
+    },
+    "reset": {
+      "title": "Réinitialiser le mot de passe",
+      "intro": "Indiquez votre adresse email, nous vous enverrons un lien de réinitialisation.",
+      "submit": "Envoyer le lien",
+      "sent": "Si un compte existe pour {{email}}, un lien de réinitialisation vient d'y être envoyé.",
+      "backToSignIn": "Retour à la connexion"
+    },
+    "updatePassword": {
+      "title": "Choisir un nouveau mot de passe",
+      "submit": "Enregistrer le mot de passe",
+      "done": "Mot de passe mis à jour."
+    },
+    "errors": {
+      "generic": "Une erreur est survenue. Réessayez.",
+      "invalid_credentials": "Adresse email ou mot de passe incorrect.",
+      "email_not_confirmed": "Votre adresse email n'a pas encore été confirmée.",
+      "user_already_exists": "Un compte existe déjà pour cette adresse.",
+      "weak_password": "Mot de passe trop faible : utilisez au moins 6 caractères.",
+      "over_email_send_rate_limit": "Trop d'emails envoyés. Patientez quelques minutes.",
+      "same_password": "Le nouveau mot de passe doit être différent de l'ancien."
+    }
+  },
+  "grade": {
+    "label": "État",
+    "unknown": "Non renseigné",
+    "VERY_FINE": "TB — Très Beau",
+    "EXTREMELY_FINE": "TTB — Très Très Beau",
+    "ABOUT_UNCIRCULATED": "SUP — Superbe",
+    "UNCIRCULATED": "FDC — Fleur de Coin",
+    "short": {
+      "VERY_FINE": "TB",
+      "EXTREMELY_FINE": "TTB",
+      "ABOUT_UNCIRCULATED": "SUP",
+      "UNCIRCULATED": "FDC"
+    }
+  },
+  "metal": {
+    "COPPER": "Cuivre",
+    "NORDIC_GOLD": "Or nordique",
+    "BIMETAL": "Bimétallique"
+  }
+}

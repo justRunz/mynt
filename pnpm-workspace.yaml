@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Versions shared across workspaces live here so a future apps/api cannot
+# drift onto a different TypeScript or Vitest than the rest of the repo.
+catalog:
+  typescript: ~6.0.2
+  vitest: ^4.1.11
+  oxlint: ^1.79.0
+  '@types/node': ^24.13.3

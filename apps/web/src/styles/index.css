@@ -1,0 +1,29 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import './theme.css';
+
+@layer base {
+  html {
+    /* Follows the active i18next locale, set in src/i18n/index.ts. */
+    color-scheme: light dark;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Grids and lists are dense columns of years and face values. Without
+     tabular figures the columns jitter from one row to the next. */
+  table,
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
