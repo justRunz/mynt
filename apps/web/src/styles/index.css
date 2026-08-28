@@ -27,3 +27,63 @@
     outline-offset: 2px;
   }
 }
+
+@layer components {
+  /* Opening animation for the native <dialog>.
+   *
+   * A dialog goes from display:none to the top layer, so a plain transition
+   * would have nothing to animate from. @starting-style gives it that first
+   * frame, and allow-discrete lets display and overlay take part so the closing
+   * transition runs before the element disappears rather than being cut off. */
+  .modal {
+    opacity: 0;
+    translate: 0 0.5rem;
+    scale: 0.98;
+    transition:
+      opacity 160ms ease-out,
+      translate 160ms ease-out,
+      scale 160ms ease-out,
+      overlay 160ms allow-discrete,
+      display 160ms allow-discrete;
+  }
+
+  .modal[open] {
+    opacity: 1;
+    translate: none;
+    scale: 1;
+  }
+
+  @starting-style {
+    .modal[open] {
+      opacity: 0;
+      translate: 0 0.5rem;
+      scale: 0.98;
+    }
+  }
+
+  .modal::backdrop {
+    background-color: rgb(0 0 0 / 0);
+    transition:
+      background-color 160ms ease-out,
+      overlay 160ms allow-discrete,
+      display 160ms allow-discrete;
+  }
+
+  .modal[open]::backdrop {
+    background-color: rgb(0 0 0 / 0.4);
+  }
+
+  @starting-style {
+    .modal[open]::backdrop {
+      background-color: rgb(0 0 0 / 0);
+    }
+  }
+
+  /* Motion sensitivity: keep the fade, drop the movement. */
+  @media (prefers-reduced-motion: reduce) {
+    .modal {
+      translate: none;
+      scale: 1;
+    }
+  }
+}

@@ -87,23 +87,16 @@ export function Collection() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        {/* Filters are noise on an empty collection: there is nothing to narrow
-            down, and every select would be empty. */}
-        {entries.length > 0 ? (
-          <FiltersBar
-            filters={filters}
-            onChange={setFilters}
-            search={search}
-            onSearchChange={setSearch}
-            countryCodes={countryCodes}
-            years={years}
-          />
-        ) : (
-          <span />
-        )}
+      <FiltersBar
+        filters={filters}
+        onChange={setFilters}
+        search={search}
+        onSearchChange={setSearch}
+        countryCodes={countryCodes}
+        years={years}
+      >
         <Button onClick={() => setAddOpen(true)}>{t('quickAdd.open')}</Button>
-      </div>
+      </FiltersBar>
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('quickAdd.title')}>
         <QuickAdd />

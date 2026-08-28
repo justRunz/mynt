@@ -35,8 +35,8 @@ export function Modal({ open, onClose, title, children }: Props) {
       onClick={(event) => {
         if (event.target === ref.current) onClose()
       }}
-      className="m-auto w-[min(48rem,calc(100vw-2rem))] rounded-lg border border-rule
-                 bg-surface p-0 text-ink backdrop:bg-black/40"
+      className="modal m-auto w-[min(48rem,calc(100vw-2rem))] rounded-lg border
+                 border-rule bg-surface p-0 text-ink"
     >
       <div className="flex items-center justify-between border-b border-rule px-6 py-4">
         <h2 className="text-base font-semibold tracking-tight">{title}</h2>

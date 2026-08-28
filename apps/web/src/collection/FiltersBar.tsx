@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FACE_VALUES_CENTS, hasActiveFilters, type CollectionFilters } from '@mynt/core'
 
@@ -8,6 +9,9 @@ import { countryFlag, countryName } from '../lib/countries'
 import { formatFaceValue } from '../lib/format'
 
 interface Props {
+  /** Rendered at the end of the same flex row, so the action sits with the
+      filters instead of wrapping onto its own line. */
+  children?: ReactNode
   filters: CollectionFilters
   onChange: (filters: CollectionFilters) => void
   search: string
@@ -18,6 +22,7 @@ interface Props {
 }
 
 export function FiltersBar({
+  children,
   filters,
   onChange,
   search,
@@ -31,6 +36,11 @@ export function FiltersBar({
   return (
     <div className="flex flex-wrap items-end gap-3">
       <Field
+        // Elastic rather than a fixed width: the search box absorbs the leftover
+        // space so the action stays on the filter row, and shrinks instead of
+        // pushing it onto its own line when a translation runs long.
+        wrapperClassName="min-w-32 flex-1"
+        className="w-full"
         label={t('filters.search')}
         type="search"
         placeholder={t('filters.searchPlaceholder')}
@@ -108,6 +118,8 @@ export function FiltersBar({
           {t('filters.reset')}
         </Button>
       )}
+
+      {children && <div className="ml-auto shrink-0">{children}</div>}
     </div>
   )
 }
