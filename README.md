@@ -27,7 +27,21 @@ cp apps/web/.env.example apps/web/.env.local   # y coller les valeurs affichées
 pnpm dev
 ```
 
-Studio sur http://127.0.0.1:54323, attrape-mails sur http://127.0.0.1:54324.
+Studio sur http://127.0.0.1:54323.
+
+### Emails en local
+
+**Aucun email ne quitte la machine.** Confirmations et liens de réinitialisation sont
+capturés par Mailpit sur **http://127.0.0.1:54324** — c'est là qu'il faut les lire,
+pas dans une vraie boîte.
+
+Les redirections d'authentification sont contraintes par `supabase/config.toml` :
+`site_url` et `additional_redirect_urls` doivent couvrir l'URL de l'app, sinon le lien
+de réinitialisation renvoie ailleurs. Les mêmes réglages existent côté hébergé, dans
+Authentication puis URL Configuration, et sont à mettre à jour à la mise en ligne.
+
+La confirmation d'email est désactivée en local (`enable_confirmations = false`),
+donc l'inscription ouvre directement une session.
 
 ## Commandes
 
