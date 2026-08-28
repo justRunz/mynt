@@ -43,9 +43,25 @@ export function Modal({ open, onClose, title, children }: Props) {
         <button
           type="button"
           onClick={onClose}
-          className="rounded-md px-2 py-1 text-sm text-muted hover:text-ink"
+          // Icon-only, so the label moves to aria-label rather than disappearing:
+          // the button still has to announce itself. The 36px box keeps the
+          // target comfortably above the 24px minimum even though the glyph is
+          // small.
+          aria-label={t('common.close')}
+          className="-mr-2 flex size-9 items-center justify-center rounded-md text-muted
+                     hover:bg-rule/60 hover:text-ink"
         >
-          {t('common.close')}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 16 16"
+            className="size-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          >
+            <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
+          </svg>
         </button>
       </div>
       <div className="max-h-[70vh] overflow-y-auto px-6 py-6">{children}</div>
