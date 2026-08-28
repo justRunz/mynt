@@ -7,11 +7,11 @@
     "loading": "Chargement…",
     "cancel": "Annuler",
     "signOut": "Se déconnecter",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "close": "Fermer"
   },
   "nav": {
     "collection": "Collection",
-    "add": "Ajouter",
     "completeness": "Complétude",
     "binders": "Classeurs"
   },
@@ -114,5 +114,28 @@
     "search": "Rechercher",
     "searchPlaceholder": "Pays, notes…",
     "reset": "Réinitialiser les filtres"
+  },
+  "quickAdd": {
+    "title": "Ajout rapide",
+    "intro": "Le pays reste sélectionné après validation, pour enchaîner une pile de pièces sans repartir de zéro.",
+    "country": "Pays",
+    "countryPlaceholder": "Taper les premières lettres…",
+    "countryNoResult": "Aucun pays",
+    "faceValue": "Valeur faciale",
+    "year": "Année",
+    "grade": "État",
+    "gradeNone": "Non renseigné",
+    "submit": "Ajouter",
+    "added_one": "{{count}} pièce ajoutée",
+    "added_other": "{{count}} pièces ajoutées",
+    "recent": "Ajoutées à l’instant",
+    "errors": {
+      "notInCatalog": "Cette pièce n’est pas au catalogue : {{country}} {{value}} {{year}}. Le catalogue démarre en 2002, or la France, l’Espagne, la Belgique, les Pays-Bas et la Finlande ont frappé des pièces millésimées 1999 à 2001.",
+      "countryRequired": "Choisissez un pays.",
+      "faceValueRequired": "Choisissez une valeur faciale.",
+      "yearRequired": "Indiquez une année à quatre chiffres.",
+      "save": "L’ajout a échoué. Réessayez."
+    },
+    "open": "Ajouter une pièce"
   }
 }

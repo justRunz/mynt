@@ -16,6 +16,7 @@
     "@mynt/core": "workspace:*",
     "@supabase/supabase-js": "^2.109.0",
     "@tanstack/react-query": "^5.102.6",
+    "downshift": "^9.4.0",
     "i18next": "^26.4.0",
     "i18next-browser-languagedetector": "^8.2.1",
     "react": "^19.2.8",

@@ -8,10 +8,13 @@ import {
   type FaceValueCents,
 } from '@mynt/core'
 
+import { Button } from '../ui/Button'
+import { Modal } from '../ui/Modal'
 import { countryCollator, countryFlag, countryName } from '../lib/countries'
 import { formatFaceValue } from '../lib/format'
 import { matchesSearch } from '../lib/search'
 import { FiltersBar } from './FiltersBar'
+import { QuickAdd } from './QuickAdd'
 import { useCollection, type CollectionEntry } from './useCollection'
 
 const METAL_DOT = {
@@ -34,6 +37,7 @@ export function Collection() {
   const { data, isPending, isError } = useCollection()
   const [filters, setFilters] = useState<CollectionFilters>(NO_FILTERS)
   const [search, setSearch] = useState('')
+  const [addOpen, setAddOpen] = useState(false)
 
   const entries = useMemo(() => data ?? [], [data])
 
@@ -83,14 +87,27 @@ export function Collection() {
 
   return (
     <div className="flex flex-col gap-6">
-      <FiltersBar
-        filters={filters}
-        onChange={setFilters}
-        search={search}
-        onSearchChange={setSearch}
-        countryCodes={countryCodes}
-        years={years}
-      />
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        {/* Filters are noise on an empty collection: there is nothing to narrow
+            down, and every select would be empty. */}
+        {entries.length > 0 ? (
+          <FiltersBar
+            filters={filters}
+            onChange={setFilters}
+            search={search}
+            onSearchChange={setSearch}
+            countryCodes={countryCodes}
+            years={years}
+          />
+        ) : (
+          <span />
+        )}
+        <Button onClick={() => setAddOpen(true)}>{t('quickAdd.open')}</Button>
+      </div>
+
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('quickAdd.title')}>
+        <QuickAdd />
+      </Modal>
 
       {entries.length === 0 ? (
         <EmptyState title={t('collection.empty.title')} body={t('collection.empty.body')} />
