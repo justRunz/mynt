@@ -16,7 +16,7 @@ export function Field({ label, ...props }: FieldProps) {
       </label>
       <input
         id={id}
-        className="h-10 rounded-md border border-rule bg-raised px-3 text-sm text-ink
+        className="h-10 rounded-md border border-field bg-raised px-3 text-sm text-ink
                    placeholder:text-muted"
         {...props}
       />

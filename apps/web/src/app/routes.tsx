@@ -6,7 +6,7 @@ import { SignIn } from '../auth/SignIn'
 import { SignUp } from '../auth/SignUp'
 import { UpdatePassword } from '../auth/UpdatePassword'
 import { useAuth } from '../auth/authContext'
-import { Home } from './Home'
+import { CollectionPage } from './CollectionPage'
 
 function Splash() {
   const { t } = useTranslation()
@@ -40,7 +40,7 @@ export function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<CollectionPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

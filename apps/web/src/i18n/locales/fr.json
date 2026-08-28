@@ -76,5 +76,43 @@
     "COPPER": "Cuivre",
     "NORDIC_GOLD": "Or nordique",
     "BIMETAL": "Bimétallique"
+  },
+  "collection": {
+    "title": "Collection",
+    "count_one": "{{count}} pièce",
+    "count_other": "{{count}} pièces",
+    "error": "Impossible de charger la collection.",
+    "empty": {
+      "title": "Votre collection est vide",
+      "body": "Ajoutez votre première pièce pour la voir apparaître ici."
+    },
+    "noResults": {
+      "title": "Aucune pièce ne correspond",
+      "body": "Modifiez ou réinitialisez les filtres."
+    },
+    "columns": {
+      "country": "Pays",
+      "faceValue": "Valeur",
+      "year": "Année",
+      "grade": "État",
+      "location": "Rangement"
+    },
+    "unfiled": "Au bocal",
+    "slot": "{{binder}} · p. {{page}} · L{{row}} C{{column}}"
+  },
+  "filters": {
+    "country": "Pays",
+    "allCountries": "Tous les pays",
+    "faceValue": "Valeur",
+    "allFaceValues": "Toutes les valeurs",
+    "year": "Année",
+    "allYears": "Toutes les années",
+    "filing": "Rangement",
+    "filingANY": "Rangées et au bocal",
+    "filingFILED": "Rangées",
+    "filingUNFILED": "Au bocal",
+    "search": "Rechercher",
+    "searchPlaceholder": "Pays, notes…",
+    "reset": "Réinitialiser les filtres"
   }
 }
