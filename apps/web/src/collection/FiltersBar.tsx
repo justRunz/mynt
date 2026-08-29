@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FACE_VALUES_CENTS, hasActiveFilters, type CollectionFilters } from '@mynt/core'
 
-import { Button } from '../ui/Button'
 import { Field } from '../ui/Field'
 import { Select } from '../ui/Select'
 import { countryFlag, countryName } from '../lib/countries'
@@ -34,7 +33,8 @@ export function FiltersBar({
   const active = hasActiveFilters(filters) || search.trim() !== ''
 
   return (
-    <div className="flex flex-wrap items-end gap-3">
+    <div className="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+      <div className="flex flex-wrap items-end gap-3">
       <Field
         // Elastic rather than a fixed width: the search box absorbs the leftover
         // space so the action stays on the filter row, and shrinks instead of
@@ -106,20 +106,38 @@ export function FiltersBar({
         <option value="UNFILED">{t('filters.filingUNFILED')}</option>
       </Select>
 
-      {active && (
-        <Button
-          variant="ghost"
-          className="h-9"
+        <button
+          type="button"
+          // Always rendered, only disabled: appearing on the first active filter
+          // used to insert a control into the row and shove everything sideways.
+          disabled={!active}
+          aria-label={t('filters.reset')}
+          title={t('filters.reset')}
           onClick={() => {
             onChange({ countryCode: null, faceValueCents: null, year: null, filing: 'ANY' })
             onSearchChange('')
           }}
+          className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted
+                     hover:bg-rule/60 hover:text-ink disabled:pointer-events-none
+                     disabled:opacity-30"
         >
-          {t('filters.reset')}
-        </Button>
-      )}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 16 16"
+            className="size-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9" />
+            <path d="M12.5 1.5v3h-3" />
+          </svg>
+        </button>
+      </div>
 
-      {children && <div className="ml-auto shrink-0">{children}</div>}
+      {children && <div className="shrink-0">{children}</div>}
     </div>
   )
 }
