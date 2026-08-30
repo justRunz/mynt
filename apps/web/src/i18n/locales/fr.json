@@ -156,5 +156,40 @@
       "notMinted": "{{country}}, {{value}}, {{year}} : jamais frappée"
     },
     "empty": "Aucun type au catalogue pour ce pays."
+  },
+  "binders": {
+    "title": "Classeurs",
+    "binder": "Classeur",
+    "page": "Page",
+    "pageNumber": "Page {{number}}",
+    "occupancy": "{{occupied}} sur {{total}} emplacements",
+    "slot": "Ligne {{row}}, colonne {{column}}",
+    "slotFree": "Ligne {{row}}, colonne {{column}} : libre",
+    "slotFilled": "Ligne {{row}}, colonne {{column}} : {{country}} {{value}} {{year}}",
+    "newBinder": "Nouveau classeur",
+    "newBinderName": "Nom du classeur",
+    "newPage": "Ajouter une page",
+    "pageRows": "Lignes",
+    "pageColumns": "Colonnes",
+    "create": "Créer",
+    "remove": "Retirer du classeur",
+    "placeTitle": "Ranger une pièce",
+    "placeIn": "Emplacement ligne {{row}}, colonne {{column}}",
+    "unfiledCount_one": "{{count}} pièce au bocal",
+    "unfiledCount_other": "{{count}} pièces au bocal",
+    "noUnfiled": "Aucune pièce au bocal. Ajoutez-en depuis la collection.",
+    "empty": {
+      "title": "Aucun classeur",
+      "body": "Créez un classeur pour commencer à ranger vos pièces."
+    },
+    "noPages": {
+      "title": "Ce classeur n’a pas encore de page",
+      "body": "Ajoutez une page en indiquant le nombre de lignes et de colonnes de vos feuilles."
+    },
+    "outOfBounds": "{{count}} pièce(s) rangée(s) hors des dimensions de cette page. Agrandissez la page ou retirez-les.",
+    "errors": {
+      "slotTaken": "Cet emplacement vient d’être occupé. Rechargez la page.",
+      "generic": "L’opération a échoué. Réessayez."
+    }
   }
 }

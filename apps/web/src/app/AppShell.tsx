@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase'
 const LINKS = [
   { to: '/', labelKey: 'nav.collection' },
   { to: '/completeness', labelKey: 'nav.completeness' },
+  { to: '/binders', labelKey: 'nav.binders' },
 ] as const
 
 export function AppShell({ title, children }: { title: string; children: ReactNode }) {

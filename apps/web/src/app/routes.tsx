@@ -7,6 +7,7 @@ import { SignUp } from '../auth/SignUp'
 import { UpdatePassword } from '../auth/UpdatePassword'
 import { useAuth } from '../auth/authContext'
 import { CollectionPage } from './CollectionPage'
+import { BindersPage } from './BindersPage'
 import { CompletenessPage } from './CompletenessPage'
 
 function Splash() {
@@ -43,6 +44,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<CollectionPage />} />
       <Route path="/completeness" element={<CompletenessPage />} />
+      <Route path="/binders" element={<BindersPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

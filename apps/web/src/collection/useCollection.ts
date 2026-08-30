@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase'
 
 /** Where a coin physically sits, when it has been filed. */
 export interface CoinLocation {
+  pageId: string
+  binderId: string
   binderName: string
   pageNumber: number
   row: number
@@ -31,7 +33,7 @@ export interface CollectionEntry {
 const SELECT = `
   id, grade, acquired_on, notes, slot_row, slot_column,
   coin_type ( country_code, face_value_cents, year, variant ),
-  page ( number, binder ( name ) )
+  page ( id, number, binder ( id, name ) )
 `
 
 /**
@@ -70,6 +72,8 @@ async function fetchCollection(): Promise<CollectionEntry[]> {
         location:
           row.page && row.slot_row !== null && row.slot_column !== null
             ? {
+                pageId: row.page.id,
+                binderId: row.page.binder.id,
                 binderName: row.page.binder.name,
                 pageNumber: row.page.number,
                 row: row.slot_row,
