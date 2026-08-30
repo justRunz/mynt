@@ -95,7 +95,8 @@
       "faceValue": "Valeur",
       "year": "Année",
       "grade": "État",
-      "location": "Rangement"
+      "location": "Rangement",
+      "actions": "Actions"
     },
     "unfiled": "Au bocal",
     "slot": "{{binder}} · p. {{page}} · L{{row}} C{{column}}"
@@ -202,5 +203,18 @@
     "available": "Une nouvelle version de Mynt est disponible.",
     "reload": "Mettre à jour",
     "dismiss": "Plus tard"
+  },
+  "editCoin": {
+    "title": "Modifier la pièce",
+    "open": "Modifier {{country}} {{value}} {{year}}",
+    "acquiredOn": "Date d’acquisition",
+    "notes": "Notes",
+    "notesPlaceholder": "Trouvée en brocante, bord usé…",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "confirmDelete": "Confirmer la suppression",
+    "cancelDelete": "Annuler",
+    "deleteWarning": "Cette pièce sera définitivement retirée de votre collection.",
+    "actions": "Actions"
   }
 }

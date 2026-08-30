@@ -13,6 +13,7 @@ import { Modal } from '../ui/Modal'
 import { countryCollator, countryFlag, countryName } from '../lib/countries'
 import { formatFaceValue } from '../lib/format'
 import { matchesSearch } from '../lib/search'
+import { EditCoin } from './EditCoin'
 import { FiltersBar } from './FiltersBar'
 import { QuickAdd } from './QuickAdd'
 import { useCollection, type CollectionEntry } from './useCollection'
@@ -38,6 +39,7 @@ export function Collection() {
   const [filters, setFilters] = useState<CollectionFilters>(NO_FILTERS)
   const [search, setSearch] = useState('')
   const [addOpen, setAddOpen] = useState(false)
+  const [editing, setEditing] = useState<CollectionEntry | null>(null)
 
   const entries = useMemo(() => data ?? [], [data])
 
@@ -102,6 +104,8 @@ export function Collection() {
         <QuickAdd />
       </Modal>
 
+      <EditCoin coin={editing} onClose={() => setEditing(null)} />
+
       {entries.length === 0 ? (
         <EmptyState title={t('collection.empty.title')} body={t('collection.empty.body')} />
       ) : visible.length === 0 ? (
@@ -112,14 +116,20 @@ export function Collection() {
       ) : (
         <>
           <p className="text-sm text-muted">{t('collection.count', { count: visible.length })}</p>
-          <CollectionTable entries={visible} />
+          <CollectionTable entries={visible} onEdit={setEditing} />
         </>
       )}
     </div>
   )
 }
 
-function CollectionTable({ entries }: { entries: readonly CollectionEntry[] }) {
+function CollectionTable({
+  entries,
+  onEdit,
+}: {
+  entries: readonly CollectionEntry[]
+  onEdit: (entry: CollectionEntry) => void
+}) {
   const { t } = useTranslation()
 
   return (
@@ -139,8 +149,11 @@ function CollectionTable({ entries }: { entries: readonly CollectionEntry[] }) {
             <th scope="col" className="py-2 pr-4 font-medium">
               {t('collection.columns.grade')}
             </th>
-            <th scope="col" className="py-2 font-medium">
+            <th scope="col" className="py-2 pr-4 font-medium">
               {t('collection.columns.location')}
+            </th>
+            <th scope="col" className="py-2">
+              <span className="sr-only">{t('collection.columns.actions')}</span>
             </th>
           </tr>
         </thead>
@@ -164,7 +177,7 @@ function CollectionTable({ entries }: { entries: readonly CollectionEntry[] }) {
               <td className="py-2 pr-4 whitespace-nowrap">
                 {entry.grade ? t(`grade.short.${entry.grade}`) : <span className="text-muted">—</span>}
               </td>
-              <td className="py-2 whitespace-nowrap">
+              <td className="py-2 pr-4 whitespace-nowrap">
                 {entry.location ? (
                   t('collection.slot', {
                     binder: entry.location.binderName,
@@ -175,6 +188,32 @@ function CollectionTable({ entries }: { entries: readonly CollectionEntry[] }) {
                 ) : (
                   <span className="text-muted">{t('collection.unfiled')}</span>
                 )}
+              </td>
+              <td className="py-2 text-right">
+                <button
+                  type="button"
+                  onClick={() => onEdit(entry)}
+                  aria-label={t('editCoin.open', {
+                    country: countryName(entry.countryCode),
+                    value: formatFaceValue(entry.faceValueCents),
+                    year: entry.year,
+                  })}
+                  className="flex size-8 items-center justify-center rounded-md text-muted
+                             hover:bg-rule/60 hover:text-ink"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 16 16"
+                    className="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M11.2 2.3l2.5 2.5-8 8-3.2.7.7-3.2z" />
+                  </svg>
+                </button>
               </td>
             </tr>
           ))}

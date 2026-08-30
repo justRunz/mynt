@@ -28,6 +28,8 @@ export const mutationKeys = {
   unfileCoin: ['coin', 'unfile'],
   createBinder: ['binder', 'create'],
   createPage: ['page', 'create'],
+  updateCoin: ['coin', 'update'],
+  deleteCoin: ['coin', 'delete'],
 } as const
 
 export interface AddCoinVariables {
@@ -35,6 +37,18 @@ export interface AddCoinVariables {
   profileId: string
   coinTypeId: number
   grade: Grade | null
+  countryCode: string
+  faceValueCents: number
+  year: number
+}
+
+export interface UpdateCoinVariables {
+  coinId: string
+  coinTypeId: number
+  grade: Grade | null
+  acquiredOn: string | null
+  notes: string | null
+  /** Carried for the optimistic patch, since the row renders these directly. */
   countryCode: string
   faceValueCents: number
   year: number
@@ -145,6 +159,44 @@ export function registerMutations(client: QueryClient) {
       if (error) throw error
     },
     onMutate: (coinId: string) => patchEntry(client, coinId, { location: null }),
+  })
+
+  client.setMutationDefaults(mutationKeys.updateCoin, {
+    mutationFn: async (input: UpdateCoinVariables) => {
+      const { error } = await supabase
+        .from('coin')
+        .update({
+          coin_type_id: input.coinTypeId,
+          grade: input.grade,
+          acquired_on: input.acquiredOn,
+          notes: input.notes,
+        })
+        .eq('id', input.coinId)
+      if (error) throw error
+    },
+    onMutate: (input: UpdateCoinVariables) =>
+      patchEntry(client, input.coinId, {
+        countryCode: input.countryCode,
+        faceValueCents: input.faceValueCents,
+        year: input.year,
+        grade: input.grade,
+        acquiredOn: input.acquiredOn,
+        notes: input.notes,
+      }),
+  })
+
+  client.setMutationDefaults(mutationKeys.deleteCoin, {
+    // Deleting a row that is already gone affects nothing and raises nothing,
+    // so replaying this after a reconnect is safe.
+    mutationFn: async (coinId: string) => {
+      const { error } = await supabase.from('coin').delete().eq('id', coinId)
+      if (error) throw error
+    },
+    onMutate: (coinId: string) => {
+      client.setQueryData<CollectionEntry[]>(collectionQueryKey, (current) =>
+        (current ?? []).filter((e) => e.id !== coinId),
+      )
+    },
   })
 
   client.setMutationDefaults(mutationKeys.createBinder, {

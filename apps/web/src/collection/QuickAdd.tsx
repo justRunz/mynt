@@ -3,11 +3,9 @@ import type { FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
-  FACE_VALUES_CENTS,
   GRADES,
   findCoinTypeId,
   indexCoinTypes,
-  metalFamily,
   newId,
   type FaceValueCents,
   type Grade,
@@ -20,14 +18,9 @@ import { formatFaceValue } from '../lib/format'
 import type { TranslationKey } from '../i18n/types'
 import { Button } from '../ui/Button'
 import { CountryCombobox } from './CountryCombobox'
+import { FaceValuePicker } from './FaceValuePicker'
 import { useAddCoin } from './useAddCoin'
 import type { CollectionEntry } from './useCollection'
-
-const METAL_DOT = {
-  COPPER: 'bg-copper',
-  NORDIC_GOLD: 'bg-nordic',
-  BIMETAL: 'bg-silver',
-} as const
 
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -128,40 +121,12 @@ export function QuickAdd() {
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
         <CountryCombobox codes={codes} value={countryCode} onChange={setCountryCode} />
 
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 text-sm font-medium text-muted">
-            {t('quickAdd.faceValue')}
-          </legend>
-          <div className="flex flex-wrap gap-2">
-            {FACE_VALUES_CENTS.map((cents, i) => (
-              <label
-                key={cents}
-                className={`tnum flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2
-                            text-sm ${
-                              faceValue === cents
-                                ? 'border-ink bg-ink text-surface'
-                                : 'border-field bg-raised'
-                            }`}
-              >
-                <input
-                  ref={i === 0 ? firstValueRef : undefined}
-                  type="radio"
-                  name="faceValue"
-                  value={cents}
-                  aria-label={formatFaceValue(cents)}
-                  className="sr-only"
-                  checked={faceValue === cents}
-                  onChange={() => setFaceValue(cents)}
-                />
-                <span
-                  aria-hidden
-                  className={`size-2.5 rounded-full ${METAL_DOT[metalFamily(cents)]}`}
-                />
-                {formatFaceValue(cents)}
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <FaceValuePicker
+          name="quick-add-face-value"
+          value={faceValue}
+          onChange={setFaceValue}
+          firstRef={firstValueRef}
+        />
 
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col gap-1.5">

@@ -10,6 +10,11 @@ interface Props {
   value: string | null
   onChange: (code: string | null) => void
   inputRef?: React.Ref<HTMLInputElement>
+  /**
+   * Text the field starts with, for editing an existing coin. Callers remount
+   * with a key when the subject changes rather than syncing it in an effect.
+   */
+  initialQuery?: string
 }
 
 /**
@@ -20,9 +25,15 @@ interface Props {
  * than Radix: Radix has no combobox primitive, and Base UI's is still a release
  * candidate. Downshift brings behaviour and ARIA only, no styles.
  */
-export function CountryCombobox({ codes, value, onChange, inputRef }: Props) {
+export function CountryCombobox({
+  codes,
+  value,
+  onChange,
+  inputRef,
+  initialQuery = '',
+}: Props) {
   const { t } = useTranslation()
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
 
   const sorted = useMemo(() => sortCountryCodes(codes), [codes])
   const matches = useMemo(() => {
