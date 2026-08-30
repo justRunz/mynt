@@ -61,14 +61,26 @@ export function SlotGrid({ rowCount, columnCount, coins, onSelect }: Props) {
                 >
                   <span
                     aria-hidden
-                    className={`flex size-14 items-center justify-center rounded-full border
-                                text-xl ${
+                    className={`flex size-16 flex-col items-center justify-center gap-0.5
+                                rounded-full border ${
                                   coin
                                     ? FILL[metalFamily(coin.faceValueCents as FaceValueCents)]
                                     : 'border-dashed border-field'
                                 }`}
                   >
-                    {coin ? countryFlag(coin.countryCode) : ''}
+                    {coin && (
+                      <>
+                        <span className="text-lg leading-none">
+                          {countryFlag(coin.countryCode)}
+                        </span>
+                        {/* Struck on the coin itself, so it belongs inside the
+                            circle rather than in the caption. The metal already
+                            says which family it is, never which value. */}
+                        <span className="tnum text-[10px] leading-none font-medium whitespace-nowrap text-on-metal">
+                          {formatFaceValue(coin.faceValueCents)}
+                        </span>
+                      </>
+                    )}
                   </span>
                   <span className="tnum h-3 text-[10px] leading-3 text-muted">
                     {coin ? coin.year : ''}
