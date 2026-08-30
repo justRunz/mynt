@@ -8,6 +8,7 @@ import {
   findCoinTypeId,
   indexCoinTypes,
   metalFamily,
+  newId,
   type FaceValueCents,
   type Grade,
 } from '@mynt/core'
@@ -75,28 +76,49 @@ export function QuickAdd() {
       )
     }
 
+    const entry: CollectionEntry = {
+      id: newId(),
+      countryCode,
+      faceValueCents: faceValue,
+      year: parsedYear,
+      variant: '',
+      grade: grade || null,
+      acquiredOn: null,
+      notes: null,
+      location: null,
+    }
+
     addCoin.mutate(
       {
+        // Generated here, not inside the mutation: a mutation replayed after a
+        // reload has to carry the same id or it would insert a second coin.
+        id: entry.id,
         profileId,
         coinTypeId,
-        grade: grade || null,
+        grade: entry.grade,
         countryCode,
         faceValueCents: faceValue,
         year: parsedYear,
       },
       {
-        onSuccess: (entry) => {
-          setRecent((list) => [entry, ...list].slice(0, 6))
-          // The country stays: a pile is usually sorted by country, and
-          // re-picking it on every coin is the friction that makes people quit.
-          setFaceValue(null)
-          setYear('')
-          setGrade('')
-          firstValueRef.current?.focus()
+        onError: () => {
+          setRecent((list) => list.filter((e) => e.id !== entry.id))
+          setErrorKey('quickAdd.errors.save')
         },
-        onError: () => setErrorKey('quickAdd.errors.save'),
       },
     )
+
+    // Confirmed and reset as soon as the entry is queued, not when the server
+    // answers. Offline the mutation stays paused for as long as the signal is
+    // gone, and a form that never clears would break the one thing this screen
+    // is for -- working through a pile without stopping.
+    setRecent((list) => [entry, ...list].slice(0, 6))
+    // The country stays: a pile is usually sorted by country, and re-picking it
+    // on every coin is the friction that makes people quit.
+    setFaceValue(null)
+    setYear('')
+    setGrade('')
+    firstValueRef.current?.focus()
   }
 
   return (
@@ -177,7 +199,11 @@ export function QuickAdd() {
             </select>
           </div>
 
-          <Button type="submit" disabled={addCoin.isPending}>
+          {/* isPending alone would stay true for as long as a mutation sits
+              paused offline, locking the form after the first coin -- the exact
+              opposite of what this screen is for. Only an in-flight request
+              should block it. */}
+          <Button type="submit" disabled={addCoin.isPending && !addCoin.isPaused}>
             {t('quickAdd.submit')}
           </Button>
         </div>

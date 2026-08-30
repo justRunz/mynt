@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mynt">
+  <rect width="512" height="512" rx="112" fill="#1d1a17"/>
+  <circle cx="256" cy="256" r="150" fill="#dcbc71"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#a8873f" stroke-width="10"/>
+  <text x="256" y="258" fill="#2a2118" font-family="Inter, Helvetica, Arial, sans-serif"
+        font-size="170" font-weight="700" text-anchor="middle" dominant-baseline="central">M</text>
+</svg>

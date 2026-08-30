@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { newId } from '@mynt/core'
 
 import { useAuth } from '../auth/authContext'
 import { useCollection } from '../collection/useCollection'
@@ -63,7 +64,7 @@ export function Binders() {
     return (
       <NewBinderForm
         onCreate={(name) =>
-          session && createBinder.mutate({ profileId: session.user.id, name })
+          session && createBinder.mutate({ id: newId(), profileId: session.user.id, name })
         }
         busy={createBinder.isPending}
         standalone
@@ -71,7 +72,11 @@ export function Binders() {
     )
   }
 
-  const busy = fileCoin.isPending || unfileCoin.isPending
+  // Paused counts as pending, so filing coins offline would lock the dialog
+  // after the first one. Only an in-flight request should block it.
+  const busy =
+    (fileCoin.isPending && !fileCoin.isPaused) ||
+    (unfileCoin.isPending && !unfileCoin.isPaused)
 
   const close = () => {
     setSlot(null)
@@ -136,6 +141,7 @@ export function Binders() {
           busy={createPage.isPending}
           onCreate={(rowCount, columnCount) =>
             createPage.mutate({
+              id: newId(),
               binderId: binder.id,
               number: (binder.pages.at(-1)?.number ?? 0) + 1,
               rowCount,
@@ -147,7 +153,7 @@ export function Binders() {
 
       <NewBinderForm
         onCreate={(name) =>
-          session && createBinder.mutate({ profileId: session.user.id, name })
+          session && createBinder.mutate({ id: newId(), profileId: session.user.id, name })
         }
         busy={createBinder.isPending}
       />

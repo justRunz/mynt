@@ -72,6 +72,27 @@ Attention au français qui ne passe pas par des chaînes : les valeurs faciales,
 les dates et le tri des noms de pays doivent passer par `Intl` (voir
 `apps/web/src/lib/format.ts` et `countries.ts`).
 
+## Hors ligne
+
+L'app fonctionne sans réseau, ce qui recouvre deux mécanismes distincts.
+
+La **coquille** est précachée par un service worker (`vite-plugin-pwa`), polices
+comprises — d'où Inter auto-hébergée plutôt que servie par un CDN. Il ne s'active
+que sur un build de production : `pnpm --filter @mynt/web preview`.
+
+Les **données** vivent dans le cache TanStack Query persisté en IndexedDB, et les
+écritures faites hors ligne sont mises en file puis rejouées au retour du réseau.
+Deux règles rendent ce rejeu sûr, et les casser réintroduirait des doublons :
+
+- les identifiants sont générés par l'appelant et voyagent dans les variables de
+  la mutation, jamais à l'intérieur de celle-ci ;
+- les écritures sont des `upsert`, donc rejouer une mutation qui avait en fait
+  atteint le serveur ne fait rien.
+
+Les mutations sont enregistrées par clé dans `apps/web/src/app/mutations.ts` et
+non dans les composants : c'est ce qui permet de les retrouver après un
+rechargement pour les rejouer.
+
 ## Mise en ligne
 
 ```bash

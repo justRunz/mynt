@@ -191,5 +191,16 @@
       "slotTaken": "Cet emplacement vient d’être occupé. Rechargez la page.",
       "generic": "L’opération a échoué. Réessayez."
     }
+  },
+  "status": {
+    "offline": "Hors ligne",
+    "offlineHint": "Vos ajouts sont conservés et seront envoyés au retour du réseau.",
+    "pending_one": "{{count}} modification en attente",
+    "pending_other": "{{count}} modifications en attente"
+  },
+  "update": {
+    "available": "Une nouvelle version de Mynt est disponible.",
+    "reload": "Mettre à jour",
+    "dismiss": "Plus tard"
   }
 }

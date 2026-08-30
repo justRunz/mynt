@@ -4,8 +4,24 @@
     {
       "name": "mynt-web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@mynt/web", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@mynt/web",
+        "dev"
+      ],
       "port": 5173
+    },
+    {
+      "name": "mynt-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@mynt/web",
+        "preview",
+        "--port",
+        "4173"
+      ],
+      "port": 4173
     }
   ]
 }

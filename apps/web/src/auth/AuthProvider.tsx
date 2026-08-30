@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 
+import { clearPersistedCache } from '../app/queryClient'
 import { supabase } from '../lib/supabase'
 import { AuthContext } from './authContext'
 
@@ -20,7 +21,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(next)
       setLoading(false)
       if (event === 'PASSWORD_RECOVERY') setRecovering(true)
-      if (event === 'SIGNED_OUT') setRecovering(false)
+      if (event === 'SIGNED_OUT') {
+        setRecovering(false)
+        void clearPersistedCache()
+      }
     })
 
     return () => data.subscription.unsubscribe()
