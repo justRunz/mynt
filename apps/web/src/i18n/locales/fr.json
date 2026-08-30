@@ -137,5 +137,24 @@
       "save": "L’ajout a échoué. Réessayez."
     },
     "open": "Ajouter une pièce"
+  },
+  "completeness": {
+    "title": "Complétude",
+    "country": "Pays",
+    "progress": "{{owned}} sur {{total}}",
+    "showCollectorOnly": "Afficher Monaco, Saint-Marin et le Vatican",
+    "collectorOnlyHint": "Monnaies de collection à tirages minuscules : leur grille reste presque vide, quoi qu’il arrive.",
+    "legend": {
+      "owned": "Possédée",
+      "missing": "Manquante",
+      "notMinted": "Jamais frappée"
+    },
+    "cell": {
+      "owned": "{{country}}, {{value}}, {{year}} : possédée",
+      "duplicates": "{{country}}, {{value}}, {{year}} : {{count}} exemplaires",
+      "missing": "{{country}}, {{value}}, {{year}} : manquante",
+      "notMinted": "{{country}}, {{value}}, {{year}} : jamais frappée"
+    },
+    "empty": "Aucun type au catalogue pour ce pays."
   }
 }

@@ -33,20 +33,32 @@
   --color-nordic: oklch(0.78 0.1 85);
   --color-silver: oklch(0.8 0.015 250);
 
-  /* Measured against --color-surface: copper 3.65:1, nordic 1.92:1, silver
-     1.78:1 in light. Fine for the decorative dots in the list, which sit next
-     to a text label, but too faint to carry "owned" on their own in the
-     completeness grid. That screen will need a darker edge per metal, plus a
-     fixed dark foreground for the year label -- --color-ink flips to near-white
-     in dark mode and lands at 1.6:1 on top of these. Added when step 4 uses
-     them: Tailwind v4 only emits theme variables that utilities reference. */
+  /* The metals measure 3.65:1 (copper), 1.92:1 (nordic) and 1.78:1 (silver)
+     against the light surface -- too faint to carry "owned" on their own in
+     the completeness grid. The fill stays true to the metal and these darker
+     edges draw the boundary, which is what WCAG 1.4.11 asks 3:1 of. */
+  --color-copper-edge: oklch(0.5 0.12 45);
+  --color-nordic-edge: oklch(0.56 0.09 85);
+  --color-silver-edge: oklch(0.56 0.02 250);
+
+  /* Fixed in both themes, and deliberately not --color-ink: the metals stay
+     light whatever the theme, so a foreground flipping to near-white would sit
+     at 1.6:1 on top of them. */
+  --color-on-metal: oklch(0.2 0.015 60);
 }
 
 /* Utilities keyed on the token names keep working in dark mode because the
-   token values swap, not the class names. */
+   token values swap, not the class names.
+ *
+ * One dark definition, driven by the system preference. There is deliberately
+ * no [data-theme] override yet: the app has no theme switch, and maintaining
+ * the same palette in two blocks is how the two drift apart -- which is exactly
+ * what happened here, leaving the dark copper edge at 2.98:1. Add the override
+ * when a switch exists, and hold the values in a single set of variables that
+ * both selectors point at. */
 @layer base {
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) {
+    :root {
       --color-surface: oklch(0.18 0.008 70);
       --color-raised: oklch(0.22 0.008 70);
       --color-ink: oklch(0.94 0.006 85);
@@ -59,21 +71,12 @@
       --color-copper: oklch(0.66 0.11 45);
       --color-nordic: oklch(0.8 0.1 85);
       --color-silver: oklch(0.78 0.015 250);
+
+      /* Lighter than the fill, not darker: on a dark ground a darker rim sinks
+         into the background instead of drawing the cell. */
+      --color-copper-edge: oklch(0.78 0.1 45);
+      --color-nordic-edge: oklch(0.9 0.08 85);
+      --color-silver-edge: oklch(0.9 0.02 250);
     }
-  }
-
-  :root[data-theme='dark'] {
-    --color-surface: oklch(0.18 0.008 70);
-    --color-raised: oklch(0.22 0.008 70);
-    --color-ink: oklch(0.94 0.006 85);
-    --color-muted: oklch(0.66 0.01 75);
-    --color-rule: oklch(0.32 0.008 75);
-    --color-field: oklch(0.55 0.01 75);
-    --color-accent: oklch(0.72 0.1 250);
-    --color-danger: oklch(0.68 0.15 25);
-
-    --color-copper: oklch(0.66 0.11 45);
-    --color-nordic: oklch(0.8 0.1 85);
-    --color-silver: oklch(0.78 0.015 250);
   }
 }

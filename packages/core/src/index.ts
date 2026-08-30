@@ -1,5 +1,6 @@
 export * from './catalog'
 export * from './collection'
+export * from './completeness'
 export * from './db'
 export * from './denominations'
 export * from './grades'
