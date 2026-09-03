@@ -129,9 +129,9 @@ export function Binders() {
           onSelect={setSlot}
         />
       ) : (
-        <div className="rounded-lg border border-dashed border-rule px-6 py-10 text-center">
-          <p className="font-medium">{t('binders.noPages.title')}</p>
-          <p className="mt-1 text-sm text-muted">{t('binders.noPages.body')}</p>
+        <div className="rounded-xl bg-card px-6 py-14 text-center">
+          <h2 className="text-2xl">{t('binders.noPages.title')}</h2>
+          <p className="mt-2 text-base text-muted">{t('binders.noPages.body')}</p>
         </div>
       )}
 
@@ -203,16 +203,14 @@ function NewBinderForm({
   return (
     <form
       onSubmit={submit}
-      className={`flex flex-wrap items-end gap-3 ${
-        standalone
-          ? 'rounded-lg border border-dashed border-rule px-6 py-10'
-          : 'border-t border-rule pt-6'
+      className={`flex flex-wrap items-end gap-4 ${
+        standalone ? 'rounded-xl bg-card px-6 py-14' : 'border-t border-rule pt-6'
       }`}
     >
       {standalone && (
         <div className="w-full text-center">
-          <p className="font-medium">{t('binders.empty.title')}</p>
-          <p className="mt-1 mb-4 text-sm text-muted">{t('binders.empty.body')}</p>
+          <h2 className="text-2xl">{t('binders.empty.title')}</h2>
+          <p className="mt-2 mb-6 text-base text-muted">{t('binders.empty.body')}</p>
         </div>
       )}
       <Field

@@ -86,7 +86,7 @@ export function SlotDialog({
                     disabled={busy}
                     onClick={() => onPlace(coin.id)}
                     className="tnum flex w-full items-center gap-3 rounded-md border
-                               border-rule px-3 py-2 text-left text-sm hover:bg-rule/40
+                               border-rule px-4 py-3 text-left text-base hover:bg-band
                                disabled:opacity-50"
                   >
                     <span

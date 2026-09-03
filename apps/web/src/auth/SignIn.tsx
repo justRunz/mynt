@@ -57,7 +57,11 @@ export function SignIn() {
         </Link>
         <p className="text-muted">
           {t('auth.signIn.noAccount')}{' '}
-          <Link to="/sign-up" className="text-accent hover:underline">
+          <Link
+            to="/sign-up"
+            className="text-ink underline decoration-field underline-offset-4
+                       hover:decoration-ink"
+          >
             {t('auth.signIn.createAccount')}
           </Link>
         </p>

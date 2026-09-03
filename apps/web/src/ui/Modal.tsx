@@ -35,11 +35,13 @@ export function Modal({ open, onClose, title, children }: Props) {
       onClick={(event) => {
         if (event.target === ref.current) onClose()
       }}
-      className="modal m-auto w-[min(48rem,calc(100vw-2rem))] rounded-lg border
-                 border-rule bg-surface p-0 text-ink"
+      className="modal m-auto w-[min(48rem,calc(100vw-2rem))] rounded-xl border
+                 border-rule bg-surface p-0 text-ink shadow-overlay"
     >
-      <div className="flex items-center justify-between border-b border-rule px-6 py-4">
-        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+      <div className="flex items-center justify-between border-b border-rule px-7 py-5">
+        {/* Serif at 400 -- see the base layer in index.css. The reference never
+            takes the display face above regular, at any size. */}
+        <h2 className="text-2xl">{title}</h2>
         <button
           type="button"
           onClick={onClose}
@@ -48,8 +50,8 @@ export function Modal({ open, onClose, title, children }: Props) {
           // target comfortably above the 24px minimum even though the glyph is
           // small.
           aria-label={t('common.close')}
-          className="-mr-2 flex size-9 items-center justify-center rounded-md text-muted
-                     hover:bg-rule/60 hover:text-ink"
+          className="-mr-2 flex size-9 items-center justify-center rounded-full text-muted
+                     hover:bg-card hover:text-ink"
         >
           <svg
             aria-hidden="true"
@@ -64,7 +66,7 @@ export function Modal({ open, onClose, title, children }: Props) {
           </svg>
         </button>
       </div>
-      <div className="max-h-[70vh] overflow-y-auto px-6 py-6">{children}</div>
+      <div className="max-h-[70vh] overflow-y-auto px-7 py-6">{children}</div>
     </dialog>
   )
 }

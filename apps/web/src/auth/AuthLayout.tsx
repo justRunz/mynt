@@ -7,13 +7,16 @@ export function AuthLayout({ title, children }: { title: string; children: React
   const { t } = useTranslation()
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 px-6 py-12">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-8 px-6 py-12">
       <header className="text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('app.name')}</h1>
-        <p className="mt-1 text-sm text-muted">{t('app.tagline')}</p>
+        <h1 className="text-4xl">{t('app.name')}</h1>
+        <p className="mt-2 text-base text-muted">{t('app.tagline')}</p>
       </header>
-      <section className="rounded-lg border border-rule bg-raised p-6">
-        <h2 className="mb-5 text-base font-medium">{title}</h2>
+      {/* A floating artifact rather than a neutral card: it is the only thing on
+          the page, and elevation is what the reference reserves for surfaces
+          that sit on top of the paper rather than in it. */}
+      <section className="rounded-lg bg-raised p-8 shadow-float">
+        <h2 className="mb-6 text-2xl">{title}</h2>
         {children}
       </section>
     </main>

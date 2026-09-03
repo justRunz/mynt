@@ -28,10 +28,10 @@ export function StatusBar() {
   return (
     <div
       role="status"
-      className="border-b border-rule bg-raised px-6 py-2 text-center text-sm text-muted"
+      className="bg-card px-6 py-3 text-center text-sm text-muted"
     >
       {!online && (
-        <span className="font-medium text-ink">{t('status.offline')}</span>
+        <span className="font-[480] text-ink">{t('status.offline')}</span>
       )}
       {!online && paused.length > 0 && ' · '}
       {paused.length > 0 && (

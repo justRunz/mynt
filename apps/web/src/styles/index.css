@@ -1,18 +1,33 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/inter';
+@import '@fontsource-variable/source-serif-4';
 @import './theme.css';
 
 @layer base {
   html {
-    /* Follows the active i18next locale, set in src/i18n/index.ts. */
-    color-scheme: light dark;
+    /* Light only, matching the reference. See the note at the top of theme.css:
+       there are no dark values to adopt, and the direction is the warm paper. */
+    color-scheme: light;
   }
 
   body {
     background-color: var(--color-surface);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.35;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* The serif carries every heading and never leaves weight 400 -- it whispers
+     authority rather than shouting in bold, which is the signature of the
+     direction. Sizes stay per-component; only the face and weight are set here,
+     so a heading cannot accidentally be rendered in the sans. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
   }
 
   /* Grids and lists are dense columns of years and face values. Without

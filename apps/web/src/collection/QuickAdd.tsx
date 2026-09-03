@@ -129,8 +129,8 @@ export function QuickAdd() {
         />
 
         <div className="flex flex-wrap items-end gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="year" className="text-sm font-medium text-muted">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="year" className="text-sm font-[450] text-muted">
               {t('quickAdd.year')}
             </label>
             <input
@@ -141,19 +141,19 @@ export function QuickAdd() {
               placeholder="2003"
               value={year}
               onChange={(e) => setYear(e.target.value.replace(/\D/g, ''))}
-              className="tnum h-10 w-28 rounded-md border border-field bg-raised px-3 text-sm"
+              className="tnum h-11 w-28 rounded-md border border-field bg-raised px-4 text-base"
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="grade" className="text-sm font-medium text-muted">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="grade" className="text-sm font-[450] text-muted">
               {t('quickAdd.grade')}
             </label>
             <select
               id="grade"
               value={grade}
               onChange={(e) => setGrade(e.target.value as Grade | '')}
-              className="h-10 rounded-md border border-field bg-raised px-2 text-sm"
+              className="h-11 rounded-md border border-field bg-raised px-3 text-base"
             >
               <option value="">{t('quickAdd.gradeNone')}</option>
               {GRADES.map((g) => (
@@ -187,10 +187,10 @@ export function QuickAdd() {
 
       {recent.length > 0 && (
         <section aria-live="polite" className="border-t border-rule pt-6">
-          <h2 className="text-sm font-medium text-muted">
+          <h2 className="text-lg">
             {t('quickAdd.recent')} · {t('quickAdd.added', { count: recent.length })}
           </h2>
-          <ul className="tnum mt-3 flex flex-col gap-1 text-sm">
+          <ul className="tnum mt-3 flex flex-col gap-1 text-base text-muted">
             {recent.map((entry) => (
               <li key={entry.id}>
                 <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}

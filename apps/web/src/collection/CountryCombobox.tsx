@@ -78,7 +78,7 @@ export function CountryCombobox({
 
   return (
     <div className="relative flex flex-col gap-1.5">
-      <label {...getLabelProps()} className="text-sm font-medium text-muted">
+      <label {...getLabelProps()} className="text-sm font-[450] text-muted">
         {t('quickAdd.country')}
       </label>
       <input
@@ -100,24 +100,24 @@ export function CountryCombobox({
           },
         })}
         placeholder={t('quickAdd.countryPlaceholder')}
-        className="h-10 w-64 rounded-md border border-field bg-raised px-3 text-sm text-ink
+        className="h-11 w-64 rounded-md border border-field bg-raised px-4 text-base text-ink
                    placeholder:text-muted"
       />
       <ul
         {...getMenuProps()}
-        className={`absolute top-full z-10 mt-1 max-h-64 w-64 overflow-y-auto rounded-md border
-                    border-field bg-raised py-1 ${isOpen ? '' : 'hidden'}`}
+        className={`absolute top-full z-10 mt-2 max-h-64 w-64 overflow-y-auto rounded-md
+                    bg-raised py-2 shadow-popover ${isOpen ? '' : 'hidden'}`}
       >
         {isOpen && matches.length === 0 && (
-          <li className="px-3 py-2 text-sm text-muted">{t('quickAdd.countryNoResult')}</li>
+          <li className="px-4 py-2 text-base text-muted">{t('quickAdd.countryNoResult')}</li>
         )}
         {isOpen &&
           matches.map((code, index) => (
             <li
               key={code}
               {...getItemProps({ item: code, index })}
-              className={`cursor-pointer px-3 py-1.5 text-sm ${
-                highlightedIndex === index ? 'bg-rule/60' : ''
+              className={`cursor-pointer px-4 py-2 text-base ${
+                highlightedIndex === index ? 'bg-card' : ''
               }`}
             >
               <span aria-hidden>{countryFlag(code)}</span> {countryName(code)}

@@ -56,8 +56,8 @@ export function SlotGrid({ rowCount, columnCount, coins, onSelect }: Props) {
                   type="button"
                   aria-label={label}
                   onClick={() => onSelect({ ...position, coin })}
-                  className="flex flex-col items-center gap-1 rounded-md p-1
-                             hover:bg-rule/40"
+                  className="flex flex-col items-center gap-1 rounded-[10px] p-1
+                             hover:bg-band"
                 >
                   <span
                     aria-hidden
@@ -76,7 +76,7 @@ export function SlotGrid({ rowCount, columnCount, coins, onSelect }: Props) {
                         {/* Struck on the coin itself, so it belongs inside the
                             circle rather than in the caption. The metal already
                             says which family it is, never which value. */}
-                        <span className="tnum text-[10px] leading-none font-medium whitespace-nowrap text-on-metal">
+                        <span className="tnum text-[10px] leading-none font-[500] whitespace-nowrap text-on-metal">
                           {formatFaceValue(coin.faceValueCents)}
                         </span>
                       </>

@@ -33,14 +33,15 @@ export function FiltersBar({
   const active = hasActiveFilters(filters) || search.trim() !== ''
 
   return (
-    <div className="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-      <div className="flex flex-wrap items-end gap-3">
+    <div className="grid items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+      <div className="flex flex-wrap items-end gap-4">
       <Field
         // Elastic rather than a fixed width: the search box absorbs the leftover
         // space so the action stays on the filter row, and shrinks instead of
         // pushing it onto its own line when a translation runs long.
-        wrapperClassName="min-w-32 flex-1"
+        wrapperClassName="min-w-48 flex-1"
         className="w-full"
+        dense
         label={t('filters.search')}
         type="search"
         placeholder={t('filters.searchPlaceholder')}
@@ -49,6 +50,7 @@ export function FiltersBar({
       />
 
       <Select
+        dense
         label={t('filters.country')}
         value={filters.countryCode ?? ''}
         onChange={(e) => onChange({ ...filters, countryCode: e.target.value || null })}
@@ -62,6 +64,7 @@ export function FiltersBar({
       </Select>
 
       <Select
+        dense
         label={t('filters.faceValue')}
         value={filters.faceValueCents ?? ''}
         onChange={(e) =>
@@ -82,6 +85,7 @@ export function FiltersBar({
       </Select>
 
       <Select
+        dense
         label={t('filters.year')}
         value={filters.year ?? ''}
         onChange={(e) => onChange({ ...filters, year: e.target.value ? Number(e.target.value) : null })}
@@ -95,6 +99,7 @@ export function FiltersBar({
       </Select>
 
       <Select
+        dense
         label={t('filters.filing')}
         value={filters.filing}
         onChange={(e) =>
@@ -117,8 +122,8 @@ export function FiltersBar({
             onChange({ countryCode: null, faceValueCents: null, year: null, filing: 'ANY' })
             onSearchChange('')
           }}
-          className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted
-                     hover:bg-rule/60 hover:text-ink disabled:pointer-events-none
+          className="flex size-10 shrink-0 items-center justify-center rounded-full
+                     text-muted hover:bg-card hover:text-ink disabled:pointer-events-none
                      disabled:opacity-30"
         >
           <svg

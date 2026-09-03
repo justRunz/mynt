@@ -73,7 +73,11 @@ export function SignUp() {
 
       <p className="mt-5 border-t border-rule pt-4 text-sm text-muted">
         {t('auth.signUp.haveAccount')}{' '}
-        <Link to="/sign-in" className="text-accent hover:underline">
+        <Link
+          to="/sign-in"
+          className="text-ink underline decoration-field underline-offset-4
+                     hover:decoration-ink"
+        >
           {t('auth.signUp.signIn')}
         </Link>
       </p>

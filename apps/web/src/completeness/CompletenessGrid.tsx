@@ -31,8 +31,10 @@ function Cell({ cell, countryCode }: { cell: CompletenessCell; countryCode: stri
         <div
           // A faint solid rather than nothing at all: a blank square is
           // indistinguishable from padding, and "never struck" is a real answer
-          // to give a collector, not an absence of one.
-          className="size-7 rounded-sm bg-rule/60"
+          // to give a collector, not an absence of one. On the white canvas the
+          // fill alone measures 1.06:1, so the boundary is what carries it: a
+          // solid 3.24:1 border here against the dashed one of a missing coin.
+          className="size-7 rounded-[6px] border border-field bg-card"
           role="img"
           aria-label={t('completeness.cell.notMinted', labelArgs)}
         />
@@ -44,7 +46,7 @@ function Cell({ cell, countryCode }: { cell: CompletenessCell; countryCode: stri
     return (
       <td className="p-0.5">
         <div
-          className="size-7 rounded-sm border border-dashed border-field"
+          className="size-7 rounded-[6px] border border-dashed border-field"
           role="img"
           aria-label={t('completeness.cell.missing', labelArgs)}
         />
@@ -61,8 +63,8 @@ function Cell({ cell, countryCode }: { cell: CompletenessCell; countryCode: stri
             ? t('completeness.cell.duplicates', { ...labelArgs, count: cell.owned })
             : t('completeness.cell.owned', labelArgs)
         }
-        className={`tnum flex size-7 items-center justify-center rounded-sm border
-                    text-[11px] font-medium text-on-metal
+        className={`tnum flex size-7 items-center justify-center rounded-[6px] border
+                    text-[11px] font-[500] text-on-metal
                     ${FILL[metalFamily(cell.faceValueCents)]}`}
       >
         {/* Only worth the ink when there is more than one copy. */}
@@ -91,7 +93,7 @@ export function CompletenessGrid({ grid }: { grid: Completeness }) {
               <th
                 key={year}
                 scope="col"
-                className="tnum px-0.5 pb-1 text-xs font-medium text-muted"
+                className="tnum px-0.5 pb-1 text-xs font-[450] text-muted"
               >
                 {/* Vertical, because 25 four-digit years will not fit flat. */}
                 <span className="block [writing-mode:vertical-rl]">{year}</span>
@@ -105,7 +107,7 @@ export function CompletenessGrid({ grid }: { grid: Completeness }) {
               <th
                 scope="row"
                 className="tnum sticky left-0 z-10 bg-surface pr-3 text-right text-xs
-                           font-medium whitespace-nowrap text-muted"
+                           font-[450] whitespace-nowrap text-muted"
               >
                 {formatFaceValue(row.faceValueCents)}
               </th>

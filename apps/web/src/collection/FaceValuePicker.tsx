@@ -26,18 +26,18 @@ export function FaceValuePicker({ name, value, onChange, firstRef }: Props) {
 
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-2 text-sm font-medium text-muted">
+      <legend className="mb-2 text-sm font-[450] text-muted">
         {t('quickAdd.faceValue')}
       </legend>
       <div className="flex flex-wrap gap-2">
         {FACE_VALUES_CENTS.map((cents, index) => (
           <label
             key={cents}
-            className={`tnum flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2
-                        text-sm ${
+            className={`tnum flex h-11 cursor-pointer items-center gap-2 rounded-full border
+                        px-5 text-base ${
                           value === cents
                             ? 'border-ink bg-ink text-surface'
-                            : 'border-field bg-raised'
+                            : 'border-ink bg-raised hover:bg-band'
                         }`}
           >
             <input

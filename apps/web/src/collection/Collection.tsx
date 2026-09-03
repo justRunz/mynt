@@ -26,9 +26,11 @@ const METAL_DOT = {
 
 function EmptyState({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-rule px-6 py-12 text-center">
-      <p className="font-medium">{title}</p>
-      <p className="mt-1 text-sm text-muted">{body}</p>
+    // A neutral card, flat: the reference reserves elevation for floating
+    // artifacts and has no dashed borders anywhere in its inventory.
+    <div className="rounded-xl bg-card px-6 py-16 text-center">
+      <h2 className="text-2xl">{title}</h2>
+      <p className="mt-2 text-base text-muted">{body}</p>
     </div>
   )
 }
@@ -134,37 +136,37 @@ function CollectionTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full border-collapse text-base">
         <thead>
-          <tr className="border-b border-rule text-left text-xs font-medium text-muted">
-            <th scope="col" className="py-2 pr-4 font-medium">
+          <tr className="border-b border-rule text-left text-sm font-[450] text-muted">
+            <th scope="col" className="py-3 pr-4 font-[450]">
               {t('collection.columns.country')}
             </th>
-            <th scope="col" className="py-2 pr-4 text-right font-medium">
+            <th scope="col" className="py-3 pr-4 text-right font-[450]">
               {t('collection.columns.faceValue')}
             </th>
-            <th scope="col" className="py-2 pr-4 text-right font-medium">
+            <th scope="col" className="py-3 pr-4 text-right font-[450]">
               {t('collection.columns.year')}
             </th>
-            <th scope="col" className="py-2 pr-4 font-medium">
+            <th scope="col" className="py-3 pr-4 font-[450]">
               {t('collection.columns.grade')}
             </th>
-            <th scope="col" className="py-2 pr-4 font-medium">
+            <th scope="col" className="py-3 pr-4 font-[450]">
               {t('collection.columns.location')}
             </th>
-            <th scope="col" className="py-2">
+            <th scope="col" className="py-3">
               <span className="sr-only">{t('collection.columns.actions')}</span>
             </th>
           </tr>
         </thead>
         <tbody>
           {entries.map((entry) => (
-            <tr key={entry.id} className="border-b border-rule/60">
-              <td className="py-2 pr-4 whitespace-nowrap">
+            <tr key={entry.id} className="border-b border-rule hover:bg-band">
+              <td className="py-3 pr-4 whitespace-nowrap">
                 <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
                 {countryName(entry.countryCode)}
               </td>
-              <td className="py-2 pr-4 text-right whitespace-nowrap">
+              <td className="py-3 pr-4 text-right whitespace-nowrap">
                 <span
                   aria-hidden
                   className={`mr-2 inline-block size-2 rounded-full align-middle ${
@@ -173,11 +175,11 @@ function CollectionTable({
                 />
                 {formatFaceValue(entry.faceValueCents)}
               </td>
-              <td className="py-2 pr-4 text-right">{entry.year}</td>
-              <td className="py-2 pr-4 whitespace-nowrap">
+              <td className="py-3 pr-4 text-right">{entry.year}</td>
+              <td className="py-3 pr-4 whitespace-nowrap">
                 {entry.grade ? t(`grade.short.${entry.grade}`) : <span className="text-muted">—</span>}
               </td>
-              <td className="py-2 pr-4 whitespace-nowrap">
+              <td className="py-3 pr-4 whitespace-nowrap">
                 {entry.location ? (
                   t('collection.slot', {
                     binder: entry.location.binderName,
@@ -189,7 +191,7 @@ function CollectionTable({
                   <span className="text-muted">{t('collection.unfiled')}</span>
                 )}
               </td>
-              <td className="py-2 text-right">
+              <td className="py-3 text-right">
                 <button
                   type="button"
                   onClick={() => onEdit(entry)}
@@ -198,8 +200,8 @@ function CollectionTable({
                     value: formatFaceValue(entry.faceValueCents),
                     year: entry.year,
                   })}
-                  className="flex size-8 items-center justify-center rounded-md text-muted
-                             hover:bg-rule/60 hover:text-ink"
+                  className="ml-auto flex size-9 items-center justify-center rounded-full
+                             text-muted hover:bg-card hover:text-ink"
                 >
                   <svg
                     aria-hidden="true"

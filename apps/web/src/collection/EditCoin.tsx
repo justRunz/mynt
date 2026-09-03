@@ -141,14 +141,14 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
         />
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="edit-grade" className="text-sm font-medium text-muted">
+          <label htmlFor="edit-grade" className="text-sm font-[450] text-muted">
             {t('quickAdd.grade')}
           </label>
           <select
             id="edit-grade"
             value={grade}
             onChange={(e) => setGrade(e.target.value as Grade | '')}
-            className="h-10 rounded-md border border-field bg-raised px-2 text-sm"
+            className="h-11 rounded-md border border-field bg-raised px-3 text-base"
           >
             <option value="">{t('quickAdd.gradeNone')}</option>
             {GRADES.map((g) => (
@@ -169,7 +169,7 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="edit-notes" className="text-sm font-medium text-muted">
+        <label htmlFor="edit-notes" className="text-sm font-[450] text-muted">
           {t('editCoin.notes')}
         </label>
         <textarea
@@ -178,7 +178,7 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder={t('editCoin.notesPlaceholder')}
-          className="rounded-md border border-field bg-raised px-3 py-2 text-sm
+          className="rounded-md border border-field bg-raised px-4 py-3 text-base
                      placeholder:text-muted"
         />
       </div>

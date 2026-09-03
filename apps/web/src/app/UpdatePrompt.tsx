@@ -20,14 +20,13 @@ export function UpdatePrompt() {
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center justify-center gap-3 border-b border-rule
-                 bg-raised px-6 py-2 text-sm"
+      className="flex flex-wrap items-center justify-center gap-3 bg-card px-6 py-3 text-sm"
     >
       <span>{t('update.available')}</span>
-      <Button className="h-8" onClick={() => void updateServiceWorker(true)}>
+      <Button className="h-9" onClick={() => void updateServiceWorker(true)}>
         {t('update.reload')}
       </Button>
-      <Button variant="ghost" className="h-8" onClick={() => setNeedRefresh(false)}>
+      <Button variant="ghost" className="h-9" onClick={() => setNeedRefresh(false)}>
         {t('update.dismiss')}
       </Button>
     </div>
