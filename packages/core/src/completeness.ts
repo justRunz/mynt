@@ -32,10 +32,20 @@ export interface Completeness {
 
 const key = (faceValueCents: number, year: number) => `${faceValueCents}|${year}`
 
+/**
+ * Copies held, keyed by coin type id.
+ *
+ * A plain object rather than a Map on purpose: this value is cached by the
+ * query client and the cache is persisted to IndexedDB as JSON. A Map survives
+ * neither leg of that round trip -- it rehydrates as {} and every read of it
+ * throws -- so the shape that crosses the cache has to be one JSON can carry.
+ */
+export type OwnedCountByTypeId = Readonly<Record<number, number>>
+
 export function buildCompleteness(
   countryCode: string,
   coinTypes: readonly CoinType[],
-  ownedCountByTypeId: ReadonlyMap<number, number>,
+  ownedCountByTypeId: OwnedCountByTypeId,
 ): Completeness {
   const byCell = new Map<string, number[]>()
   const years = new Set<number>()
@@ -59,7 +69,7 @@ export function buildCompleteness(
       // Several types can share a cell once variants exist -- German mint
       // marks, the 2007 reverse. Their copies count towards the same square.
       const ids = byCell.get(key(faceValueCents, year)) ?? []
-      const owned = ids.reduce((sum, id) => sum + (ownedCountByTypeId.get(id) ?? 0), 0)
+      const owned = ids.reduce((sum, id) => sum + (ownedCountByTypeId[id] ?? 0), 0)
       const minted = ids.length > 0
       if (minted) mintedTypes += 1
       if (owned > 0) ownedTypes += 1
@@ -73,10 +83,10 @@ export function buildCompleteness(
 /** Copies held per coin type, the shape buildCompleteness expects. */
 export function countByCoinType(
   coins: readonly { coin_type_id: number }[],
-): Map<number, number> {
-  const counts = new Map<number, number>()
+): Record<number, number> {
+  const counts: Record<number, number> = {}
   for (const coin of coins) {
-    counts.set(coin.coin_type_id, (counts.get(coin.coin_type_id) ?? 0) + 1)
+    counts[coin.coin_type_id] = (counts[coin.coin_type_id] ?? 0) + 1
   }
   return counts
 }

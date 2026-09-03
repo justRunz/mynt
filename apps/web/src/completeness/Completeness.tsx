@@ -50,7 +50,7 @@ export function Completeness() {
   }, [countries.data, showCollectorOnly])
 
   const grid = useMemo(
-    () => buildCompleteness(countryCode, coinTypes.data ?? [], owned.data ?? new Map()),
+    () => buildCompleteness(countryCode, coinTypes.data ?? [], owned.data ?? {}),
     [countryCode, coinTypes.data, owned.data],
   )
 

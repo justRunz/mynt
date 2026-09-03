@@ -21,14 +21,14 @@ const catalog = [
 
 describe('buildCompleteness', () => {
   it('lays years out in columns and only for the country asked for', () => {
-    const grid = buildCompleteness('HR', catalog, new Map())
+    const grid = buildCompleteness('HR', catalog, {})
     expect(grid.years).toEqual([2023, 2024])
     expect(grid.rows).toHaveLength(8)
     expect(grid.rows[0]?.faceValueCents).toBe(1)
   })
 
   it('marks cells the catalog never struck, which are not gaps to fill', () => {
-    const grid = buildCompleteness('HR', catalog, new Map())
+    const grid = buildCompleteness('HR', catalog, {})
     const twoCents = grid.rows.find((r) => r.faceValueCents === 2)
     expect(twoCents?.cells.find((c) => c.year === 2023)?.minted).toBe(true)
     expect(twoCents?.cells.find((c) => c.year === 2024)?.minted).toBe(false)
@@ -51,6 +51,17 @@ describe('buildCompleteness', () => {
     expect(grid.mintedTypes).toBe(3)
   })
 
+  // Regression: this value is cached by the query client and the cache is
+  // persisted to IndexedDB as JSON. It used to be a Map, which rehydrated as {}
+  // and made every read of it throw -- a white screen on the completeness page
+  // for anyone who reloaded after visiting it once.
+  it('survives the JSON round trip the persisted cache puts it through', () => {
+    const owned = countByCoinType([{ coin_type_id: 1 }, { coin_type_id: 1 }])
+    const rehydrated = JSON.parse(JSON.stringify(owned)) as typeof owned
+    const grid = buildCompleteness('HR', catalog, rehydrated)
+    expect(grid.rows[0]?.cells.find((c) => c.year === 2023)?.owned).toBe(2)
+  })
+
   it('sums copies across variants sharing one square', () => {
     // What German mint marks will look like: same country, value and year.
     const withVariants = [
@@ -64,7 +75,7 @@ describe('buildCompleteness', () => {
   })
 
   it('returns an empty grid for a country with no catalog entry', () => {
-    const grid = buildCompleteness('XX', catalog, new Map())
+    const grid = buildCompleteness('XX', catalog, {})
     expect(grid.years).toEqual([])
     expect(grid.mintedTypes).toBe(0)
   })
