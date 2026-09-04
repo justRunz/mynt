@@ -13,7 +13,8 @@
   "nav": {
     "collection": "Collection",
     "completeness": "Complétude",
-    "binders": "Classeurs"
+    "binders": "Classeurs",
+    "openMenu": "Ouvrir le menu"
   },
   "auth": {
     "fields": {

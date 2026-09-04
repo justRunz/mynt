@@ -94,11 +94,68 @@
     }
   }
 
+  /* The navigation drawer, same @starting-style technique as .modal but
+   * sliding from the left edge instead of fading in place. Pinned with margin
+   * rather than position, since a modal dialog is laid out in the top layer.
+   *
+   * The easing is the one the reference drawer uses -- a fast start settling
+   * without a bounce, which is what makes a sheet feel dragged rather than
+   * animated. It runs a little longer than the modal because the distance
+   * travelled is the whole width of the panel, not half a centimetre.
+   */
+  .drawer {
+    margin: 0 auto 0 0;
+    translate: -100% 0;
+    transition:
+      translate 320ms cubic-bezier(0.32, 0.72, 0, 1),
+      overlay 320ms allow-discrete,
+      display 320ms allow-discrete;
+  }
+
+  .drawer[open] {
+    translate: none;
+  }
+
+  @starting-style {
+    .drawer[open] {
+      translate: -100% 0;
+    }
+  }
+
+  /* Blurring the backdrop rather than only darkening it: the page behind stays
+     recognisable as the place you are coming back to, instead of turning into
+     a grey rectangle. */
+  .drawer::backdrop {
+    background-color: rgb(0 0 0 / 0);
+    backdrop-filter: blur(0px);
+    transition:
+      background-color 320ms cubic-bezier(0.32, 0.72, 0, 1),
+      backdrop-filter 320ms cubic-bezier(0.32, 0.72, 0, 1),
+      overlay 320ms allow-discrete,
+      display 320ms allow-discrete;
+  }
+
+  .drawer[open]::backdrop {
+    background-color: rgb(0 0 0 / 0.3);
+    backdrop-filter: blur(6px);
+  }
+
+  @starting-style {
+    .drawer[open]::backdrop {
+      background-color: rgb(0 0 0 / 0);
+      backdrop-filter: blur(0px);
+    }
+  }
+
   /* Motion sensitivity: keep the fade, drop the movement. */
   @media (prefers-reduced-motion: reduce) {
     .modal {
       translate: none;
       scale: 1;
+    }
+
+    .drawer {
+      translate: none;
     }
   }
 }
