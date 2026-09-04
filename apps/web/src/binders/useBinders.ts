@@ -61,7 +61,15 @@ export function useCreatePage() {
 }
 
 /** Postgres unique_violation: two coins aimed at the same hole. */
-export const SLOT_TAKEN = '23505'
+const SLOT_TAKEN = '23505'
+
+/**
+ * Told apart from any other failure because it is the one the user can act on:
+ * the hole is gone, pick another. Both the binder view and the add form ask.
+ */
+export function isSlotTaken(error: unknown): boolean {
+  return (error as { code?: string } | null)?.code === SLOT_TAKEN
+}
 
 export function useFileCoin() {
   return useMutation<void, Error, FileCoinVariables>({ mutationKey: mutationKeys.fileCoin })

@@ -12,7 +12,7 @@ import { Select } from '../ui/Select'
 import { SlotGrid, type SlotCoin } from './SlotGrid'
 import { SlotDialog, type SelectedSlot } from './SlotDialog'
 import {
-  SLOT_TAKEN,
+  isSlotTaken,
   useBinders,
   useCreateBinder,
   useCreatePage,
@@ -84,8 +84,7 @@ export function Binders() {
   }
 
   const onError = (error: unknown) => {
-    const code = (error as { code?: string } | null)?.code
-    setErrorKey(code === SLOT_TAKEN ? 'binders.errors.slotTaken' : 'binders.errors.generic')
+    setErrorKey(isSlotTaken(error) ? 'binders.errors.slotTaken' : 'binders.errors.generic')
   }
 
   return (

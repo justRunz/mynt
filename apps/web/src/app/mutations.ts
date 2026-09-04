@@ -3,7 +3,11 @@ import type { Grade } from '@mynt/core'
 
 import { supabase } from '../lib/supabase'
 import { bindersQueryKey } from '../binders/useBinders'
-import { collectionQueryKey, type CollectionEntry } from '../collection/useCollection'
+import {
+  collectionQueryKey,
+  type CoinLocation,
+  type CollectionEntry,
+} from '../collection/useCollection'
 
 /**
  * Every mutation is registered here by key rather than defined inside a hook.
@@ -32,6 +36,13 @@ export const mutationKeys = {
   deleteCoin: ['coin', 'delete'],
 } as const
 
+/** A hole in a binder page, as the forms name one. */
+export interface SlotDestination {
+  pageId: string
+  row: number
+  column: number
+}
+
 export interface AddCoinVariables {
   id: string
   profileId: string
@@ -40,6 +51,12 @@ export interface AddCoinVariables {
   countryCode: string
   faceValueCents: number
   year: number
+  /**
+   * Set when the add form filed the coin on the spot. It rides along in the
+   * same upsert rather than becoming a second mutation: one write instead of
+   * two, and no window in which the coin exists but is nowhere.
+   */
+  destination: SlotDestination | null
 }
 
 export interface UpdateCoinVariables {
@@ -54,11 +71,8 @@ export interface UpdateCoinVariables {
   year: number
 }
 
-export interface FileCoinVariables {
+export interface FileCoinVariables extends SlotDestination {
   coinId: string
-  pageId: string
-  row: number
-  column: number
 }
 
 export interface CreateBinderVariables {
@@ -73,6 +87,29 @@ export interface CreatePageVariables {
   number: number
   rowCount: number
   columnCount: number
+}
+
+/**
+ * The location as the collection list renders it, resolved from the binders
+ * cache -- itself persisted, so this works offline too. Null when the page is
+ * not in the cache, which leaves the optimistic row unfiled until the next
+ * fetch corrects it rather than inventing a name.
+ */
+function locationFor(client: QueryClient, slot: SlotDestination): CoinLocation | null {
+  const binders = client.getQueryData<
+    { id: string; name: string; pages: { id: string; number: number }[] }[]
+  >(bindersQueryKey)
+  const binder = binders?.find((b) => b.pages.some((p) => p.id === slot.pageId))
+  const page = binder?.pages.find((p) => p.id === slot.pageId)
+  if (!binder || !page) return null
+  return {
+    pageId: page.id,
+    binderId: binder.id,
+    binderName: binder.name,
+    pageNumber: page.number,
+    row: slot.row,
+    column: slot.column,
+  }
 }
 
 /** Replaces by id rather than appending, so re-running onMutate is harmless. */
@@ -101,6 +138,9 @@ export function registerMutations(client: QueryClient) {
         profile_id: input.profileId,
         coin_type_id: input.coinTypeId,
         grade: input.grade,
+        page_id: input.destination?.pageId ?? null,
+        slot_row: input.destination?.row ?? null,
+        slot_column: input.destination?.column ?? null,
       })
       if (error) throw error
     },
@@ -114,7 +154,7 @@ export function registerMutations(client: QueryClient) {
         grade: input.grade,
         acquiredOn: null,
         notes: null,
-        location: null,
+        location: input.destination ? locationFor(client, input.destination) : null,
       })
     },
   })
@@ -128,25 +168,8 @@ export function registerMutations(client: QueryClient) {
       if (error) throw error
     },
     onMutate: (input: FileCoinVariables) => {
-      // The location is rendered from the binder name and page number, which
-      // the binders cache already holds -- itself persisted, so this works
-      // offline too.
-      const binders = client.getQueryData<
-        { id: string; name: string; pages: { id: string; number: number }[] }[]
-      >(bindersQueryKey)
-      const binder = binders?.find((b) => b.pages.some((p) => p.id === input.pageId))
-      const page = binder?.pages.find((p) => p.id === input.pageId)
-      if (!binder || !page) return
-      patchEntry(client, input.coinId, {
-        location: {
-          pageId: page.id,
-          binderId: binder.id,
-          binderName: binder.name,
-          pageNumber: page.number,
-          row: input.row,
-          column: input.column,
-        },
-      })
+      const location = locationFor(client, input)
+      if (location) patchEntry(client, input.coinId, { location })
     },
   })
 

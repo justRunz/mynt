@@ -126,6 +126,11 @@
     "year": "Année",
     "grade": "État",
     "gradeNone": "Non renseigné",
+    "filing": "Rangement",
+    "slot": "Emplacement",
+    "slotNone": "Au bocal",
+    "pageFull": "Cette page est pleine. Choisissez-en une autre.",
+    "noBinders": "Créez un classeur avec au moins une page pour pouvoir ranger une pièce dès l’ajout.",
     "submit": "Ajouter",
     "added_one": "{{count}} pièce ajoutée",
     "added_other": "{{count}} pièces ajoutées",
@@ -135,7 +140,8 @@
       "countryRequired": "Choisissez un pays.",
       "faceValueRequired": "Choisissez une valeur faciale.",
       "yearRequired": "Indiquez une année à quatre chiffres.",
-      "save": "L’ajout a échoué. Réessayez."
+      "save": "L’ajout a échoué. Réessayez.",
+      "slotTaken": "Cet emplacement vient d’être occupé. Choisissez-en un autre."
     },
     "open": "Ajouter une pièce"
   },
@@ -191,7 +197,8 @@
     "errors": {
       "slotTaken": "Cet emplacement vient d’être occupé. Rechargez la page.",
       "generic": "L’opération a échoué. Réessayez."
-    }
+    },
+    "slotShort": "L{{row}} C{{column}}"
   },
   "status": {
     "offline": "Hors ligne",

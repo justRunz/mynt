@@ -12,6 +12,7 @@ import {
 } from '@mynt/core'
 
 import { useAuth } from '../auth/authContext'
+import type { SlotDestination } from '../app/mutations'
 import { catalogQueries } from '../app/catalog'
 import { countryFlag, countryName } from '../lib/countries'
 import { formatFaceValue } from '../lib/format'
@@ -19,10 +20,23 @@ import type { TranslationKey } from '../i18n/types'
 import { Button } from '../ui/Button'
 import { CountryCombobox } from './CountryCombobox'
 import { FaceValuePicker } from './FaceValuePicker'
+import { isSlotTaken } from '../binders/useBinders'
+import { SlotSelect } from './SlotSelect'
 import { useAddCoin } from './useAddCoin'
 import type { CollectionEntry } from './useCollection'
 
 const CURRENT_YEAR = new Date().getFullYear()
+
+/**
+ * The confirmation line needs to say where the coin went, and the optimistic
+ * entry cannot: resolving a page id into a binder name is the mutation's job.
+ * The hole is carried alongside instead, which is the part the user just chose
+ * and the part worth reading back.
+ */
+interface RecentAdd {
+  entry: CollectionEntry
+  slot: { row: number; column: number } | null
+}
 
 export function QuickAdd() {
   const { t } = useTranslation()
@@ -35,9 +49,10 @@ export function QuickAdd() {
   const [faceValue, setFaceValue] = useState<FaceValueCents | null>(null)
   const [year, setYear] = useState('')
   const [grade, setGrade] = useState<Grade | ''>('')
+  const [destination, setDestination] = useState<SlotDestination | null>(null)
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
   const [notInCatalog, setNotInCatalog] = useState<string | null>(null)
-  const [recent, setRecent] = useState<CollectionEntry[]>([])
+  const [recent, setRecent] = useState<RecentAdd[]>([])
 
   const firstValueRef = useRef<HTMLInputElement>(null)
   const index = useMemo(() => indexCoinTypes(coinTypes.data ?? []), [coinTypes.data])
@@ -78,6 +93,8 @@ export function QuickAdd() {
       grade: grade || null,
       acquiredOn: null,
       notes: null,
+      // Filled in by the mutation's onMutate, which is the one place that can
+      // resolve a page id into a binder name.
       location: null,
     }
 
@@ -92,11 +109,17 @@ export function QuickAdd() {
         countryCode,
         faceValueCents: faceValue,
         year: parsedYear,
+        destination,
       },
       {
-        onError: () => {
-          setRecent((list) => list.filter((e) => e.id !== entry.id))
-          setErrorKey('quickAdd.errors.save')
+        onError: (error) => {
+          setRecent((list) => list.filter((item) => item.entry.id !== entry.id))
+          setErrorKey(
+            // A hole taken between choosing it and the write landing is worth
+            // its own message: "try again" would send the user back to the same
+            // occupied slot.
+            isSlotTaken(error) ? 'quickAdd.errors.slotTaken' : 'quickAdd.errors.save',
+          )
         },
       },
     )
@@ -105,12 +128,14 @@ export function QuickAdd() {
     // answers. Offline the mutation stays paused for as long as the signal is
     // gone, and a form that never clears would break the one thing this screen
     // is for -- working through a pile without stopping.
-    setRecent((list) => [entry, ...list].slice(0, 6))
+    setRecent((list) => [{ entry, slot: destination }, ...list].slice(0, 6))
     // The country stays: a pile is usually sorted by country, and re-picking it
     // on every coin is the friction that makes people quit.
     setFaceValue(null)
     setYear('')
     setGrade('')
+    // The binder and page stay, the hole does not: it is occupied now.
+    setDestination(null)
     firstValueRef.current?.focus()
   }
 
@@ -127,6 +152,8 @@ export function QuickAdd() {
           onChange={setFaceValue}
           firstRef={firstValueRef}
         />
+
+        <SlotSelect value={destination} onChange={setDestination} />
 
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col gap-2">
@@ -191,12 +218,13 @@ export function QuickAdd() {
             {t('quickAdd.recent')} · {t('quickAdd.added', { count: recent.length })}
           </h2>
           <ul className="tnum mt-3 flex flex-col gap-1 text-base text-muted">
-            {recent.map((entry) => (
+            {recent.map(({ entry, slot }) => (
               <li key={entry.id}>
                 <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
                 {countryName(entry.countryCode)} · {formatFaceValue(entry.faceValueCents)} ·{' '}
                 {entry.year}
                 {entry.grade ? ` · ${t(`grade.short.${entry.grade}`)}` : ''}
+                {slot ? ` · ${t('binders.slotShort', slot)}` : ''}
               </li>
             ))}
           </ul>
