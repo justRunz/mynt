@@ -22,7 +22,7 @@ type Variant = 'primary' | 'ghost' | 'quiet'
 // px-* is a conflict CSS resolves by source order rather than by the order the
 // classes are written, so the quiet variant's px-2 silently lost to px-5.
 const base =
-  'inline-flex h-11 items-center justify-center rounded-md text-base font-normal ' +
+  'inline-flex h-11 items-center justify-center gap-2 rounded-md text-base font-normal ' +
   'whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50'
 
 const variants: Record<Variant, string> = {

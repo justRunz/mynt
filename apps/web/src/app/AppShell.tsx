@@ -50,6 +50,16 @@ function BindersIcon({ className }: IconProps) {
   )
 }
 
+/** Leaving: a door standing open, and the arrow on its way out. */
+function SignOutIcon({ className }: IconProps) {
+  return (
+    <svg {...iconBase} className={className}>
+      <path d="M6.5 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3" />
+      <path d="M10.5 5.5 13 8l-2.5 2.5M13 8H6.5" />
+    </svg>
+  )
+}
+
 const LINKS = [
   { to: '/', labelKey: 'nav.collection', Icon: CollectionIcon },
   { to: '/completeness', labelKey: 'nav.completeness', Icon: CompletenessIcon },
@@ -82,6 +92,22 @@ function NavLinks({ onNavigate, className }: { onNavigate?: () => void; classNam
   )
 }
 
+/**
+ * Set off by a rule and pushed to the foot of whichever container holds it, so
+ * it reads as the way out rather than as a fourth destination.
+ */
+function SignOutAction({ onSignOut }: { onSignOut: () => void }) {
+  const { t } = useTranslation()
+  return (
+    <div className="mt-auto w-full border-t border-rule pt-4">
+      <Button variant="quiet" className="-ml-2" onClick={onSignOut}>
+        <SignOutIcon className="size-4 shrink-0" />
+        {t('common.signOut')}
+      </Button>
+    </div>
+  )
+}
+
 export function AppShell({ title, children }: { title: string; children: ReactNode }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -108,9 +134,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
       >
         <span className="font-serif text-xl">{t('app.name')}</span>
         <NavLinks className="flex flex-col gap-3 self-stretch text-base" />
-        <Button variant="quiet" className="-ml-2 mt-auto" onClick={signOut}>
-          {t('common.signOut')}
-        </Button>
+        <SignOutAction onSignOut={signOut} />
       </aside>
 
       <div>
@@ -155,9 +179,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
           onNavigate={() => setMenuOpen(false)}
           className="flex flex-col gap-2 text-lg"
         />
-        <Button variant="quiet" className="-ml-2 mt-auto self-start" onClick={signOut}>
-          {t('common.signOut')}
-        </Button>
+        <SignOutAction onSignOut={signOut} />
       </Drawer>
     </div>
   )
