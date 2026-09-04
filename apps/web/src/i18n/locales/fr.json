@@ -196,7 +196,7 @@
     },
     "outOfBounds": "{{count}} pièce(s) rangée(s) hors des dimensions de cette page. Agrandissez la page ou retirez-les.",
     "errors": {
-      "slotTaken": "Cet emplacement vient d’être occupé. Rechargez la page.",
+      "slotTaken": "Cet emplacement vient d’être occupé. La grille a été remise à jour, choisissez-en un autre.",
       "generic": "L’opération a échoué. Réessayez."
     },
     "slotShort": "L{{row}} C{{column}}"

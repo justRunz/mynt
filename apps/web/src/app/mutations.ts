@@ -112,6 +112,22 @@ function locationFor(client: QueryClient, slot: SlotDestination): CoinLocation |
   }
 }
 
+/**
+ * Every write here patches the collection cache before the server answers, and
+ * nothing used to put it back when the answer was no. The screen then kept
+ * showing a move that never happened -- which is why the slot-taken message
+ * used to end with "reload the page": reloading was genuinely the only way out.
+ *
+ * Refetching on failure is the general answer, not one per call site: whatever
+ * the optimistic patch claimed, the server's version replaces it. While offline
+ * this does not fire at all, since a paused mutation has not failed.
+ */
+function refetchCollection(client: QueryClient) {
+  return () => {
+    void client.invalidateQueries({ queryKey: collectionQueryKey })
+  }
+}
+
 /** Replaces by id rather than appending, so re-running onMutate is harmless. */
 function upsertEntry(client: QueryClient, entry: CollectionEntry) {
   client.setQueryData<CollectionEntry[]>(collectionQueryKey, (current) => [
@@ -144,6 +160,7 @@ export function registerMutations(client: QueryClient) {
       })
       if (error) throw error
     },
+    onError: refetchCollection(client),
     onMutate: (input: AddCoinVariables) => {
       upsertEntry(client, {
         id: input.id,
@@ -167,6 +184,7 @@ export function registerMutations(client: QueryClient) {
         .eq('id', input.coinId)
       if (error) throw error
     },
+    onError: refetchCollection(client),
     onMutate: (input: FileCoinVariables) => {
       const location = locationFor(client, input)
       if (location) patchEntry(client, input.coinId, { location })
@@ -181,6 +199,7 @@ export function registerMutations(client: QueryClient) {
         .eq('id', coinId)
       if (error) throw error
     },
+    onError: refetchCollection(client),
     onMutate: (coinId: string) => patchEntry(client, coinId, { location: null }),
   })
 
@@ -197,6 +216,7 @@ export function registerMutations(client: QueryClient) {
         .eq('id', input.coinId)
       if (error) throw error
     },
+    onError: refetchCollection(client),
     onMutate: (input: UpdateCoinVariables) =>
       patchEntry(client, input.coinId, {
         countryCode: input.countryCode,
@@ -215,6 +235,7 @@ export function registerMutations(client: QueryClient) {
       const { error } = await supabase.from('coin').delete().eq('id', coinId)
       if (error) throw error
     },
+    onError: refetchCollection(client),
     onMutate: (coinId: string) => {
       client.setQueryData<CollectionEntry[]>(collectionQueryKey, (current) =>
         (current ?? []).filter((e) => e.id !== coinId),
