@@ -1,10 +1,17 @@
 import { useMemo, useState } from 'react'
+import {
+  parseAsInteger,
+  parseAsNumberLiteral,
+  parseAsString,
+  parseAsStringLiteral,
+  useQueryState,
+  useQueryStates,
+} from 'nuqs'
 import { useTranslation } from 'react-i18next'
 import {
-  NO_FILTERS,
+  FACE_VALUES_CENTS,
   matchesFilters,
   metalFamily,
-  type CollectionFilters,
   type FaceValueCents,
 } from '@mynt/core'
 
@@ -17,6 +24,30 @@ import { EditCoin } from './EditCoin'
 import { FiltersBar } from './FiltersBar'
 import { QuickAdd } from './QuickAdd'
 import { useCollection, type CollectionEntry } from './useCollection'
+
+const FILING = ['ANY', 'FILED', 'UNFILED'] as const
+
+/**
+ * The filters live in the query string, so a view worth coming back to -- the
+ * Belgian two-euro coins still in the jar -- survives a reload and can be sent
+ * to someone as a link. The keys are shortened for the URL while the state
+ * keeps the names the rest of the app uses.
+ */
+const FILTER_PARSERS = {
+  countryCode: parseAsString,
+  // Literal rather than a plain integer, so ?value=7 is rejected by the parser
+  // instead of being cast into a face value that does not exist.
+  faceValueCents: parseAsNumberLiteral(FACE_VALUES_CENTS),
+  year: parseAsInteger,
+  filing: parseAsStringLiteral(FILING).withDefault('ANY'),
+}
+
+const FILTER_URL_KEYS = {
+  countryCode: 'country',
+  faceValueCents: 'value',
+  year: 'year',
+  filing: 'filing',
+}
 
 const METAL_DOT = {
   COPPER: 'bg-copper',
@@ -38,8 +69,13 @@ function EmptyState({ title, body }: { title: string; body: string }) {
 export function Collection() {
   const { t } = useTranslation()
   const { data, isPending, isError } = useCollection()
-  const [filters, setFilters] = useState<CollectionFilters>(NO_FILTERS)
-  const [search, setSearch] = useState('')
+  const [filters, setFilters] = useQueryStates(FILTER_PARSERS, { urlKeys: FILTER_URL_KEYS })
+  // Throttled: a search box writing to the URL on every keystroke would fight
+  // the address bar and fill the history with half-typed words.
+  const [search, setSearch] = useQueryState(
+    'q',
+    parseAsString.withDefault('').withOptions({ throttleMs: 300 }),
+  )
   const [addOpen, setAddOpen] = useState(false)
   const [editing, setEditing] = useState<CollectionEntry | null>(null)
 
@@ -93,9 +129,9 @@ export function Collection() {
     <div className="flex flex-col gap-6">
       <FiltersBar
         filters={filters}
-        onChange={setFilters}
+        onChange={(next) => void setFilters(next)}
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(next) => void setSearch(next)}
         countryCodes={countryCodes}
         years={years}
       >

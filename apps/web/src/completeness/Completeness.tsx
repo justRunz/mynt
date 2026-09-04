@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs'
 import { useTranslation } from 'react-i18next'
 import { buildCompleteness, countByCoinType } from '@mynt/core'
 
@@ -41,8 +42,13 @@ export function Completeness() {
   const coinTypes = useQuery(catalogQueries.coinTypes())
   const owned = useOwnedTypeCounts()
 
-  const [countryCode, setCountryCode] = useState('FR')
-  const [showCollectorOnly, setShowCollectorOnly] = useState(false)
+  // In the query string, so the country being worked through survives a reload
+  // and a link points at the same grid.
+  const [countryCode, setCountryCode] = useQueryState('country', parseAsString.withDefault('FR'))
+  const [showCollectorOnly, setShowCollectorOnly] = useQueryState(
+    'collector',
+    parseAsBoolean.withDefault(false),
+  )
 
   const visibleCountries = useMemo(() => {
     const list = (countries.data ?? []).filter((c) => showCollectorOnly || c.circulating)
@@ -64,7 +70,7 @@ export function Completeness() {
         <Select
           label={t('completeness.country')}
           value={countryCode}
-          onChange={(e) => setCountryCode(e.target.value)}
+          onChange={(e) => void setCountryCode(e.target.value)}
         >
           {visibleCountries.map((code) => (
             <option key={code} value={code}>
@@ -86,7 +92,7 @@ export function Completeness() {
         <input
           type="checkbox"
           checked={showCollectorOnly}
-          onChange={(e) => setShowCollectorOnly(e.target.checked)}
+          onChange={(e) => void setShowCollectorOnly(e.target.checked)}
           className="mt-0.5"
         />
         <span>

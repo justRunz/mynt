@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
+import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
 import { useTranslation } from 'react-i18next'
 import { newId } from '@mynt/core'
 
@@ -33,8 +34,12 @@ export function Binders() {
   const movePair = useMovePair()
   const unfileCoin = useUnfileCoin()
 
-  const [binderId, setBinderId] = useState<string | null>(null)
-  const [pageId, setPageId] = useState<string | null>(null)
+  // In the query string rather than in state, so reloading or sharing the link
+  // lands on the same page of the same binder. The page travels as its number
+  // rather than its id: it is what the tabs are labelled with, and it survives
+  // a link pasted to someone looking at their own copy of the same album.
+  const [binderId, setBinderId] = useQueryState('binder', parseAsString)
+  const [pageNumber, setPageNumber] = useQueryState('page', parseAsInteger)
   const [slot, setSlot] = useState<SelectedSlot | null>(null)
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
   const [newBinderOpen, setNewBinderOpen] = useState(false)
@@ -45,7 +50,7 @@ export function Binders() {
   // that no longer exists simply falls back to the first entry, so there is no
   // state to repair after the fact.
   const binder = list.find((b) => b.id === binderId) ?? list[0] ?? null
-  const page = binder?.pages.find((p) => p.id === pageId) ?? binder?.pages[0] ?? null
+  const page = binder?.pages.find((p) => p.number === pageNumber) ?? binder?.pages[0] ?? null
 
   const entries = useMemo(() => collection.data ?? [], [collection.data])
   const pageCoins = useMemo<SlotCoin[]>(
@@ -150,8 +155,9 @@ export function Binders() {
           label={t('binders.binder')}
           value={binder?.id ?? ''}
           onChange={(e) => {
-            setBinderId(e.target.value)
-            setPageId(null)
+            void setBinderId(e.target.value)
+            // Page numbers do not carry across binders.
+            void setPageNumber(null)
           }}
         >
           {list.map((b) => (
@@ -164,11 +170,11 @@ export function Binders() {
         {binder && binder.pages.length > 0 && (
           <Select
             label={t('binders.page')}
-            value={page?.id ?? ''}
-            onChange={(e) => setPageId(e.target.value)}
+            value={page?.number ?? ''}
+            onChange={(e) => void setPageNumber(Number(e.target.value))}
           >
             {binder.pages.map((p) => (
-              <option key={p.id} value={p.id}>
+              <option key={p.id} value={p.number}>
                 {t('binders.pageNumber', { number: p.number })}
               </option>
             ))}

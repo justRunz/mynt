@@ -1,4 +1,5 @@
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
 import { BrowserRouter } from 'react-router-dom'
 
 import { AuthProvider } from '../auth/AuthProvider'
@@ -24,7 +25,13 @@ export default function App() {
         <UpdatePrompt />
         <StatusBar />
         <BrowserRouter>
-          <AppRoutes />
+          {/* Screen state -- which binder page, which filters -- lives in the
+              query string rather than in component state, so a reload, a
+              bookmark or a shared link all land where the user left off.
+              Inside the router, since that is what nuqs writes through. */}
+          <NuqsAdapter>
+            <AppRoutes />
+          </NuqsAdapter>
         </BrowserRouter>
       </AuthProvider>
     </PersistQueryClientProvider>
