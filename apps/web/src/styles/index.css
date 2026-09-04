@@ -3,6 +3,15 @@
 @import '@fontsource-variable/source-serif-4';
 @import './theme.css';
 
+/* The whole type scale, in one number. Every --text-* step in theme.css is
+   multiplied by this, so the site shrinks or grows as a set rather than nine
+   sizes drifting apart. Deliberately not html { font-size: 85% }: the scale is
+   in pixels, so that would have shrunk every rem-based margin and left the
+   text exactly where it was. */
+:root {
+  --font-scale: 0.85;
+}
+
 @layer base {
   html {
     /* Light only, matching the reference. See the note at the top of theme.css:

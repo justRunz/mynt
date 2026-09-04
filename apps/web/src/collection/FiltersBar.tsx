@@ -33,8 +33,8 @@ export function FiltersBar({
   const active = hasActiveFilters(filters) || search.trim() !== ''
 
   return (
-    <div className="grid items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
-      <div className="flex flex-wrap items-end gap-4">
+    <div className="grid items-end gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+      <div className="flex flex-wrap items-end gap-2">
       <Field
         // Elastic rather than a fixed width: the search box absorbs the leftover
         // space so the action stays on the filter row, and shrinks instead of
