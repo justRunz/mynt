@@ -227,6 +227,19 @@ export type Database = {
     }
     Functions: {
       extend_catalog: { Args: { max_year: number }; Returns: undefined }
+      place_pair: {
+        Args: {
+          first_coin: string
+          first_column: number
+          first_page: string
+          first_row: number
+          second_coin: string
+          second_column: number
+          second_page: string
+          second_row: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       coin_grade:
