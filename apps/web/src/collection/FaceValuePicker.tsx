@@ -33,7 +33,7 @@ export function FaceValuePicker({ name, value, onChange, firstRef }: Props) {
         {FACE_VALUES_CENTS.map((cents, index) => (
           <label
             key={cents}
-            className={`tnum flex h-11 cursor-pointer items-center gap-2 rounded-full border
+            className={`tnum flex h-11 cursor-pointer items-center gap-2 rounded-md border
                         px-5 text-base ${
                           value === cents
                             ? 'border-ink bg-ink text-surface'

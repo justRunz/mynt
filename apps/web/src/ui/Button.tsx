@@ -3,16 +3,23 @@ import type { ButtonHTMLAttributes } from 'react'
 type Variant = 'primary' | 'ghost' | 'quiet'
 
 /**
- * Three levels, matching the reference's own inventory: a filled pill, a ghost
- * pill that shares its geometry so the two read as a matched pair on one
- * baseline, and a plain text control for the lowest-emphasis actions (sign out,
- * dismiss) where the reference uses a bare link rather than a button shape.
+ * Three levels: a filled button, a ghost that shares its geometry so the two
+ * read as a matched pair on one baseline, and a plain text control for the
+ * lowest-emphasis actions (sign out, dismiss) where the reference uses a bare
+ * link rather than a button shape.
  *
- * Weight stays at 400. The pill shape and the dark fill carry the emphasis, so
- * the label does not need to.
+ * The radius is the same --radius-md as inputs and selects, deliberately. The
+ * reference makes buttons full-radius pills against 16px fields, and that
+ * mismatch is the one part of it we do not keep: in a form, a control that
+ * submits and a control that takes text belong to the same family and reading
+ * them as two shapes on one row is noise. Everything round in this app is a
+ * coin.
+ *
+ * Weight stays at 400. The dark fill carries the emphasis, so the label does
+ * not need to.
  */
 const base =
-  'inline-flex h-11 items-center justify-center rounded-full px-5 text-base font-normal ' +
+  'inline-flex h-11 items-center justify-center rounded-md px-5 text-base font-normal ' +
   'transition-colors disabled:cursor-not-allowed disabled:opacity-50'
 
 const variants: Record<Variant, string> = {

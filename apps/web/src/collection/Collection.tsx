@@ -200,7 +200,7 @@ function CollectionTable({
                     value: formatFaceValue(entry.faceValueCents),
                     year: entry.year,
                   })}
-                  className="ml-auto flex size-9 items-center justify-center rounded-full
+                  className="ml-auto flex size-9 items-center justify-center rounded-md
                              text-muted hover:bg-card hover:text-ink"
                 >
                   <svg

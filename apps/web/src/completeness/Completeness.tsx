@@ -103,15 +103,15 @@ function Legend() {
   return (
     <ul className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted">
       <li className="flex items-center gap-2">
-        <span aria-hidden className="size-4 rounded-[6px] border border-nordic-edge bg-nordic" />
+        <span aria-hidden className="size-4 rounded-[4px] border border-nordic-edge bg-nordic" />
         {t('completeness.legend.owned')}
       </li>
       <li className="flex items-center gap-2">
-        <span aria-hidden className="size-4 rounded-[6px] border border-dashed border-field" />
+        <span aria-hidden className="size-4 rounded-[4px] border border-dashed border-field" />
         {t('completeness.legend.missing')}
       </li>
       <li className="flex items-center gap-2">
-        <span aria-hidden className="size-4 rounded-[6px] border border-field bg-card" />
+        <span aria-hidden className="size-4 rounded-[4px] border border-field bg-card" />
         {t('completeness.legend.notMinted')}
       </li>
     </ul>

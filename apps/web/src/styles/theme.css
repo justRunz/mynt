@@ -91,9 +91,11 @@
   --text-5xl--line-height: 1.3;
   --text-5xl--letter-spacing: -0.025em;
 
-  /* Radii. Buttons are pills and take rounded-full; everything else lands on
-     one of these four. Mapped onto Tailwind's names so the existing
-     rounded-md / rounded-lg in components move up without a sweep. */
+  /* Radii. Every control -- button, input, select -- shares --radius-md, which
+     is where this departs from the reference: it draws buttons as full pills
+     against 16px fields, and two shapes on one form row read as noise rather
+     than as hierarchy. The only round things left in the app are coins and the
+     metal dots that stand for them. */
   --radius-sm: 12px; /* images */
   --radius-md: 16px; /* inputs, small cards */
   --radius-lg: 20px; /* elevated cards */

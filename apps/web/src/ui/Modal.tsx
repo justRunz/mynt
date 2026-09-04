@@ -50,7 +50,7 @@ export function Modal({ open, onClose, title, children }: Props) {
           // target comfortably above the 24px minimum even though the glyph is
           // small.
           aria-label={t('common.close')}
-          className="-mr-2 flex size-9 items-center justify-center rounded-full text-muted
+          className="-mr-2 flex size-9 items-center justify-center rounded-md text-muted
                      hover:bg-card hover:text-ink"
         >
           <svg

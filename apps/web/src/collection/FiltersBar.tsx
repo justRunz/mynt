@@ -122,7 +122,7 @@ export function FiltersBar({
             onChange({ countryCode: null, faceValueCents: null, year: null, filing: 'ANY' })
             onSearchChange('')
           }}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full
+          className="flex size-10 shrink-0 items-center justify-center rounded-md
                      text-muted hover:bg-card hover:text-ink disabled:pointer-events-none
                      disabled:opacity-30"
         >
