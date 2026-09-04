@@ -197,9 +197,17 @@
     "outOfBounds": "{{count}} pièce(s) rangée(s) hors des dimensions de cette page. Agrandissez la page ou retirez-les.",
     "errors": {
       "slotTaken": "Cet emplacement vient d’être occupé. La grille a été remise à jour, choisissez-en un autre.",
-      "generic": "L’opération a échoué. Réessayez."
+      "generic": "L’opération a échoué. Réessayez.",
+      "move": "Le déplacement a échoué. Réessayez."
     },
-    "slotShort": "L{{row}} C{{column}}"
+    "slotShort": "L{{row}} C{{column}}",
+    "dnd": {
+      "start": "Pièce prise : {{coin}}. Utilisez les flèches pour la déplacer, Entrée pour la poser, Échap pour annuler.",
+      "overFree": "Sur l’emplacement libre ligne {{row}}, colonne {{column}}.",
+      "overFilled": "Sur la ligne {{row}}, colonne {{column}}, occupée par {{coin}}. Poser ici échangera les deux pièces.",
+      "dropped": "Pièce posée ligne {{row}}, colonne {{column}}.",
+      "cancelled": "Déplacement annulé, la pièce reste à sa place."
+    }
   },
   "status": {
     "offline": "Hors ligne",

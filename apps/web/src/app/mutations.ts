@@ -34,6 +34,7 @@ export const mutationKeys = {
   createPage: ['page', 'create'],
   updateCoin: ['coin', 'update'],
   deleteCoin: ['coin', 'delete'],
+  movePair: ['coin', 'move-pair'],
 } as const
 
 /** A hole in a binder page, as the forms name one. */
@@ -73,6 +74,29 @@ export interface UpdateCoinVariables {
 
 export interface FileCoinVariables extends SlotDestination {
   coinId: string
+}
+
+/**
+ * One coin and the hole it ends up in. Narrower than the SQL function, which
+ * would accept a null position: this mutation only ever exchanges two coins
+ * that are both on a page. Sending one to the jar is unfileCoin, on its own.
+ */
+export interface PlacedCoin {
+  coinId: string
+  destination: SlotDestination
+}
+
+/**
+ * Two coins moved in one transaction, which is what dropping a coin onto an
+ * occupied hole needs: neither can move first without landing on a hole the
+ * other has not left.
+ *
+ * Absolute destinations rather than "swap these two", so that replaying this
+ * after a reconnect lands on the same state instead of undoing the move.
+ */
+export interface MovePairVariables {
+  first: PlacedCoin
+  second: PlacedCoin
 }
 
 export interface CreateBinderVariables {
@@ -226,6 +250,28 @@ export function registerMutations(client: QueryClient) {
         acquiredOn: input.acquiredOn,
         notes: input.notes,
       }),
+  })
+
+  client.setMutationDefaults(mutationKeys.movePair, {
+    mutationFn: async (input: MovePairVariables) => {
+      const { error } = await supabase.rpc('place_pair', {
+        first_coin: input.first.coinId,
+        first_page: input.first.destination.pageId,
+        first_row: input.first.destination.row,
+        first_column: input.first.destination.column,
+        second_coin: input.second.coinId,
+        second_page: input.second.destination.pageId,
+        second_row: input.second.destination.row,
+        second_column: input.second.destination.column,
+      })
+      if (error) throw error
+    },
+    onError: refetchCollection(client),
+    onMutate: (input: MovePairVariables) => {
+      for (const placed of [input.first, input.second]) {
+        patchEntry(client, placed.coinId, { location: locationFor(client, placed.destination) })
+      }
+    },
   })
 
   client.setMutationDefaults(mutationKeys.deleteCoin, {

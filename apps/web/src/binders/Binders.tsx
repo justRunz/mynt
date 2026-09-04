@@ -10,7 +10,7 @@ import { Button } from '../ui/Button'
 import { Field } from '../ui/Field'
 import { Modal } from '../ui/Modal'
 import { Select } from '../ui/Select'
-import { SlotGrid, type SlotCoin } from './SlotGrid'
+import { SlotGrid, type SlotCoin, type SlotTarget } from './SlotGrid'
 import { SlotDialog, type SelectedSlot } from './SlotDialog'
 import {
   isSlotTaken,
@@ -18,6 +18,7 @@ import {
   useCreateBinder,
   useCreatePage,
   useFileCoin,
+  useMovePair,
   useUnfileCoin,
 } from './useBinders'
 
@@ -29,6 +30,7 @@ export function Binders() {
   const createBinder = useCreateBinder()
   const createPage = useCreatePage()
   const fileCoin = useFileCoin()
+  const movePair = useMovePair()
   const unfileCoin = useUnfileCoin()
 
   const [binderId, setBinderId] = useState<string | null>(null)
@@ -114,6 +116,33 @@ export function Binders() {
     setErrorKey(isSlotTaken(error) ? 'binders.errors.slotTaken' : 'binders.errors.generic')
   }
 
+  const onMoveError = (error: unknown) => {
+    setErrorKey(isSlotTaken(error) ? 'binders.errors.slotTaken' : 'binders.errors.move')
+  }
+
+  // Dropping onto a free hole is an ordinary filing; onto an occupied one it
+  // has to be the paired move, or the first update would land on a hole the
+  // other coin has not left yet.
+  const moveCoin = (dragged: SlotCoin, target: SlotTarget) => {
+    if (!page) return
+    setErrorKey(null)
+    const destination = { pageId: page.id, row: target.row, column: target.column }
+    if (target.coin === null) {
+      fileCoin.mutate({ coinId: dragged.id, ...destination }, { onError: onMoveError })
+      return
+    }
+    movePair.mutate(
+      {
+        first: { coinId: dragged.id, destination },
+        second: {
+          coinId: target.coin.id,
+          destination: { pageId: page.id, row: dragged.slotRow, column: dragged.slotColumn },
+        },
+      },
+      { onError: onMoveError },
+    )
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end gap-4">
@@ -153,6 +182,7 @@ export function Binders() {
           columnCount={page.columnCount}
           coins={pageCoins}
           onSelect={setSlot}
+          onMove={moveCoin}
         />
       ) : (
         <EmptyState
@@ -177,6 +207,12 @@ export function Binders() {
           {t('binders.newBinder')}
         </Button>
       </div>
+
+      {errorKey && !slot && (
+        <p role="alert" className="text-sm text-danger">
+          {t(errorKey)}
+        </p>
+      )}
 
       {createBinderModal}
 

@@ -5,6 +5,7 @@ import {
   type CreateBinderVariables,
   type CreatePageVariables,
   type FileCoinVariables,
+  type MovePairVariables,
 } from '../app/mutations'
 import { supabase } from '../lib/supabase'
 
@@ -73,6 +74,11 @@ export function isSlotTaken(error: unknown): boolean {
 
 export function useFileCoin() {
   return useMutation<void, Error, FileCoinVariables>({ mutationKey: mutationKeys.fileCoin })
+}
+
+/** Two coins exchanged in one transaction; see place_pair in the migrations. */
+export function useMovePair() {
+  return useMutation<void, Error, MovePairVariables>({ mutationKey: mutationKeys.movePair })
 }
 
 export function useUnfileCoin() {
