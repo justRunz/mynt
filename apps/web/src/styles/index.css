@@ -46,6 +46,16 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Tailwind v4 dropped the cursor: pointer that v3's preflight put on
+     buttons, so every button in the app was showing the arrow while links
+     showed the hand. Restored once here rather than a class per call site.
+     Disabled buttons keep the default: a pointer there promises something that
+     will not happen. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;

@@ -29,7 +29,8 @@ export function Field({
           so border-field (3.24:1) stands in -- see the note in theme.css. */}
       <input
         id={id}
-        className={`rounded-md border border-field bg-raised text-ink placeholder:text-subtle ${
+        className={`rounded-md border border-field bg-raised text-ink transition-colors
+                    placeholder:text-subtle hover:border-ink ${
           dense ? 'h-10 px-3 text-sm' : 'h-11 px-4 text-base'
         } ${className}`}
         {...props}

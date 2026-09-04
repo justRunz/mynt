@@ -48,7 +48,7 @@ export function Drawer({ open, onClose, title, children }: Props) {
               onClick={onClose}
               aria-label={t('common.close')}
               className="flex size-11 items-center justify-center rounded-md text-muted
-                         hover:bg-card hover:text-ink"
+                         hover:bg-hover hover:text-ink"
             >
               <svg
                 aria-hidden="true"

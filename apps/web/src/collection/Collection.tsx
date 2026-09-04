@@ -197,7 +197,7 @@ function CollectionTable({
         </thead>
         <tbody>
           {entries.map((entry) => (
-            <tr key={entry.id} className="border-b border-rule hover:bg-band">
+            <tr key={entry.id} className="border-b border-rule hover:bg-card">
               <td className="py-3 pr-4 whitespace-nowrap">
                 <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
                 {countryName(entry.countryCode)}
@@ -237,7 +237,7 @@ function CollectionTable({
                     year: entry.year,
                   })}
                   className="ml-auto flex size-9 items-center justify-center rounded-md
-                             text-muted hover:bg-card hover:text-ink"
+                             text-muted hover:bg-hover hover:text-ink"
                 >
                   <svg
                     aria-hidden="true"

@@ -123,7 +123,7 @@ export function FiltersBar({
             onSearchChange('')
           }}
           className="flex size-10 shrink-0 items-center justify-center rounded-md
-                     text-muted hover:bg-card hover:text-ink disabled:pointer-events-none
+                     text-muted hover:bg-hover hover:text-ink disabled:pointer-events-none
                      disabled:opacity-30"
         >
           <svg

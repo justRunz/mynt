@@ -125,7 +125,7 @@ function Hole({
       {...attributes}
       {...listeners}
       className={`flex touch-none flex-col items-center gap-1 rounded-[10px] p-1 ${
-        isOver ? 'bg-accent-wash' : 'hover:bg-band'
+        isOver ? 'bg-accent-wash' : 'hover:bg-hover'
       } ${isDragging ? 'opacity-30' : ''}`}
     >
       <Disc coin={coin} />

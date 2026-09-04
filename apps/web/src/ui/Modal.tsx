@@ -51,7 +51,7 @@ export function Modal({ open, onClose, title, children }: Props) {
           // small.
           aria-label={t('common.close')}
           className="-mr-2 flex size-9 items-center justify-center rounded-md text-muted
-                     hover:bg-card hover:text-ink"
+                     hover:bg-hover hover:text-ink"
         >
           <svg
             aria-hidden="true"

@@ -40,6 +40,10 @@
   --color-subtle: #979799; /* 2.92:1 -- decorative labels only, never essential text */
 
   --color-rule: #ececec; /* hairline between rows and around inputs */
+  /* --color-band measures 1.04:1 against the canvas, which is to say it is
+     invisible; every hover built on it did nothing. This is 1.27:1 -- still
+     quiet, but a patch the eye actually registers. */
+  --color-hover: #e4e4e8;
   /* Kept separate from --color-rule. A hairline is fine between table rows, but
      the border of a control is what identifies it as one, and WCAG 1.4.11 asks
      3:1 there. Measured: 1.18:1 for rule, 3.24:1 for this. */

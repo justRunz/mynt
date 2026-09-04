@@ -149,7 +149,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
             aria-haspopup="dialog"
             aria-label={t('nav.openMenu')}
             className="-ml-2 flex size-11 items-center justify-center rounded-md text-ink
-                       hover:bg-card"
+                       hover:bg-hover"
           >
             <svg
               aria-hidden="true"

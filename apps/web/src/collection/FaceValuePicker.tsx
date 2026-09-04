@@ -37,7 +37,7 @@ export function FaceValuePicker({ name, value, onChange, firstRef }: Props) {
                         px-5 text-base ${
                           value === cents
                             ? 'border-ink bg-ink text-surface'
-                            : 'border-ink bg-raised hover:bg-band'
+                            : 'border-ink bg-raised hover:bg-hover'
                         }`}
           >
             <input

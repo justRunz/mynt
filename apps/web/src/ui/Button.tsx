@@ -30,8 +30,8 @@ const variants: Record<Variant, string> = {
   // border-current, not border-ink: a call site that recolours the label (the
   // delete action passes text-danger) gets a matching outline for free rather
   // than red text inside an ink ring.
-  ghost: 'border border-current px-5 text-ink hover:bg-band',
-  quiet: 'px-2 text-muted hover:text-ink',
+  ghost: 'border border-current px-5 text-ink hover:bg-hover',
+  quiet: 'px-2 text-muted hover:bg-hover hover:text-ink',
 }
 
 export function Button({
