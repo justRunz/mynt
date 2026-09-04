@@ -8,6 +8,7 @@ import { useCollection } from '../collection/useCollection'
 import type { TranslationKey } from '../i18n/types'
 import { Button } from '../ui/Button'
 import { Field } from '../ui/Field'
+import { Modal } from '../ui/Modal'
 import { Select } from '../ui/Select'
 import { SlotGrid, type SlotCoin } from './SlotGrid'
 import { SlotDialog, type SelectedSlot } from './SlotDialog'
@@ -34,6 +35,8 @@ export function Binders() {
   const [pageId, setPageId] = useState<string | null>(null)
   const [slot, setSlot] = useState<SelectedSlot | null>(null)
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
+  const [newBinderOpen, setNewBinderOpen] = useState(false)
+  const [newPageOpen, setNewPageOpen] = useState(false)
 
   const list = useMemo(() => binders.data ?? [], [binders.data])
   // Derived during render rather than synchronised in an effect: a selection
@@ -56,19 +59,43 @@ export function Binders() {
   )
   const unfiled = useMemo(() => entries.filter((entry) => entry.location === null), [entries])
 
+  const nextPageNumber = (binder?.pages.at(-1)?.number ?? 0) + 1
+
+  // Creating a binder or a page is a handful of clicks in the life of a
+  // collection, so both live behind a button rather than as forms standing open
+  // under the grid. The grid is what this page is for.
+  const createBinderModal = (
+    <Modal
+      open={newBinderOpen}
+      onClose={() => setNewBinderOpen(false)}
+      title={t('binders.newBinder')}
+    >
+      <NewBinderForm
+        busy={createBinder.isPending && !createBinder.isPaused}
+        onCreate={(name) => {
+          if (!session) return
+          createBinder.mutate({ id: newId(), profileId: session.user.id, name })
+          setNewBinderOpen(false)
+        }}
+      />
+    </Modal>
+  )
+
   if (binders.isPending || collection.isPending) {
     return <p className="text-sm text-muted">{t('common.loading')}</p>
   }
 
   if (list.length === 0) {
     return (
-      <NewBinderForm
-        onCreate={(name) =>
-          session && createBinder.mutate({ id: newId(), profileId: session.user.id, name })
-        }
-        busy={createBinder.isPending}
-        standalone
-      />
+      <>
+        <EmptyState
+          title={t('binders.empty.title')}
+          body={t('binders.empty.body')}
+          action={t('binders.newBinder')}
+          onAction={() => setNewBinderOpen(true)}
+        />
+        {createBinderModal}
+      </>
     )
   }
 
@@ -128,34 +155,48 @@ export function Binders() {
           onSelect={setSlot}
         />
       ) : (
-        <div className="rounded-xl bg-card px-6 py-14 text-center">
-          <h2 className="text-2xl">{t('binders.noPages.title')}</h2>
-          <p className="mt-2 text-base text-muted">{t('binders.noPages.body')}</p>
-        </div>
-      )}
-
-      {binder && (
-        <NewPageForm
-          nextNumber={(binder.pages.at(-1)?.number ?? 0) + 1}
-          busy={createPage.isPending}
-          onCreate={(rowCount, columnCount) =>
-            createPage.mutate({
-              id: newId(),
-              binderId: binder.id,
-              number: (binder.pages.at(-1)?.number ?? 0) + 1,
-              rowCount,
-              columnCount,
-            })
-          }
+        <EmptyState
+          title={t('binders.noPages.title')}
+          body={t('binders.noPages.body')}
+          action={t('binders.newPage')}
+          onAction={() => setNewPageOpen(true)}
         />
       )}
 
-      <NewBinderForm
-        onCreate={(name) =>
-          session && createBinder.mutate({ id: newId(), profileId: session.user.id, name })
-        }
-        busy={createBinder.isPending}
-      />
+      {/* Adding a page is dropped from this row when there is no page yet: the
+          empty state above already carries that action, and offering it twice
+          would be the clutter this row exists to remove. Creating a binder
+          always stays, or a binder with no pages would be a dead end. */}
+      <div className="flex flex-wrap gap-3 border-t border-rule pt-6">
+        {page && (
+          <Button type="button" variant="ghost" onClick={() => setNewPageOpen(true)}>
+            {t('binders.newPage')}
+          </Button>
+        )}
+        <Button type="button" variant="ghost" onClick={() => setNewBinderOpen(true)}>
+          {t('binders.newBinder')}
+        </Button>
+      </div>
+
+      {createBinderModal}
+
+      <Modal open={newPageOpen} onClose={() => setNewPageOpen(false)} title={t('binders.newPage')}>
+        <NewPageForm
+          nextNumber={nextPageNumber}
+          busy={createPage.isPending && !createPage.isPaused}
+          onCreate={(rowCount, columnCount) => {
+            if (!binder) return
+            createPage.mutate({
+              id: newId(),
+              binderId: binder.id,
+              number: nextPageNumber,
+              rowCount,
+              columnCount,
+            })
+            setNewPageOpen(false)
+          }}
+        />
+      </Modal>
 
       <SlotDialog
         slot={slot}
@@ -180,15 +221,29 @@ export function Binders() {
   )
 }
 
-function NewBinderForm({
-  onCreate,
-  busy,
-  standalone = false,
+function EmptyState({
+  title,
+  body,
+  action,
+  onAction,
 }: {
-  onCreate: (name: string) => void
-  busy: boolean
-  standalone?: boolean
+  title: string
+  body: string
+  action: string
+  onAction: () => void
 }) {
+  return (
+    <div className="rounded-xl bg-card px-6 py-14 text-center">
+      <h2 className="text-2xl">{title}</h2>
+      <p className="mt-2 mb-6 text-base text-muted">{body}</p>
+      <Button type="button" onClick={onAction}>
+        {action}
+      </Button>
+    </div>
+  )
+}
+
+function NewBinderForm({ onCreate, busy }: { onCreate: (name: string) => void; busy: boolean }) {
   const { t } = useTranslation()
   const [name, setName] = useState('')
 
@@ -200,19 +255,10 @@ function NewBinderForm({
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className={`flex flex-wrap items-end gap-4 ${
-        standalone ? 'rounded-xl bg-card px-6 py-14' : 'border-t border-rule pt-6'
-      }`}
-    >
-      {standalone && (
-        <div className="w-full text-center">
-          <h2 className="text-2xl">{t('binders.empty.title')}</h2>
-          <p className="mt-2 mb-6 text-base text-muted">{t('binders.empty.body')}</p>
-        </div>
-      )}
+    <form onSubmit={submit} className="flex flex-wrap items-end gap-4">
       <Field
+        wrapperClassName="min-w-56 flex-1"
+        className="w-full"
         label={t('binders.newBinderName')}
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -248,24 +294,27 @@ function NewPageForm({
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-wrap items-end gap-3 border-t border-rule pt-6">
-      <Field
-        label={t('binders.pageRows')}
-        inputMode="numeric"
-        className="w-20"
-        value={rows}
-        onChange={(e) => setRows(e.target.value.replace(/\D/g, ''))}
-      />
-      <Field
-        label={t('binders.pageColumns')}
-        inputMode="numeric"
-        className="w-20"
-        value={columns}
-        onChange={(e) => setColumns(e.target.value.replace(/\D/g, ''))}
-      />
-      <Button type="submit" disabled={busy}>
-        {t('binders.newPage')} {nextNumber}
-      </Button>
+    <form onSubmit={submit} className="flex flex-col gap-5">
+      <p className="text-base text-muted">{t('binders.pageWillBe', { number: nextNumber })}</p>
+      <div className="flex flex-wrap items-end gap-4">
+        <Field
+          label={t('binders.pageRows')}
+          inputMode="numeric"
+          className="w-20"
+          value={rows}
+          onChange={(e) => setRows(e.target.value.replace(/\D/g, ''))}
+        />
+        <Field
+          label={t('binders.pageColumns')}
+          inputMode="numeric"
+          className="w-20"
+          value={columns}
+          onChange={(e) => setColumns(e.target.value.replace(/\D/g, ''))}
+        />
+        <Button type="submit" disabled={busy}>
+          {t('binders.create')}
+        </Button>
+      </div>
     </form>
   )
 }

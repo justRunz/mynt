@@ -176,6 +176,7 @@
     "newBinder": "Nouveau classeur",
     "newBinderName": "Nom du classeur",
     "newPage": "Ajouter une page",
+    "pageWillBe": "Ce sera la page {{number}} de ce classeur.",
     "pageRows": "Lignes",
     "pageColumns": "Colonnes",
     "create": "Créer",
