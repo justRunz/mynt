@@ -11,7 +11,7 @@ import {
   type Grade,
 } from '@mynt/core'
 
-import { useAuth } from '../auth/authContext'
+import { useProfileId } from '../auth/authStore'
 import type { SlotDestination } from '../app/mutations'
 import { catalogQueries } from '../app/catalog'
 import { countryFlag, countryName } from '../lib/countries'
@@ -40,7 +40,7 @@ interface RecentAdd {
 
 export function QuickAdd() {
   const { t } = useTranslation()
-  const { session } = useAuth()
+  const profileId = useProfileId()
   const countries = useQuery(catalogQueries.countries())
   const coinTypes = useQuery(catalogQueries.coinTypes())
   const addCoin = useAddCoin()
@@ -63,7 +63,6 @@ export function QuickAdd() {
     setErrorKey(null)
     setNotInCatalog(null)
 
-    const profileId = session?.user.id
     if (!profileId) return
     if (!countryCode) return setErrorKey('quickAdd.errors.countryRequired')
     if (faceValue === null) return setErrorKey('quickAdd.errors.faceValueRequired')

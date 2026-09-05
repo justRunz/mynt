@@ -4,7 +4,7 @@ import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
 import { useTranslation } from 'react-i18next'
 import { newId } from '@mynt/core'
 
-import { useAuth } from '../auth/authContext'
+import { useProfileId } from '../auth/authStore'
 import { useCollection } from '../collection/useCollection'
 import type { TranslationKey } from '../i18n/types'
 import { Button } from '../ui/Button'
@@ -25,7 +25,7 @@ import {
 
 export function Binders() {
   const { t } = useTranslation()
-  const { session } = useAuth()
+  const profileId = useProfileId()
   const binders = useBinders()
   const collection = useCollection()
   const createBinder = useCreateBinder()
@@ -80,8 +80,8 @@ export function Binders() {
       <NewBinderForm
         busy={createBinder.isPending && !createBinder.isPaused}
         onCreate={(name) => {
-          if (!session) return
-          createBinder.mutate({ id: newId(), profileId: session.user.id, name })
+          if (!profileId) return
+          createBinder.mutate({ id: newId(), profileId, name })
           setNewBinderOpen(false)
         }}
       />

@@ -5,7 +5,7 @@ import { ResetPassword } from '../auth/ResetPassword'
 import { SignIn } from '../auth/SignIn'
 import { SignUp } from '../auth/SignUp'
 import { UpdatePassword } from '../auth/UpdatePassword'
-import { useAuth } from '../auth/authContext'
+import { useAuthStore } from '../auth/authStore'
 import { CollectionPage } from './CollectionPage'
 import { BindersPage } from './BindersPage'
 import { CompletenessPage } from './CompletenessPage'
@@ -20,7 +20,9 @@ function Splash() {
 }
 
 export function AppRoutes() {
-  const { session, loading, recovering } = useAuth()
+  const session = useAuthStore((state) => state.session)
+  const loading = useAuthStore((state) => state.loading)
+  const recovering = useAuthStore((state) => state.recovering)
 
   if (loading) return <Splash />
 

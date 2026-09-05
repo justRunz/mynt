@@ -8,13 +8,12 @@ import type { TranslationKey } from '../i18n/types'
 import { supabase } from '../lib/supabase'
 import { AuthLayout, FormError } from './AuthLayout'
 import { authErrorKey } from './authErrors'
-import { useAuth } from './authContext'
+import { endRecovery } from './authStore'
 
 /** Reached through the link in the reset email, once Supabase has opened a
  *  recovery session for the user. */
 export function UpdatePassword() {
   const { t } = useTranslation()
-  const { endRecovery } = useAuth()
   const [password, setPassword] = useState('')
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
   const [busy, setBusy] = useState(false)
