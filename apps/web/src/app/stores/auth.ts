@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js'
 import { create } from 'zustand'
 
-import { clearPersistedCache } from '@/app/lib/query-client'
+import { clearPersistedCache, resumePersistence } from '@/app/lib/query-client'
 import { supabase } from '@/app/lib/supabase'
 
 interface AuthState {
@@ -55,6 +55,9 @@ export function startAuthSync(): void {
     if (event === 'SIGNED_OUT') {
       useAuthStore.setState({ recovering: false })
       void clearPersistedCache()
+    } else if (session) {
+      // Signing in again in the same tab, after a sign-out closed the persister.
+      resumePersistence()
     }
   })
 }
