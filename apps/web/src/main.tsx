@@ -1,10 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import { startAuthSync } from './auth/authStore'
-import './i18n'
+import { startAuthSync } from '@/app/stores/auth'
+import '@/app/i18n'
 import './styles/index.css'
-import App from './app/App'
+import App from '@/app/app'
 
 startAuthSync()
 

@@ -1,14 +1,14 @@
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
-import { ResetPassword } from '../auth/ResetPassword'
-import { SignIn } from '../auth/SignIn'
-import { SignUp } from '../auth/SignUp'
-import { UpdatePassword } from '../auth/UpdatePassword'
-import { useAuthStore } from '../auth/authStore'
-import { CollectionPage } from './CollectionPage'
-import { BindersPage } from './BindersPage'
-import { CompletenessPage } from './CompletenessPage'
+import { ResetPassword } from '@/app/auth/reset-password'
+import { SignIn } from '@/app/auth/sign-in'
+import { SignUp } from '@/app/auth/sign-up'
+import { UpdatePassword } from '@/app/auth/update-password'
+import { BindersPage } from '@/app/binders'
+import { CollectionPage } from '@/app/collection'
+import { CompletenessPage } from '@/app/completeness'
+import { useAuthStore } from '@/app/stores/auth'
 
 function Splash() {
   const { t } = useTranslation()

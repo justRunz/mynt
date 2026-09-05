@@ -5,7 +5,10 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
     "jsx": "react-jsx",
-    "allowArbitraryExtensions": true
+    "allowArbitraryExtensions": true,
+    // Everything under src/ is reachable as @/..., so a file can move
+    // between folders without a trail of ../../.. to repair.
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src"]
 }
