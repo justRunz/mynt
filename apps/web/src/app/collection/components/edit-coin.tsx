@@ -10,6 +10,7 @@ import {
   type Grade,
 } from '@mynt/core'
 
+import { useIsOnline } from '@/app/hooks/use-is-online'
 import { catalogQueries } from '@/app/lib/catalog'
 import type { TranslationKey } from '@/app/i18n/types'
 import { countryName } from '@/app/lib/countries'
@@ -61,6 +62,7 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
     () => (countries.data ?? []).map((c) => c.code),
     [countries.data],
   )
+  const online = useIsOnline()
   const updateCoin = useUpdateCoin()
   const deleteCoin = useDeleteCoin()
 
@@ -78,8 +80,10 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
 
   const index = useMemo(() => indexCoinTypes(coinTypes.data ?? []), [coinTypes.data])
   // Paused counts as pending, so offline this would lock the form for good.
-  const busy =
-    updateCoin.isPending || deleteCoin.isPending
+  // Offline counts as busy: the controls stay in place, greyed, rather than
+  // vanishing -- a button that disappears reads as a feature that does not
+  // exist, where a disabled one reads as one that is waiting.
+  const busy = !online || updateCoin.isPending || deleteCoin.isPending
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -219,11 +223,14 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
             </Button>
           </div>
         ) : (
-          // Two steps, because deleting a coin cannot be undone.
+          // Two steps, because deleting a coin cannot be undone. Disabled
+          // offline like the save above: the second step could not go through,
+          // and offering the first one would only lead there.
           <Button
             type="button"
             variant="ghost"
             className="text-danger"
+            disabled={busy}
             onClick={() => setConfirmingDelete(true)}
           >
             {t('editCoin.delete')}

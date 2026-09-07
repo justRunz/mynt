@@ -17,6 +17,7 @@ import {
 
 import { AppShell } from '@/app/components/app-shell'
 import { Button } from '@/app/ui/button'
+import { useIsOnline } from '@/app/hooks/use-is-online'
 import { Modal } from '@/app/ui/modal'
 import { countryCollator, countryFlag, countryName } from '@/app/lib/countries'
 import { formatFaceValue } from '@/app/lib/format'
@@ -78,6 +79,7 @@ export function CollectionPage() {
 
 function Collection() {
   const { t } = useTranslation()
+  const online = useIsOnline()
   const { data, isPending, isError } = useCollection()
   const [filters, setFilters] = useQueryStates(FILTER_PARSERS, { urlKeys: FILTER_URL_KEYS })
   // Throttled: a search box writing to the URL on every keystroke would fight
@@ -145,7 +147,11 @@ function Collection() {
         countryCodes={countryCodes}
         years={years}
       >
-        <Button onClick={() => setAddOpen(true)}>{t('quickAdd.open')}</Button>
+        {/* Disabled rather than hidden, and disabled here rather than only on
+            the submit inside: opening a form that cannot be sent is a dead end. */}
+        <Button disabled={!online} onClick={() => setAddOpen(true)}>
+          {t('quickAdd.open')}
+        </Button>
       </FiltersBar>
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('quickAdd.title')}>

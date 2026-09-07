@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
 import { useTranslation } from 'react-i18next'
 import { AppShell } from '@/app/components/app-shell'
+import { useIsOnline } from '@/app/hooks/use-is-online'
 import { useProfileId } from '@/app/stores/auth'
 import { useCollection } from '@/app/collection/hooks/use-collection'
 import type { TranslationKey } from '@/app/i18n/types'
@@ -34,6 +35,7 @@ export function BindersPage() {
 function Binders() {
   const { t } = useTranslation()
   const profileId = useProfileId()
+  const online = useIsOnline()
   const binders = useBinders()
   const collection = useCollection()
   const createBinder = useCreateBinder()
@@ -86,7 +88,7 @@ function Binders() {
       title={t('binders.newBinder')}
     >
       <NewBinderForm
-        busy={createBinder.isPending}
+        busy={!online || createBinder.isPending}
         onCreate={(name) => {
           if (!profileId) return
           createBinder.mutate({ profileId, name })
@@ -107,6 +109,7 @@ function Binders() {
           title={t('binders.empty.title')}
           body={t('binders.empty.body')}
           action={t('binders.newBinder')}
+          disabled={!online}
           onAction={() => setNewBinderOpen(true)}
         />
         {createBinderModal}
@@ -114,7 +117,7 @@ function Binders() {
     )
   }
 
-  const busy = fileCoin.isPending || unfileCoin.isPending
+  const busy = !online || fileCoin.isPending || unfileCoin.isPending
 
   const close = () => {
     setSlot(null)
@@ -193,12 +196,14 @@ function Binders() {
           coins={pageCoins}
           onSelect={setSlot}
           onMove={moveCoin}
+          frozen={!online}
         />
       ) : (
         <EmptyState
           title={t('binders.noPages.title')}
           body={t('binders.noPages.body')}
           action={t('binders.newPage')}
+          disabled={!online}
           onAction={() => setNewPageOpen(true)}
         />
       )}
@@ -209,11 +214,21 @@ function Binders() {
           always stays, or a binder with no pages would be a dead end. */}
       <div className="flex flex-wrap gap-3 border-t border-rule pt-6">
         {page && (
-          <Button type="button" variant="ghost" onClick={() => setNewPageOpen(true)}>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={!online}
+            onClick={() => setNewPageOpen(true)}
+          >
             {t('binders.newPage')}
           </Button>
         )}
-        <Button type="button" variant="ghost" onClick={() => setNewBinderOpen(true)}>
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={!online}
+          onClick={() => setNewBinderOpen(true)}
+        >
           {t('binders.newBinder')}
         </Button>
       </div>
@@ -229,7 +244,7 @@ function Binders() {
       <Modal open={newPageOpen} onClose={() => setNewPageOpen(false)} title={t('binders.newPage')}>
         <NewPageForm
           nextNumber={nextPageNumber}
-          busy={createPage.isPending}
+          busy={!online || createPage.isPending}
           onCreate={(rowCount, columnCount) => {
             if (!binder) return
             createPage.mutate({
@@ -270,18 +285,20 @@ function EmptyState({
   title,
   body,
   action,
+  disabled,
   onAction,
 }: {
   title: string
   body: string
   action: string
+  disabled?: boolean
   onAction: () => void
 }) {
   return (
     <div className="rounded-xl bg-card px-6 py-14 text-center">
       <h2 className="text-2xl">{title}</h2>
       <p className="mt-2 mb-6 text-base text-muted">{body}</p>
-      <Button type="button" onClick={onAction}>
+      <Button type="button" disabled={disabled} onClick={onAction}>
         {action}
       </Button>
     </div>

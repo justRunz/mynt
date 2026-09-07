@@ -8,7 +8,8 @@
     "cancel": "Annuler",
     "signOut": "Se déconnecter",
     "retry": "Réessayer",
-    "close": "Fermer"
+    "close": "Fermer",
+    "offlineWrite": "Indisponible hors ligne"
   },
   "nav": {
     "collection": "Collection",
@@ -212,9 +213,7 @@
   },
   "status": {
     "offline": "Hors ligne",
-    "offlineHint": "Vos ajouts sont conservés et seront envoyés au retour du réseau.",
-    "pending_one": "{{count}} modification en attente",
-    "pending_other": "{{count}} modifications en attente"
+    "offlineHint": "Votre collection reste consultable, mais rien ne peut être modifié tant que le réseau est absent."
   },
   "update": {
     "available": "Une nouvelle version de Mynt est disponible.",

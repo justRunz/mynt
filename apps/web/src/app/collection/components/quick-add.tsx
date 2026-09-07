@@ -10,6 +10,7 @@ import {
   type Grade,
 } from '@mynt/core'
 
+import { useIsOnline } from '@/app/hooks/use-is-online'
 import { useProfileId } from '@/app/stores/auth'
 import { catalogQueries } from '@/app/lib/catalog'
 import { countryFlag, countryName } from '@/app/lib/countries'
@@ -45,6 +46,7 @@ interface RecentAdd {
 export function QuickAdd() {
   const { t } = useTranslation()
   const profileId = useProfileId()
+  const online = useIsOnline()
   const countries = useQuery(catalogQueries.countries())
   const coinTypes = useQuery(catalogQueries.coinTypes())
   const addCoin = useAddCoin()
@@ -181,7 +183,7 @@ export function QuickAdd() {
             </select>
           </div>
 
-          <Button type="submit" disabled={addCoin.isPending}>
+          <Button type="submit" disabled={!online || addCoin.isPending}>
             {t('quickAdd.submit')}
           </Button>
         </div>

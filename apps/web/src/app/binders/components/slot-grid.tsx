@@ -45,6 +45,12 @@ interface Props {
   onSelect: (slot: SlotTarget) => void
   /** Dropped onto another hole: free means a move, occupied means an exchange. */
   onMove: (dragged: SlotCoin, target: SlotTarget) => void
+  /**
+   * Offline. Holes still open their dialog -- looking is always allowed -- but
+   * nothing can be dragged: a coin that follows the pointer and then springs
+   * back with no explanation is worse than a grid that plainly will not move.
+   */
+  frozen?: boolean
 }
 
 const holeId = (row: number, column: number) => `hole-${row}-${column}`
@@ -84,11 +90,13 @@ function Hole({
   row,
   column,
   coin,
+  frozen,
   onSelect,
 }: {
   row: number
   column: number
   coin: SlotCoin | null
+  frozen: boolean
   onSelect: (slot: SlotTarget) => void
 }) {
   const { t } = useTranslation()
@@ -105,7 +113,11 @@ function Hole({
     isDragging,
   } = useDraggable({
     id: coin?.id ?? holeId(row, column),
-    disabled: coin === null,
+    // Emptying the sensors array instead would change its length between
+    // renders, and dnd-kit hands that array straight to a useEffect -- React
+    // refuses a dependency list that changes size. Disabling the draggable is
+    // the supported way, and it drops the activation listeners just the same.
+    disabled: coin === null || frozen,
     data: { coin },
   })
 
@@ -134,7 +146,14 @@ function Hole({
   )
 }
 
-export function SlotGrid({ rowCount, columnCount, coins, onSelect, onMove }: Props) {
+export function SlotGrid({
+  rowCount,
+  columnCount,
+  coins,
+  onSelect,
+  onMove,
+  frozen = false,
+}: Props) {
   const { t } = useTranslation()
   const grid = buildSlotGrid(rowCount, columnCount, coins)
   const [dragged, setDragged] = useState<SlotCoin | null>(null)
@@ -214,6 +233,7 @@ export function SlotGrid({ rowCount, columnCount, coins, onSelect, onMove }: Pro
                   row={rowIndex + 1}
                   column={columnIndex + 1}
                   coin={coin}
+                  frozen={frozen}
                   onSelect={onSelect}
                 />
               )),
