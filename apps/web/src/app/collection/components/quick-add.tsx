@@ -6,13 +6,11 @@ import {
   GRADES,
   findCoinTypeId,
   indexCoinTypes,
-  newId,
   type FaceValueCents,
   type Grade,
 } from '@mynt/core'
 
 import { useProfileId } from '@/app/stores/auth'
-import type { SlotDestination } from '@/app/lib/mutations'
 import { catalogQueries } from '@/app/lib/catalog'
 import { countryFlag, countryName } from '@/app/lib/countries'
 import { formatFaceValue } from '@/app/lib/format'
@@ -22,19 +20,25 @@ import { CountryCombobox } from './country-combobox'
 import { FaceValuePicker } from './face-value-picker'
 import { isSlotTaken } from '@/app/binders/hooks/use-binders'
 import { SlotSelect } from './slot-select'
-import { useAddCoin } from '../hooks/use-add-coin'
-import type { CollectionEntry } from '../hooks/use-collection'
+import { useAddCoin, type SlotDestination } from '../hooks/use-collection'
 
 const CURRENT_YEAR = new Date().getFullYear()
 
 /**
- * The confirmation line needs to say where the coin went, and the optimistic
- * entry cannot: resolving a page id into a binder name is the mutation's job.
- * The hole is carried alongside instead, which is the part the user just chose
- * and the part worth reading back.
+ * A line in the confirmation strip. Not a CollectionEntry: this is a record of
+ * what the user just typed, kept locally so a pile can be worked through
+ * without scrolling back up to the table. The row itself now comes back from
+ * the server on the refetch.
+ *
+ * The key is a local counter rather than the coin's id, which the database
+ * assigns and this screen never asks for.
  */
 interface RecentAdd {
-  entry: CollectionEntry
+  key: number
+  countryCode: string
+  faceValueCents: FaceValueCents
+  year: number
+  grade: Grade | null
   slot: { row: number; column: number } | null
 }
 
@@ -55,6 +59,7 @@ export function QuickAdd() {
   const [recent, setRecent] = useState<RecentAdd[]>([])
 
   const firstValueRef = useRef<HTMLInputElement>(null)
+  const nextKey = useRef(0)
   const index = useMemo(() => indexCoinTypes(coinTypes.data ?? []), [coinTypes.data])
   const codes = useMemo(() => (countries.data ?? []).map((c) => c.code), [countries.data])
 
@@ -83,59 +88,45 @@ export function QuickAdd() {
       )
     }
 
-    const entry: CollectionEntry = {
-      id: newId(),
-      countryCode,
-      faceValueCents: faceValue,
-      year: parsedYear,
-      variant: '',
-      grade: grade || null,
-      acquiredOn: null,
-      notes: null,
-      // Filled in by the mutation's onMutate, which is the one place that can
-      // resolve a page id into a binder name.
-      location: null,
-    }
-
     addCoin.mutate(
+      { profileId, coinTypeId, grade: grade || null, destination },
       {
-        // Generated here, not inside the mutation: a mutation replayed after a
-        // reload has to carry the same id or it would insert a second coin.
-        id: entry.id,
-        profileId,
-        coinTypeId,
-        grade: entry.grade,
-        countryCode,
-        faceValueCents: faceValue,
-        year: parsedYear,
-        destination,
-      },
-      {
-        onError: (error) => {
-          setRecent((list) => list.filter((item) => item.entry.id !== entry.id))
+        onSuccess: () => {
+          setRecent((list) =>
+            [
+              {
+                key: nextKey.current++,
+                countryCode,
+                faceValueCents: faceValue,
+                year: parsedYear,
+                grade: grade || null,
+                slot: destination,
+              },
+              ...list,
+            ].slice(0, 6),
+          )
+          // Cleared once the coin is actually saved, not on submit. A write
+          // that fails now leaves the form as it was, so nothing has to be
+          // retyped from memory.
+          //
+          // The country stays either way: a pile is usually sorted by country,
+          // and re-picking it on every coin is the friction that makes people
+          // quit.
+          setFaceValue(null)
+          setYear('')
+          setGrade('')
+          setDestination(null)
+          firstValueRef.current?.focus()
+        },
+        onError: (error) =>
           setErrorKey(
             // A hole taken between choosing it and the write landing is worth
             // its own message: "try again" would send the user back to the same
             // occupied slot.
             isSlotTaken(error) ? 'quickAdd.errors.slotTaken' : 'quickAdd.errors.save',
-          )
-        },
+          ),
       },
     )
-
-    // Confirmed and reset as soon as the entry is queued, not when the server
-    // answers. Offline the mutation stays paused for as long as the signal is
-    // gone, and a form that never clears would break the one thing this screen
-    // is for -- working through a pile without stopping.
-    setRecent((list) => [{ entry, slot: destination }, ...list].slice(0, 6))
-    // The country stays: a pile is usually sorted by country, and re-picking it
-    // on every coin is the friction that makes people quit.
-    setFaceValue(null)
-    setYear('')
-    setGrade('')
-    // The binder and page stay, the hole does not: it is occupied now.
-    setDestination(null)
-    firstValueRef.current?.focus()
   }
 
   return (
@@ -190,11 +181,7 @@ export function QuickAdd() {
             </select>
           </div>
 
-          {/* isPending alone would stay true for as long as a mutation sits
-              paused offline, locking the form after the first coin -- the exact
-              opposite of what this screen is for. Only an in-flight request
-              should block it. */}
-          <Button type="submit" disabled={addCoin.isPending && !addCoin.isPaused}>
+          <Button type="submit" disabled={addCoin.isPending}>
             {t('quickAdd.submit')}
           </Button>
         </div>
@@ -217,13 +204,13 @@ export function QuickAdd() {
             {t('quickAdd.recent')} · {t('quickAdd.added', { count: recent.length })}
           </h2>
           <ul className="tnum mt-3 flex flex-col gap-1 text-base text-muted">
-            {recent.map(({ entry, slot }) => (
-              <li key={entry.id}>
-                <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
-                {countryName(entry.countryCode)} · {formatFaceValue(entry.faceValueCents)} ·{' '}
-                {entry.year}
-                {entry.grade ? ` · ${t(`grade.short.${entry.grade}`)}` : ''}
-                {slot ? ` · ${t('binders.slotShort', slot)}` : ''}
+            {recent.map((add) => (
+              <li key={add.key}>
+                <span aria-hidden>{countryFlag(add.countryCode)}</span>{' '}
+                {countryName(add.countryCode)} · {formatFaceValue(add.faceValueCents)} ·{' '}
+                {add.year}
+                {add.grade ? ` · ${t(`grade.short.${add.grade}`)}` : ''}
+                {add.slot ? ` · ${t('binders.slotShort', add.slot)}` : ''}
               </li>
             ))}
           </ul>

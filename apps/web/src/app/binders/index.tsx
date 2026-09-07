@@ -2,8 +2,6 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
 import { useTranslation } from 'react-i18next'
-import { newId } from '@mynt/core'
-
 import { AppShell } from '@/app/components/app-shell'
 import { useProfileId } from '@/app/stores/auth'
 import { useCollection } from '@/app/collection/hooks/use-collection'
@@ -88,10 +86,10 @@ function Binders() {
       title={t('binders.newBinder')}
     >
       <NewBinderForm
-        busy={createBinder.isPending && !createBinder.isPaused}
+        busy={createBinder.isPending}
         onCreate={(name) => {
           if (!profileId) return
-          createBinder.mutate({ id: newId(), profileId, name })
+          createBinder.mutate({ profileId, name })
           setNewBinderOpen(false)
         }}
       />
@@ -116,11 +114,7 @@ function Binders() {
     )
   }
 
-  // Paused counts as pending, so filing coins offline would lock the dialog
-  // after the first one. Only an in-flight request should block it.
-  const busy =
-    (fileCoin.isPending && !fileCoin.isPaused) ||
-    (unfileCoin.isPending && !unfileCoin.isPaused)
+  const busy = fileCoin.isPending || unfileCoin.isPending
 
   const close = () => {
     setSlot(null)
@@ -235,11 +229,10 @@ function Binders() {
       <Modal open={newPageOpen} onClose={() => setNewPageOpen(false)} title={t('binders.newPage')}>
         <NewPageForm
           nextNumber={nextPageNumber}
-          busy={createPage.isPending && !createPage.isPaused}
+          busy={createPage.isPending}
           onCreate={(rowCount, columnCount) => {
             if (!binder) return
             createPage.mutate({
-              id: newId(),
               binderId: binder.id,
               number: nextPageNumber,
               rowCount,

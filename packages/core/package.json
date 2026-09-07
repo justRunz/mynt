@@ -12,9 +12,6 @@
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
-  "dependencies": {
-    "uuidv7": "^1.2.1"
-  },
   "devDependencies": {
     "oxlint": "catalog:",
     "typescript": "catalog:",

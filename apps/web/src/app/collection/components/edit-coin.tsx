@@ -19,8 +19,11 @@ import { Field } from '@/app/ui/field'
 import { Modal } from '@/app/ui/modal'
 import { CountryCombobox } from './country-combobox'
 import { FaceValuePicker } from './face-value-picker'
-import { useDeleteCoin, useUpdateCoin } from '../hooks/use-coin-mutations'
-import type { CollectionEntry } from '../hooks/use-collection'
+import {
+  useDeleteCoin,
+  useUpdateCoin,
+  type CollectionEntry,
+} from '../hooks/use-collection'
 
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -76,8 +79,7 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
   const index = useMemo(() => indexCoinTypes(coinTypes.data ?? []), [coinTypes.data])
   // Paused counts as pending, so offline this would lock the form for good.
   const busy =
-    (updateCoin.isPending && !updateCoin.isPaused) ||
-    (deleteCoin.isPending && !deleteCoin.isPaused)
+    updateCoin.isPending || deleteCoin.isPending
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -108,15 +110,15 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
         grade: grade || null,
         acquiredOn: acquiredOn || null,
         notes: notes.trim() || null,
-        countryCode,
-        faceValueCents: faceValue,
-        year: parsedYear,
       },
-      { onError: () => setErrorKey('binders.errors.generic') },
+      {
+        onSuccess: onClose,
+        // Left open on failure. This used to close first and set the message
+        // afterwards, on a dialog that was already gone -- so the user was told
+        // nothing at all.
+        onError: () => setErrorKey('binders.errors.generic'),
+      },
     )
-    // Closed as soon as the change is queued: offline the mutation stays paused,
-    // and waiting on it would trap the user in the dialog.
-    onClose()
   }
 
   return (
@@ -203,10 +205,12 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
               variant="ghost"
               className="text-danger"
               disabled={busy}
-              onClick={() => {
-                deleteCoin.mutate(coin.id)
-                onClose()
-              }}
+              onClick={() =>
+                deleteCoin.mutate(coin.id, {
+                  onSuccess: onClose,
+                  onError: () => setErrorKey('binders.errors.generic'),
+                })
+              }
             >
               {t('editCoin.confirmDelete')}
             </Button>

@@ -2,8 +2,6 @@ import { QueryClient } from '@tanstack/react-query'
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 import { del, get, set } from 'idb-keyval'
 
-import { registerMutations } from './mutations'
-
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -15,15 +13,14 @@ export const queryClient = new QueryClient({
       gcTime: 7 * 24 * 60 * 60 * 1000,
     },
     mutations: {
-      // networkMode 'online' is the default and is what pauses mutations while
-      // offline instead of failing them. Spelled out because the whole offline
-      // queue depends on it.
-      networkMode: 'online',
+      // 'always' rather than the 'online' default, which would hold a write
+      // until the signal came back. Nothing is queued here: a write attempted
+      // without a connection has to fail, and say so, rather than wait in
+      // silence for a return that this app no longer arranges.
+      networkMode: 'always',
     },
   },
 })
-
-registerMutations(queryClient)
 
 const PERSIST_KEY = 'mynt-query-cache'
 

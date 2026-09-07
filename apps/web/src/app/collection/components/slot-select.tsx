@@ -2,10 +2,9 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { buildSlotGrid } from '@mynt/core'
 
-import type { SlotDestination } from '@/app/lib/mutations'
 import { useBinders } from '@/app/binders/hooks/use-binders'
 import { Select } from '@/app/ui/select'
-import { useCollection } from '../hooks/use-collection'
+import { useCollection, type SlotDestination } from '../hooks/use-collection'
 
 interface Props {
   value: SlotDestination | null
