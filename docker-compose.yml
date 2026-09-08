@@ -1,0 +1,42 @@
+# The database Mynt is moving to, replacing the Supabase stack.
+#
+# It runs alongside that stack rather than instead of it: Supabase keeps serving
+# the app while the new backend is built next to it, and is only stopped once
+# authentication moves over. Nothing here collides with it -- Supabase's own
+# Postgres listens on 54322.
+
+services:
+  db:
+    # 18 for uuidv7(), which is a built-in function from that release. It is
+    # what the private tables default to: a v7 sorts by time, so inserts land at
+    # the right edge of the index instead of scattering across it the way the
+    # random v4 of gen_random_uuid() does.
+    image: postgres:18
+    container_name: mynt_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      # Local development only, hence a value in plain sight. The hosted
+      # database takes its password from Dokploy's environment, never from here.
+      POSTGRES_PASSWORD: mynt
+      POSTGRES_DB: mynt
+    ports:
+      - '5433:5432'
+    volumes:
+      # /var/lib/postgresql, not /var/lib/postgresql/data. The 18 image moved
+      # PGDATA to /var/lib/postgresql/18/docker and declares the parent as its
+      # volume; mounting the old path would leave the cluster outside the volume
+      # and lose it on the next `docker compose down`.
+      - mynt-db:/var/lib/postgresql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Depending on this rather than on a sleep, so the migration runner can
+      # wait for a database that actually answers instead of one that has merely
+      # started its process.
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d mynt']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  mynt-db:
