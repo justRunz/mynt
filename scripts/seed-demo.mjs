@@ -1,58 +1,65 @@
 /**
- * Seeds a demo account with a collection worth looking at.
+ * Fills the new database with a collection worth looking at.
  *
- * Local development only: it talks to the local Supabase stack with the
- * published anon key and creates a throwaway account. Never point it at a
- * hosted project.
+ * Local development only. It writes as the owner, bypassing row level
+ * security, which is exactly what a fixture needs and exactly what the server
+ * must never do.
  *
- *   node scripts/seed-demo.mjs
+ *   pnpm db:demo
+ *
+ * The account it creates carries the *same id as the Supabase account*, which
+ * is what makes step 2 verifiable: the app stays signed in through GoTrue while
+ * Express verifies that very token, and both databases then speak about one
+ * person. That coupling disappears with Supabase at step 4.
  */
 
-const API = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
-const ANON =
-  process.env.SUPABASE_ANON_KEY ??
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+import { execFileSync } from 'node:child_process'
 
+const CONTAINER = 'mynt_db'
 const EMAIL = process.env.DEMO_EMAIL ?? 'demo@mynt.test'
-const PASSWORD = process.env.DEMO_PASSWORD ?? 'mynt2026'
 const NICKNAME = 'Démo'
 
-/** Deterministic pseudo-random, so two runs produce the same collection. */
+/** Deterministic, so two runs produce the same collection. */
 let seed = 20260829
 const random = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff)
 const pick = (list) => list[Math.floor(random() * list.length)]
 
-async function call(path, { method = 'GET', token, body, prefer } = {}) {
-  const headers = { apikey: ANON, 'Content-Type': 'application/json' }
-  if (token) headers.Authorization = `Bearer ${token}`
-  if (prefer) headers.Prefer = prefer
-  const response = await fetch(`${API}${path}`, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+const psql = (args, input) =>
+  execFileSync('docker', ['exec', '-i', CONTAINER, 'psql', ...args], {
+    input,
+    encoding: 'utf8',
   })
-  const text = await response.text()
-  if (!response.ok) throw new Error(`${method} ${path} -> ${response.status} ${text}`)
-  return text ? JSON.parse(text) : null
-}
 
-async function signUpOrSignIn() {
+/**
+ * The id of the Supabase account, so the two databases agree on who this is.
+ *
+ * Read from the running stack rather than pasted in, because a stale uuid here
+ * would fail in the most confusing way possible: the app signed in, Express
+ * accepting the token, and the collection simply empty.
+ */
+function supabaseUserId() {
   try {
-    const session = await call('/auth/v1/signup', {
-      method: 'POST',
-      body: { email: EMAIL, password: PASSWORD, data: { nickname: NICKNAME } },
-    })
-    if (session.access_token) return session
-  } catch (error) {
-    if (!String(error).includes('already')) throw error
+    const id = execFileSync(
+      'docker',
+      ['exec', 'supabase_db_mynt', 'psql', '-U', 'postgres', '-tAc',
+       'select id from auth.users order by created_at limit 1'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+    ).trim()
+    if (id) return { id, source: 'compte Supabase' }
+  } catch {
+    // Supabase is not running, or has no account yet.
   }
-  return call('/auth/v1/token?grant_type=password', {
-    method: 'POST',
-    body: { email: EMAIL, password: PASSWORD },
-  })
+  return { id: '00000000-0000-4000-8000-000000000001', source: 'identifiant de repli' }
 }
 
-const COUNTRIES = ['FR', 'DE', 'ES', 'IT', 'BE', 'PT', 'NL', 'GR', 'AT', 'FI', 'IE', 'SI', 'HR', 'LU']
+const COUNTRIES = {
+  // Country to its first minting year, so a generated coin always exists in
+  // the catalog. Picking a year a country never struck would insert nothing
+  // and leave the collection quietly short.
+  FR: 1999, BE: 1999, ES: 1999, NL: 1999, FI: 1999,
+  DE: 2002, IT: 2002, PT: 2002, GR: 2002, AT: 2002, IE: 2002, LU: 2002,
+  SI: 2007, HR: 2023,
+}
 const VALUES = [1, 2, 5, 10, 20, 50, 100, 200]
 const GRADES = [null, 'VERY_FINE', 'EXTREMELY_FINE', 'ABOUT_UNCIRCULATED', 'UNCIRCULATED']
 const NOTES = [
@@ -64,104 +71,85 @@ const NOTES = [
   'Première de ce pays',
 ]
 
-async function main() {
-  const session = await signUpOrSignIn()
-  const token = session.access_token
-  const profileId = session.user?.id ?? (await call('/auth/v1/user', { token })).id
+const CURRENT_YEAR = new Date().getFullYear()
+const quote = (value) => (value === null ? 'null' : `'${String(value).replace(/'/g, "''")}'`)
 
-  // Start from a clean slate so the script can be re-run.
-  await call(`/rest/v1/coin?profile_id=eq.${profileId}`, { method: 'DELETE', token })
-  await call(`/rest/v1/binder?profile_id=eq.${profileId}`, { method: 'DELETE', token })
+function main() {
+  const user = supabaseUserId()
+  const binderId = '5eed0000-0000-4000-8000-000000000001'
+  const pageIds = [1, 2, 3].map((n) => `5eed0000-0000-4000-8000-00000000000${n + 1}`)
 
-  const [binder] = await call('/rest/v1/binder', {
-    method: 'POST',
-    token,
-    prefer: 'return=representation',
-    body: { profile_id: profileId, name: 'Classeur Europe', sort_order: 0 },
-  })
+  const lines = []
+  const say = (sql) => lines.push(sql)
 
-  const pages = []
-  for (const number of [1, 2, 3]) {
-    const [page] = await call('/rest/v1/page', {
-      method: 'POST',
-      token,
-      prefer: 'return=representation',
-      body: { binder_id: binder.id, number, row_count: 4, column_count: 5 },
-    })
-    pages.push(page)
+  // Re-runnable: the account cascades to everything it owns.
+  say(`delete from auth.users where user_id = ${quote(user.id)};`)
+  say(`insert into auth.users (user_id, email, password_hash, email_verified_at)
+       values (${quote(user.id)}, ${quote(EMAIL)}, 'seeded-not-a-real-hash', now());`)
+  say(`insert into user_info (user_id, nickname) values (${quote(user.id)}, ${quote(NICKNAME)});`)
+
+  say(`insert into binders (binder_id, user_id, name)
+       values (${quote(binderId)}, ${quote(user.id)}, 'Classeur Europe');`)
+  for (const [index, pageId] of pageIds.entries()) {
+    say(`insert into pages (page_id, binder_id, page_number, row_count, column_count)
+         values (${quote(pageId)}, ${quote(binderId)}, ${index + 1}, 4, 5);`)
   }
 
-  // Every free slot on the first two pages, in order.
+  // Every hole on the first two sheets, in order, then the jar.
   const slots = []
-  for (const page of pages.slice(0, 2)) {
-    for (let row = 1; row <= page.row_count; row++) {
-      for (let column = 1; column <= page.column_count; column++) {
-        slots.push({ page_id: page.id, slot_row: row, slot_column: column })
-      }
+  for (const pageId of pageIds.slice(0, 2)) {
+    for (let row = 1; row <= 4; row++) {
+      for (let column = 1; column <= 5; column++) slots.push({ pageId, row, column })
     }
   }
 
-  // PostgREST caps a plain select, so page through explicit ranges -- the same
-  // trap the app already handles in app/catalog.ts.
-  const catalog = []
-  for (let offset = 0; ; offset += 1000) {
-    const batch = await call(
-      `/rest/v1/coin_type?select=id,country_code,face_value_cents,year&order=id.asc&offset=${offset}&limit=1000`,
-      { token },
-    )
-    catalog.push(...batch)
-    if (batch.length < 1000) break
-  }
-  const byCountry = new Map()
-  for (const type of catalog) {
-    if (!COUNTRIES.includes(type.country_code)) continue
-    if (!VALUES.includes(type.face_value_cents)) continue
-    const list = byCountry.get(type.country_code) ?? []
-    list.push(type)
-    byCountry.set(type.country_code, list)
-  }
-
-  const missing = COUNTRIES.filter((code) => !byCountry.has(code))
-  if (missing.length > 0) {
-    throw new Error(`Catalogue incomplet, pays absents : ${missing.join(', ')}`)
-  }
-
-  const rows = []
-  const TOTAL = 58
-  for (let i = 0; i < TOTAL; i++) {
-    const country = pick(COUNTRIES)
-    const type = pick(byCountry.get(country))
-    const slot = i < slots.length ? slots[i] : null
-    rows.push({
-      profile_id: profileId,
-      coin_type_id: type.id,
+  const codes = Object.keys(COUNTRIES)
+  const coins = []
+  for (let i = 0; i < 58; i++) {
+    const code = pick(codes)
+    const since = COUNTRIES[code]
+    coins.push({
+      code,
+      value: pick(VALUES),
+      year: since + Math.floor(random() * (CURRENT_YEAR - since + 1)),
       grade: pick(GRADES),
       notes: pick(NOTES),
-      // PostgREST rejects a batch whose objects do not share the same keys.
-      page_id: slot?.page_id ?? null,
-      slot_row: slot?.slot_row ?? null,
-      slot_column: slot?.slot_column ?? null,
+      slot: slots[i] ?? null,
     })
   }
-
   // Duplicates are the daily reality of this hobby, so make sure some exist.
   for (let i = 0; i < 4; i++) {
-    const source = rows[i * 3]
-    rows.push({ ...source, page_id: null, slot_row: null, slot_column: null, notes: 'Double' })
+    coins.push({ ...coins[i * 3], slot: null, notes: 'Double' })
   }
 
-  await call('/rest/v1/coin', { method: 'POST', token, body: rows })
+  for (const coin of coins) {
+    // The coin type is resolved by its natural key rather than by an id the
+    // script would have to look up first. The unique constraint on the catalog
+    // guarantees the subquery matches at most one row.
+    say(`insert into coins (user_id, coin_type_id, grade, notes, page_id, slot_row, slot_column)
+         select ${quote(user.id)},
+                coin_type_id, ${quote(coin.grade)}, ${quote(coin.notes)},
+                ${quote(coin.slot?.pageId ?? null)},
+                ${coin.slot ? coin.slot.row : 'null'},
+                ${coin.slot ? coin.slot.column : 'null'}
+           from coin_types
+          where country_code = ${quote(coin.code)}
+            and face_value_cents = ${coin.value}
+            and year = ${coin.year};`)
+  }
 
-  const all = await call('/rest/v1/coin?select=id,page_id', { token })
-  const filed = all.filter((c) => c.page_id !== null).length
+  // One statement, so a failure halfway leaves nothing behind.
+  psql(['-U', 'postgres', '-d', 'mynt', '-q', '-v', 'ON_ERROR_STOP=1', '-1'],
+       lines.join('\n'))
 
-  console.log(`Compte      ${EMAIL}`)
-  console.log(`Mot de passe ${PASSWORD}`)
-  console.log(`Collection  ${all.length} pièces, dont ${filed} rangées`)
-  console.log(`Classeur    « ${binder.name} », ${pages.length} pages de 4 × 5`)
+  const count = (what) =>
+    psql(['-U', 'postgres', '-d', 'mynt', '-tAc', what]).trim()
+
+  console.log(`Compte       ${EMAIL}`)
+  console.log(`Identifiant  ${user.id}  (${user.source})`)
+  console.log(`Collection   ${count(`select count(*) from coins where user_id = '${user.id}'`)} pièces, ` +
+              `dont ${count(`select count(*) from coins where user_id = '${user.id}' and page_id is not null`)} rangées`)
+  console.log(`Classeur     « Classeur Europe », 3 pages de 4 × 5`)
 }
 
-main().catch((error) => {
-  console.error(String(error))
-  process.exit(1)
-})
+main()
