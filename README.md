@@ -14,7 +14,7 @@ packages/core/   types générés depuis la base, constantes métier, logique pu
 supabase/        migrations et configuration — infrastructure partagée
 ```
 
-`packages/core` est ce que consommerait un futur `apps/api`, d'où le monorepo.
+`packages/core` est ce que consommerait un futur `apps/backend`, d'où le monorepo.
 
 ## Démarrer
 
@@ -54,6 +54,7 @@ donc l'inscription ouvre directement une session.
 | `pnpm test` | vitest |
 | `pnpm db:reset` | rejoue les migrations et le seed depuis zéro |
 | `pnpm db:types` | régénère `packages/core/src/database.types.ts` |
+| `pnpm db:demo` | remplit un compte de démonstration |
 
 `pnpm db:types` est à relancer après **toute** migration : le typage des grades
 casse volontairement la compilation si l'enum de la base a bougé.
@@ -70,28 +71,34 @@ de conservation sont nationales et ne sont pas des traductions les unes des autr
 
 Attention au français qui ne passe pas par des chaînes : les valeurs faciales,
 les dates et le tri des noms de pays doivent passer par `Intl` (voir
-`apps/web/src/lib/format.ts` et `countries.ts`).
+`apps/web/src/app/lib/format.ts` et `countries.ts`).
 
 ## Hors ligne
 
-L'app fonctionne sans réseau, ce qui recouvre deux mécanismes distincts.
+Sans réseau, l'app est **consultable mais pas modifiable**. C'est un choix, pas
+une limite technique : les pièces se saisissent au bureau, alors que vérifier si
+on possède déjà une pièce se fait debout devant un stand.
+
+Deux mécanismes distincts rendent la consultation possible.
 
 La **coquille** est précachée par un service worker (`vite-plugin-pwa`), polices
 comprises — d'où Inter auto-hébergée plutôt que servie par un CDN. Il ne s'active
 que sur un build de production : `pnpm --filter @mynt/web preview`.
 
-Les **données** vivent dans le cache TanStack Query persisté en IndexedDB, et les
-écritures faites hors ligne sont mises en file puis rejouées au retour du réseau.
-Deux règles rendent ce rejeu sûr, et les casser réintroduirait des doublons :
+Les **données** vivent dans le cache TanStack Query persisté en IndexedDB, gardé
+une semaine. Seules les lectures y sont écrites : `shouldDehydrateMutation` est
+explicitement à `false`, et les mutations utilisent `networkMode: 'always'` pour
+**échouer tout de suite** au lieu d'attendre en silence un retour de réseau qui
+ne serait plus exploité.
 
-- les identifiants sont générés par l'appelant et voyagent dans les variables de
-  la mutation, jamais à l'intérieur de celle-ci ;
-- les écritures sont des `upsert`, donc rejouer une mutation qui avait en fait
-  atteint le serveur ne fait rien.
+Les commandes d'écriture sont donc désactivées hors ligne — grisées et non
+masquées, avec une explication dans la barre du haut. Le glisser-déposer aussi,
+via `useDraggable({ disabled })` : une pièce qui suit le curseur puis revient en
+place sans explication est pire qu'une grille qui ne bouge pas.
 
-Les mutations sont enregistrées par clé dans `apps/web/src/app/mutations.ts` et
-non dans les composants : c'est ce qui permet de les retrouver après un
-rechargement pour les rejouer.
+L'état de la connexion vient de `useIsOnline` (`apps/web/src/app/hooks/`), qui
+lit le gestionnaire de TanStack Query plutôt que `navigator.onLine` directement :
+les écrans et la couche réseau ne peuvent ainsi jamais être en désaccord.
 
 ## Mise en ligne
 
