@@ -126,7 +126,7 @@ function main() {
     // The coin type is resolved by its natural key rather than by an id the
     // script would have to look up first. The unique constraint on the catalog
     // guarantees the subquery matches at most one row.
-    say(`insert into coins (user_id, coin_type_id, grade, notes, page_id, slot_row, slot_column)
+    say(`insert into coins (user_id, coin_type_id, grade_code, notes, page_id, slot_row, slot_column)
          select ${quote(user.id)},
                 coin_type_id, ${quote(coin.grade)}, ${quote(coin.notes)},
                 ${quote(coin.slot?.pageId ?? null)},
