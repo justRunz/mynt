@@ -1,9 +1,11 @@
+import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
 
 import { env } from './env.js'
 import { authenticate } from './middleware/authenticate.js'
 import { errorHandler } from './middleware/error-handler.js'
+import { authController } from './modules/auth/controller.js'
 import { binderController } from './modules/binders/controller.js'
 import { catalogController } from './modules/catalog/controller.js'
 import { collectionController } from './modules/collection/controller.js'
@@ -21,6 +23,15 @@ const app = express()
  */
 app.use(cors({ origin: env.webOrigin, credentials: true }))
 app.use(express.json())
+
+// The refresh token arrives as a cookie and nowhere else, so it has to be parsed
+// before any route can look for it.
+app.use(cookieParser())
+
+// Above the middleware on purpose, and the only thing that is: these are the
+// routes reached while holding no token, so requiring one would close the door
+// from the inside.
+app.use('/api/auth', authController)
 
 // Everything below needs a signed-in caller. Mounted before the routes rather
 // than repeated inside each of them, so adding a route cannot forget it.

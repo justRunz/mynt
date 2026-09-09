@@ -27,7 +27,12 @@ const ISSUER = 'mynt'
  * it. Short life is the only limit on a leaked one, so it is the compensation
  * for that speed rather than an arbitrary number.
  */
-const ACCESS_TTL = '15m'
+const ACCESS_TTL_MINUTES = 15
+const ACCESS_TTL = `${ACCESS_TTL_MINUTES}m`
+
+/** Handed to the client so it can renew before a request fails rather than
+ *  after. */
+export const ACCESS_TTL_SECONDS = ACCESS_TTL_MINUTES * 60
 
 /** Thirty days, and rotating: the collector who opens the app once a month
  *  stays signed in, and a stolen token has a horizon. */

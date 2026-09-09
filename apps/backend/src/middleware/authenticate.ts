@@ -1,13 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
-import { createRemoteJWKSet, jwtVerify } from 'jose'
 
-import { env } from '../env.js'
-
-/**
- * Fetched once and cached, then refetched only when a token arrives signed by a
- * key this has not seen -- which is what makes key rotation a non-event.
- */
-const jwks = createRemoteJWKSet(new URL(env.supabaseJwksUrl))
+import { readAccessToken } from '../modules/auth/tokens.js'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -21,17 +14,17 @@ declare global {
 }
 
 /**
- * Establishes who is asking, from the token GoTrue issued.
+ * Establishes who is asking, from a token this server signed itself.
  *
  * This is the one place identity enters the server. A route that took a user id
  * from its own body would let anyone write as anyone -- the row level security
  * policy would refuse it, which is the point of having a second line, but the
  * first line is here.
  *
- * Verifying Supabase's token rather than inventing a development header is
- * deliberate: the app is genuinely signed in during this step, so the real path
- * is exercised from the start and there is no bypass that could survive into
- * production. Only the issuer changes at step 4.
+ * Verification is a signature check and nothing else: no database round trip, no
+ * session table, no shared state. That is what makes it cheap enough to sit in
+ * front of every request, and it is also why an access token cannot be revoked
+ * and is therefore short-lived. The refresh half carries that weight instead.
  */
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization
@@ -42,21 +35,18 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     return
   }
 
-  try {
-    // jwtVerify checks the signature and the expiry. An expired token is not a
-    // token, so this rejects rather than returning stale claims.
-    const { payload } = await jwtVerify(token, jwks)
-    if (typeof payload.sub !== 'string') {
-      res.status(401).json({ error: 'unauthenticated' })
-      return
-    }
-    req.userId = payload.sub
-    next()
-  } catch {
-    // The reason is deliberately not passed on. "Signature invalid" against
-    // "expired" tells someone probing which half of a forgery to fix.
+  // Null for every failure alike -- bad signature, expired, wrong issuer, not a
+  // token at all. "Signature invalid" against "expired" tells someone probing
+  // which half of a forgery to fix, and no client has anything different to do
+  // about the difference.
+  const userId = await readAccessToken(token)
+  if (userId === null) {
     res.status(401).json({ error: 'unauthenticated' })
+    return
   }
+
+  req.userId = userId
+  next()
 }
 
 /**

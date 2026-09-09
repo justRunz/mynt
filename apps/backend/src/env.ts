@@ -25,19 +25,9 @@ export const env = {
    */
   webOrigin: process.env.WEB_ORIGIN ?? 'http://localhost:5173',
 
-  /**
-   * Where GoTrue publishes the public half of its signing key.
-   *
-   * Supabase signs with ES256 now, not with a shared secret, so verifying means
-   * fetching a key rather than holding one -- and nothing secret lives in this
-   * server's environment for it.
-   *
-   * Temporary, and it is the whole reason step 2 works: the app stays signed in
-   * through Supabase while its reads move here, so nothing breaks in between
-   * and no fake identity header has to exist. It goes at step 4, when this
-   * server issues its own tokens.
-   */
-  supabaseJwksUrl: required('SUPABASE_JWKS_URL'),
+  /** Whether cookies may insist on TLS. Development is served over plain
+   *  http on localhost, where a Secure cookie would simply never be set. */
+  isProduction: process.env.NODE_ENV === 'production',
 
   /**
    * The key this server signs its own access tokens with.
