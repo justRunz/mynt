@@ -2,6 +2,7 @@ import {
   boolean,
   check,
   date,
+  index,
   integer,
   pgSchema,
   pgTable,
@@ -44,6 +45,34 @@ export const users = auth.table('users', {
   emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+/**
+ * Live sessions, one row per refresh token.
+ *
+ * No policy guards this table: it is read in order to find out who is asking,
+ * so there is no identity to filter by yet. See the migration.
+ */
+export const refreshTokens = auth.table(
+  'refresh_tokens',
+  {
+    tokenId: uuid('token_id').primaryKey().default(sql`uuidv7()`),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    /** The chain descending from one sign-in; revoked whole on reuse. */
+    familyId: uuid('family_id').notNull(),
+    /** SHA-256 of the token, never the token. */
+    tokenHash: text('token_hash').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    /** Null until spent. A second use is what proves a copy exists. */
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('refresh_tokens_family_idx').on(table.familyId),
+    index('refresh_tokens_user_idx').on(table.userId),
+  ],
+)
 
 /** The same person, seen from the application side, and the only owner every
  *  foreign key in the collection points at. */
