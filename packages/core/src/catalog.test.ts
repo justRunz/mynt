@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import type { CoinType } from './db'
+import type { CoinType } from './catalog-types'
 
 import { findCoinTypeId, indexCoinTypes } from './catalog'
 
 const type = (
-  id: number,
-  country_code: string,
-  face_value_cents: number,
+  coinTypeId: number,
+  countryCode: string,
+  faceValueCents: number,
   year: number,
   variant = '',
-): CoinType => ({ id, country_code, face_value_cents, year, variant })
+): CoinType => ({ coinTypeId, countryCode, faceValueCents, year, variant })
 
 const catalog = [
   type(1, 'FR', 20, 2003),

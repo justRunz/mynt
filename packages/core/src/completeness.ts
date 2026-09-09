@@ -1,4 +1,4 @@
-import type { CoinType } from './db'
+import type { CoinType } from './catalog-types'
 import { FACE_VALUES_CENTS, type FaceValueCents } from './denominations'
 
 /**
@@ -51,12 +51,12 @@ export function buildCompleteness(
   const years = new Set<number>()
 
   for (const type of coinTypes) {
-    if (type.country_code !== countryCode) continue
+    if (type.countryCode !== countryCode) continue
     years.add(type.year)
-    const cell = key(type.face_value_cents, type.year)
+    const cell = key(type.faceValueCents, type.year)
     const ids = byCell.get(cell)
-    if (ids) ids.push(type.id)
-    else byCell.set(cell, [type.id])
+    if (ids) ids.push(type.coinTypeId)
+    else byCell.set(cell, [type.coinTypeId])
   }
 
   const sortedYears = [...years].sort((a, b) => a - b)

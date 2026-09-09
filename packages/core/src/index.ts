@@ -1,5 +1,6 @@
 export * from './binder'
 export * from './catalog'
+export * from './catalog-types'
 export * from './collection'
 export * from './completeness'
 export * from './db'

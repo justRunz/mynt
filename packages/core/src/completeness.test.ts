@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import type { CoinType } from './db'
+import type { CoinType } from './catalog-types'
 
 import { buildCompleteness, countByCoinType } from './completeness'
 
 const type = (
-  id: number,
-  country_code: string,
-  face_value_cents: number,
+  coinTypeId: number,
+  countryCode: string,
+  faceValueCents: number,
   year: number,
   variant = '',
-): CoinType => ({ id, country_code, face_value_cents, year, variant })
+): CoinType => ({ coinTypeId, countryCode, faceValueCents, year, variant })
 
 // Croatia joined in 2023, so its catalog is small enough to reason about.
 const catalog = [

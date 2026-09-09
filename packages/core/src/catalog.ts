@@ -1,4 +1,4 @@
-import type { CoinType } from './db'
+import type { CoinType } from './catalog-types'
 
 /**
  * A coin type is identified by country, face value, year and variant -- the
@@ -22,8 +22,8 @@ export function indexCoinTypes(types: readonly CoinType[]): Map<string, number> 
   const index = new Map<string, number>()
   for (const type of types) {
     index.set(
-      coinTypeKey(type.country_code, type.face_value_cents, type.year, type.variant),
-      type.id,
+      coinTypeKey(type.countryCode, type.faceValueCents, type.year, type.variant),
+      type.coinTypeId,
     )
   }
   return index

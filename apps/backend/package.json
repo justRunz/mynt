@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "tsx watch --env-file=../../.env src/server.ts",
+    "start": "node --env-file=../../.env dist/server.js",
     "build": "tsc -p tsconfig.json",
     "lint": "oxlint",
     "test": "vitest run",
@@ -11,13 +13,19 @@
   },
   "dependencies": {
     "@mynt/core": "workspace:*",
+    "cors": "^2.8.6",
     "drizzle-orm": "^0.44.7",
+    "express": "^5.2.1",
+    "jose": "^6.2.12",
     "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "catalog:",
     "@types/pg": "^8.15.6",
     "oxlint": "catalog:",
+    "tsx": "^4.23.13",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
