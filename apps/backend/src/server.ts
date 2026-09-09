@@ -21,7 +21,7 @@ const app = express()
  * credentials is on for the refresh cookie the auth step brings; today the token travels in an
  * Authorization header, which does not need it.
  */
-app.use(cors({ origin: env.webOrigin, credentials: true }))
+app.use(cors({ origin: env.appUrl, credentials: true }))
 app.use(express.json())
 
 // The refresh token arrives as a cookie and nowhere else, so it has to be parsed

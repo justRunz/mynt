@@ -1,9 +1,7 @@
-# The database Mynt is moving to, replacing the Supabase stack.
+# What Mynt needs running locally: a database, and somewhere for mail to land.
 #
-# It runs alongside that stack rather than instead of it: Supabase keeps serving
-# the app while the new backend is built next to it, and is only stopped once
-# authentication moves over. Nothing here collides with it -- Supabase's own
-# Postgres listens on 54322.
+# Both are development only. In production the database is Dokploy's and the mail
+# goes to a real relay; nothing in this file is deployed.
 
 services:
   db:
@@ -37,6 +35,29 @@ services:
       interval: 2s
       timeout: 3s
       retries: 15
+
+  # Every message the app sends, caught and displayed instead of delivered.
+  #
+  # Not a convenience: without it, testing a verification link means sending real
+  # mail to a real address, which is slow, occasionally undeliverable, and
+  # impossible to do for an address that is not yours. Here the link is on screen
+  # a second after the request.
+  #
+  # It speaks SMTP with no authentication and accepts everything, so the server's
+  # mail path is exercised in full -- the same nodemailer transport, the same
+  # message -- with only the host and port differing from production.
+  mail:
+    image: axllent/mailpit:latest
+    container_name: mynt_mail
+    restart: unless-stopped
+    ports:
+      # 1025 is where the API sends; 8025 is the inbox to read in a browser.
+      - '1025:1025'
+      - '8025:8025'
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
 volumes:
   mynt-db:

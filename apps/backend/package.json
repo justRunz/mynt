@@ -19,6 +19,7 @@
     "drizzle-orm": "^0.44.7",
     "express": "^5.2.1",
     "jose": "^6.2.12",
+    "nodemailer": "^10.0.1",
     "pg": "^8.16.3",
     "zod": "^4.5.4"
   },
@@ -27,6 +28,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "catalog:",
+    "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.15.6",
     "oxlint": "catalog:",
     "tsx": "^4.23.13",

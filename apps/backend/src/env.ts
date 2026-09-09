@@ -17,13 +17,17 @@ export const env = {
   port: Number(process.env.PORT ?? 3001),
 
   /**
-   * Where the browser talks from, during development only.
+   * Where the app is served from.
    *
-   * In production the app and the API share one origin -- Express serves the
-   * built front end alongside /api -- so there is no cross-origin request to
-   * allow and none of this applies.
+   * Two jobs, which is why it is one variable rather than two that could
+   * disagree. It is the origin CORS permits in development, where the app is on
+   * 5173 and this is on 3001 -- in production they share an origin and none of
+   * that runs. And it is what every link in an email is built from, which is why
+   * it has no default: a verification link pointing at localhost because a
+   * variable was missing is a mail that cannot be told apart from a working one
+   * until somebody clicks it.
    */
-  webOrigin: process.env.WEB_ORIGIN ?? 'http://localhost:5173',
+  appUrl: required('APP_URL'),
 
   /** Whether cookies may insist on TLS. Development is served over plain
    *  http on localhost, where a Secure cookie would simply never be set. */
@@ -48,4 +52,18 @@ export const env = {
     }
     return value
   })(),
+
+  /**
+   * Where mail goes.
+   *
+   * Mailpit locally, on a port that speaks SMTP and delivers nothing; a real
+   * relay in production. Credentials are optional because the local one wants
+   * none, and passing empty strings would make nodemailer attempt to
+   * authenticate with them.
+   */
+  smtpHost: process.env.SMTP_HOST ?? '127.0.0.1',
+  smtpPort: Number(process.env.SMTP_PORT ?? 1025),
+  smtpUser: process.env.SMTP_USER,
+  smtpPassword: process.env.SMTP_PASSWORD,
+  mailFrom: process.env.MAIL_FROM ?? 'Mynt <no-reply@mynt.local>',
 } as const
