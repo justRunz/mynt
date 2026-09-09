@@ -1,13 +1,14 @@
-import type { DatabaseGrade } from './db'
-
 /**
  * Condition grades, worst to best.
  *
  * Grading scales are national and not translations of one another, so the code
  * is English and the French label (TB, TTB, SUP, FDC) comes from i18n.
  *
- * The order here must match the declaration order of the `coin_grade` enum in
- * the database, which is what Postgres sorts by.
+ * This list must match the grades table, which is where the codes actually
+ * exist. There is no type that can say so any more -- they used to be an enum,
+ * and an enum has a type; rows do not -- so the backend asserts it against the
+ * real table instead. Losing the compile-time check for a check that reads the
+ * database is not obviously a loss.
  */
 export const GRADES = [
   'VERY_FINE',
@@ -22,12 +23,3 @@ export type Grade = (typeof GRADES)[number]
 export function gradeRank(grade: Grade): number {
   return GRADES.indexOf(grade)
 }
-
-type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : never) : never
-
-/**
- * Fails to compile if GRADES drifts from the database enum, which is the whole
- * point: regenerating database.types.ts after an `alter type` will break here
- * rather than silently somewhere in the UI.
- */
-export const gradesMatchDatabase: Equal<Grade, DatabaseGrade> = true

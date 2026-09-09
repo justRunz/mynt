@@ -7,10 +7,10 @@
  *
  *   pnpm db:demo
  *
- * The account it creates carries the *same id as the Supabase account*, which
- * is what makes step 2 verifiable: the app stays signed in through GoTrue while
- * Express verifies that very token, and both databases then speak about one
- * person. That coupling disappears with Supabase at step 4.
+ * The account has a fixed id, so the demo collection survives re-seeding and so
+ * the ids in a bug report mean the same thing on two machines. It used to be
+ * read out of the running Supabase stack, back when two databases had to agree
+ * on who this person was; there is one database now.
  */
 
 import { execFileSync } from 'node:child_process'
@@ -44,27 +44,9 @@ const psql = (args, input) =>
     encoding: 'utf8',
   })
 
-/**
- * The id of the Supabase account, so the two databases agree on who this is.
- *
- * Read from the running stack rather than pasted in, because a stale uuid here
- * would fail in the most confusing way possible: the app signed in, Express
- * accepting the token, and the collection simply empty.
- */
-function supabaseUserId() {
-  try {
-    const id = execFileSync(
-      'docker',
-      ['exec', 'supabase_db_mynt', 'psql', '-U', 'postgres', '-tAc',
-       'select id from auth.users order by created_at limit 1'],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
-    ).trim()
-    if (id) return { id, source: 'compte Supabase' }
-  } catch {
-    // Supabase is not running, or has no account yet.
-  }
-  return { id: '00000000-0000-4000-8000-000000000001', source: 'identifiant de repli' }
-}
+/** Fixed, and recognisable in a query result. Version 4 in shape rather than
+ *  the uuidv7 the column defaults to: a seeded row should look seeded. */
+const USER_ID = '5eed0000-0000-4000-8000-000000000000'
 
 const COUNTRIES = {
   // Country to its first minting year, so a generated coin always exists in
@@ -89,7 +71,6 @@ const CURRENT_YEAR = new Date().getFullYear()
 const quote = (value) => (value === null ? 'null' : `'${String(value).replace(/'/g, "''")}'`)
 
 async function main() {
-  const user = supabaseUserId()
   const passwordHash = await hash(PASSWORD, ARGON2ID)
   const binderId = '5eed0000-0000-4000-8000-000000000001'
   const pageIds = [1, 2, 3].map((n) => `5eed0000-0000-4000-8000-00000000000${n + 1}`)
@@ -97,16 +78,18 @@ async function main() {
   const lines = []
   const say = (sql) => lines.push(sql)
 
-  // Re-runnable: the account cascades to everything it owns.
-  say(`delete from auth.users where user_id = ${quote(user.id)};`)
+  // Re-runnable: the account cascades to everything it owns. Matched on the
+  // address as well as the id, so the account seeded under the old Supabase
+  // uuid is cleaned up rather than left beside the new one.
+  say(`delete from auth.users where user_id = ${quote(USER_ID)} or email = ${quote(EMAIL)};`)
   say(`insert into auth.users (user_id, email, password_hash, email_verified_at)
-       values (${quote(user.id)}, ${quote(EMAIL)}, ${quote(passwordHash)}, now());`)
+       values (${quote(USER_ID)}, ${quote(EMAIL)}, ${quote(passwordHash)}, now());`)
   // Updated rather than inserted: the trigger on auth.users has already put the
   // row there, and writing it again would violate the primary key.
-  say(`update user_info set nickname = ${quote(NICKNAME)} where user_id = ${quote(user.id)};`)
+  say(`update user_info set nickname = ${quote(NICKNAME)} where user_id = ${quote(USER_ID)};`)
 
   say(`insert into binders (binder_id, user_id, name)
-       values (${quote(binderId)}, ${quote(user.id)}, 'Classeur Europe');`)
+       values (${quote(binderId)}, ${quote(USER_ID)}, 'Classeur Europe');`)
   for (const [index, pageId] of pageIds.entries()) {
     say(`insert into pages (page_id, binder_id, page_number, row_count, column_count)
          values (${quote(pageId)}, ${quote(binderId)}, ${index + 1}, 4, 5);`)
@@ -144,7 +127,7 @@ async function main() {
     // script would have to look up first. The unique constraint on the catalog
     // guarantees the subquery matches at most one row.
     say(`insert into coins (user_id, coin_type_id, grade_code, notes, page_id, slot_row, slot_column)
-         select ${quote(user.id)},
+         select ${quote(USER_ID)},
                 coin_type_id, ${quote(coin.grade)}, ${quote(coin.notes)},
                 ${quote(coin.slot?.pageId ?? null)},
                 ${coin.slot ? coin.slot.row : 'null'},
@@ -164,9 +147,13 @@ async function main() {
 
   console.log(`Compte       ${EMAIL}`)
   console.log(`Mot de passe ${PASSWORD}`)
-  console.log(`Identifiant  ${user.id}  (${user.source})`)
-  console.log(`Collection   ${count(`select count(*) from coins where user_id = '${user.id}'`)} pièces, ` +
-              `dont ${count(`select count(*) from coins where user_id = '${user.id}' and page_id is not null`)} rangées`)
+  console.log(`Identifiant  ${USER_ID}`)
+  console.log(
+    `Collection   ${count(`select count(*) from coins where user_id = '${USER_ID}'`)} pièces, ` +
+      `dont ${count(
+        `select count(*) from coins where user_id = '${USER_ID}' and page_id is not null`,
+      )} rangées`,
+  )
   console.log(`Classeur     « Classeur Europe », 3 pages de 4 × 5`)
 }
 

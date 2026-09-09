@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./catalog-types": "./src/catalog-types.ts"
+    "./catalog-types": "./src/catalog-types.ts",
+    "./grades": "./src/grades.ts"
   },
   "scripts": {
     "build": "echo \"@mynt/core is consumed as source, nothing to build\"",

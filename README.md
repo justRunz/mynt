@@ -10,11 +10,12 @@ est physiquement rangée** — quel classeur, quelle page, quel trou.
 
 ```
 apps/web/        la PWA React
-packages/core/   types générés depuis la base, constantes métier, logique pure
-supabase/        migrations et configuration — infrastructure partagée
+apps/backend/    l'API Express : authentification, lectures, écritures
+packages/core/   types partagés, constantes métier, logique pure
+db/migrations/   le schéma, en SQL, joué par dbmate
 ```
 
-`packages/core` est ce que consommerait un futur `apps/backend`, d'où le monorepo.
+`packages/core` est ce que les deux consomment, d'où le monorepo.
 
 ## Démarrer
 
@@ -22,26 +23,25 @@ Prérequis : Node ≥ 20.19, pnpm, Docker.
 
 ```bash
 pnpm install
-pnpm db:start                       # base locale, imprime l'URL et la clé anon
-cp apps/web/.env.example apps/web/.env.local   # y coller les valeurs affichées
-pnpm dev
+cp .env.example .env                            # y mettre AUTH_SECRET
+cp apps/web/.env.example apps/web/.env.local
+pnpm db:up                                      # Postgres 18 + migrations
+pnpm db:demo                                    # un compte et 62 pièces
+pnpm dev                                        # l'API sur 3001, l'app sur 5173
 ```
 
-Studio sur http://127.0.0.1:54323.
+`pnpm db:demo` imprime l'adresse et le mot de passe du compte de démonstration.
 
-### Emails en local
+### Comptes et sessions
 
-**Aucun email ne quitte la machine.** Confirmations et liens de réinitialisation sont
-capturés par Mailpit sur **http://127.0.0.1:54324** — c'est là qu'il faut les lire,
-pas dans une vraie boîte.
+L'inscription ouvre directement une session : il n'y a pas encore de vérification
+d'adresse, parce qu'il n'y a pas encore de quoi envoyer un email. Le mot de passe
+oublié attend la même chose.
 
-Les redirections d'authentification sont contraintes par `supabase/config.toml` :
-`site_url` et `additional_redirect_urls` doivent couvrir l'URL de l'app, sinon le lien
-de réinitialisation renvoie ailleurs. Les mêmes réglages existent côté hébergé, dans
-Authentication puis URL Configuration, et sont à mettre à jour à la mise en ligne.
-
-La confirmation d'email est désactivée en local (`enable_confirmations = false`),
-donc l'inscription ouvre directement une session.
+Le jeton d'accès vit quinze minutes, en mémoire et jamais dans `localStorage`. Ce
+qui survit à un rechargement est le cookie de rafraîchissement, `httpOnly` et donc
+hors de portée de tout script : au démarrage l'app l'échange contre un nouveau
+jeton, ce qui est exactement ce que l'écran de chargement recouvre.
 
 ## Commandes
 
@@ -52,12 +52,16 @@ donc l'inscription ouvre directement une session.
 | `pnpm typecheck` | TypeScript sur tout le workspace |
 | `pnpm lint` | oxlint |
 | `pnpm test` | vitest |
-| `pnpm db:reset` | rejoue les migrations et le seed depuis zéro |
-| `pnpm db:types` | régénère `packages/core/src/database.types.ts` |
+| `pnpm db:up` | démarre la base et joue les migrations |
+| `pnpm db:new <nom>` | crée une migration |
+| `pnpm db:reset` | rejoue les migrations depuis zéro |
+| `pnpm db:catalog` | étend le catalogue jusqu'à l'année courante |
 | `pnpm db:demo` | remplit un compte de démonstration |
 
-`pnpm db:types` est à relancer après **toute** migration : le typage des grades
-casse volontairement la compilation si l'enum de la base a bougé.
+Les migrations SQL sont la source de vérité. `apps/backend/src/db/schema.ts` en est
+une **vue typée** : drizzle-kit n'a jamais le droit d'écrire dans la base — ni
+`push` ni `migrate`, seulement `pull` — parce qu'il ne gère que ce qu'il sait
+exprimer et supprimerait les politiques, les triggers et les rôles qu'il ignore.
 
 ## Conventions
 
@@ -102,10 +106,6 @@ les écrans et la couche réseau ne peuvent ainsi jamais être en désaccord.
 
 ## Mise en ligne
 
-```bash
-pnpm exec supabase link --project-ref <ref>
-pnpm exec supabase db push
-```
-
-Les migrations sont la source de vérité, partagée entre le local et l'hébergé.
-Seules les variables d'environnement changent.
+Pas encore faite. Le plan : un conteneur qui sert `/api` et l'app bâtie derrière
+un seul domaine — donc CORS n'existe qu'en développement — déployé par Dokploy sur
+un VPS, avec `dbmate up` au démarrage.

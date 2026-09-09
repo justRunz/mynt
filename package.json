@@ -7,7 +7,7 @@
     "node": ">=20.19"
   },
   "scripts": {
-    "dev": "pnpm --filter @mynt/web dev",
+    "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
@@ -20,16 +20,11 @@
     "db:demo": "node scripts/seed-demo.mjs",
     "db:password": "docker exec mynt_db psql -U postgres -qc \"alter role mynt_app password 'mynt'\"",
     "db:status": "dbmate status",
-    "db:reset": "dbmate --wait drop && dbmate up",
-    "supabase:start": "supabase start",
-    "supabase:stop": "supabase stop",
-    "supabase:reset": "supabase db reset",
-    "supabase:types": "supabase gen types typescript --local > packages/core/src/database.types.ts"
+    "db:reset": "dbmate --wait drop && dbmate up"
   },
   "devDependencies": {
     "@node-rs/argon2": "^2.2.0",
     "dbmate": "^2.35.1",
-    "supabase": "^2.116.0",
     "typescript": "catalog:"
   }
 }
