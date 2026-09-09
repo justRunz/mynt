@@ -36,3 +36,19 @@ export function postgresErrorCode(error: unknown): string | undefined {
   const cause = (error as { cause?: unknown }).cause ?? error
   return (cause as { code?: string }).code
 }
+
+/**
+ * The constraint a failure names, when it names one.
+ *
+ * A SQLSTATE says what kind of thing went wrong; the constraint says which rule.
+ * Both foreign keys on coins report 23503, and so does the trigger that hides
+ * someone else's page -- three different answers for the collector, told apart
+ * by a name the database assigned rather than by a message anybody wrote.
+ *
+ * Undefined when the failure came from a plpgsql raise, which carries no
+ * constraint. That absence is itself informative.
+ */
+export function postgresErrorConstraint(error: unknown): string | undefined {
+  const cause = (error as { cause?: unknown }).cause ?? error
+  return (cause as { constraint?: string }).constraint
+}

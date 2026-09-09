@@ -16,6 +16,29 @@ const STATUS: Record<string, number> = {
   email_taken: 409,
   // Deliberately one answer for a wrong password and an unknown address alike.
   invalid_credentials: 401,
+
+  // A coin that is not there, or is somebody else's -- the policy makes those
+  // the same thing, and so does this. 404 rather than 403: a refusal that
+  // distinguishes them tells a stranger which ids are real.
+  not_found: 404,
+
+  // The hole is taken. The one conflict a collector can act on, which is why it
+  // arrives as itself instead of as a generic failure: the binder view and the
+  // add form both ask whether this is what happened, and offer another hole.
+  slot_taken: 409,
+  // Two sheets cannot both be page seven of one binder.
+  page_number_taken: 409,
+
+  // Well-formed, permitted, and still impossible: row 5 of a four-row sheet, or
+  // a grade that is not in the grades table. 422 rather than 400, because the
+  // request was understood -- it just asks for something that cannot be.
+  slot_out_of_bounds: 422,
+  unknown_grade: 422,
+  unknown_coin_type: 422,
+
+  // A uniqueness rule broke that no route names specifically. Left mapped rather
+  // than falling through to 500, since a conflict is still the truth.
+  conflict: 409,
 }
 
 /**

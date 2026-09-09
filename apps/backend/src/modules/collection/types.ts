@@ -1,3 +1,12 @@
+import type { z } from 'zod'
+
+import type {
+  addCoinSchema,
+  fileCoinSchema,
+  movePairSchema,
+  updateCoinSchema,
+} from './schemas.js'
+
 /**
  * What the collection endpoints promise, independent of both the column layout
  * below and the component props above.
@@ -42,3 +51,17 @@ export interface CollectionCoin {
  * would then throw. This project has had that bug once already.
  */
 export type OwnedTypeCounts = Record<number, number>
+
+// ---------------------------------------------------------------------------
+// What a write is given
+// ---------------------------------------------------------------------------
+
+/**
+ * Inferred from the schemas rather than written again, so a field added to a
+ * validator cannot be forgotten in the type -- there is only one description of
+ * a request body, and it is the one that actually rejects things.
+ */
+export type Slot = z.infer<typeof fileCoinSchema>
+export type AddCoin = z.infer<typeof addCoinSchema>
+export type UpdateCoin = z.infer<typeof updateCoinSchema>
+export type MovePair = z.infer<typeof movePairSchema>
