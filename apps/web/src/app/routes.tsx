@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { SignIn } from '@/app/auth/sign-in'
 import { SignUp } from '@/app/auth/sign-up'
+import { ForgotPassword } from '@/app/auth/forgot-password'
+import { ResetPassword } from '@/app/auth/reset-password'
 import { VerifyEmail } from '@/app/auth/verify-email'
 import { BindersPage } from '@/app/binders'
 import { CollectionPage } from '@/app/collection'
@@ -32,6 +34,8 @@ export function AppRoutes() {
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="*" element={<Navigate to="/sign-in" replace />} />
       </Routes>
     )

@@ -9,6 +9,7 @@ import { hashPassword, verifyPassword } from './passwords.js'
 import {
   ACCESS_TTL_SECONDS,
   EMAIL_VERIFICATION_TTL_HOURS,
+  PASSWORD_RESET_TTL_HOURS,
   hashOpaqueToken,
   hoursFromNow,
   mintOpaqueToken,
@@ -31,6 +32,7 @@ import type { Session, SignInOutcome } from './types.js'
 const UNIQUE_VIOLATION = '23505'
 
 const EMAIL_VERIFICATION = 'EMAIL_VERIFICATION'
+const PASSWORD_RESET = 'PASSWORD_RESET'
 
 /**
  * Issues a link token, and revokes the ones it replaces.
@@ -299,4 +301,86 @@ export async function signOut(tx: Tx, presented: string): Promise<void> {
   if (!existing) return
 
   await tx.delete(refreshTokens).where(eq(refreshTokens.familyId, existing.familyId))
+}
+
+/**
+ * Starts a password reset, if there is an account to start it for.
+ *
+ * Returns null when there is not, and the route answers the same either way.
+ * Telling the two apart would turn this form into a way of asking whether an
+ * address is registered -- which is exactly the fact sign-in refuses to reveal,
+ * and it would be odd to guard it there and hand it over here.
+ *
+ * No check that the address was ever confirmed. Somebody who can read the
+ * mailbox is the person the address belongs to, whether or not they got round to
+ * clicking the first link -- and refusing would strand an account whose
+ * confirmation went missing.
+ */
+export async function requestPasswordReset(tx: Tx, email: string): Promise<string | null> {
+  const [account] = await tx
+    .select({ userId: users.userId })
+    .from(users)
+    .where(eq(users.email, email))
+
+  if (!account) return null
+
+  return issueLinkToken(tx, account.userId, PASSWORD_RESET, PASSWORD_RESET_TTL_HOURS)
+}
+
+/**
+ * Sets a new password, and closes every session the old one opened.
+ *
+ * The revocation is most of the point. A reset is what somebody does when they
+ * believe the password is known to someone else, and leaving that someone's
+ * session running would make the whole exercise decorative -- they would keep
+ * their access and simply lose the ability to sign in again.
+ *
+ * It confirms the address at the same time, if it was not already. Reading the
+ * mailbox is the same proof the verification link asks for; requiring it twice
+ * would strand an account whose first message went missing.
+ *
+ * No session comes back. Every session just ended, including the caller's, and
+ * handing one straight out would contradict the sentence above.
+ */
+export async function resetPassword(
+  tx: Tx,
+  presented: string,
+  password: string,
+): Promise<void> {
+  const [token] = await tx
+    .select()
+    .from(oneTimeTokens)
+    .where(
+      and(
+        eq(oneTimeTokens.tokenHash, hashOpaqueToken(presented)),
+        eq(oneTimeTokens.purpose, PASSWORD_RESET),
+      ),
+    )
+
+  if (!token || token.usedAt !== null || token.expiresAt.getTime() <= Date.now()) {
+    throw new DomainError('invalid_link')
+  }
+
+  const spent = await tx
+    .update(oneTimeTokens)
+    .set({ usedAt: new Date() })
+    .where(and(eq(oneTimeTokens.tokenId, token.tokenId), isNull(oneTimeTokens.usedAt)))
+    .returning({ tokenId: oneTimeTokens.tokenId })
+
+  if (spent.length === 0) throw new DomainError('invalid_link')
+
+  await tx
+    .update(users)
+    .set({ passwordHash: await hashPassword(password) })
+    .where(eq(users.userId, token.userId))
+
+  await tx
+    .update(users)
+    .set({ emailVerifiedAt: new Date() })
+    .where(and(eq(users.userId, token.userId), isNull(users.emailVerifiedAt)))
+
+  // Every device, deleted rather than marked spent: there is nothing to
+  // reconstruct afterwards, and a row that can never be presented again is a row
+  // worth being rid of.
+  await tx.delete(refreshTokens).where(eq(refreshTokens.userId, token.userId))
 }

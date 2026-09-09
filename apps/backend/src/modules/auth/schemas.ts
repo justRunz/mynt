@@ -36,3 +36,9 @@ export type Credentials = z.infer<typeof credentialsSchema>
 export const linkTokenSchema = z.object({
   token: z.string().min(1).max(500),
 })
+
+export const emailSchema = credentialsSchema.pick({ email: true })
+
+export const resetPasswordSchema = linkTokenSchema.extend(
+  credentialsSchema.pick({ password: true }).shape,
+)

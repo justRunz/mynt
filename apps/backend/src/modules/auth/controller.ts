@@ -3,9 +3,22 @@ import { Router, type CookieOptions, type Response } from 'express'
 import { dbQueryUnscoped } from '../../db/index.js'
 import { env } from '../../env.js'
 import { sendMail } from '../../mail/index.js'
-import { verificationMessage } from '../../mail/messages.js'
-import { credentialsSchema, linkTokenSchema } from './schemas.js'
-import { rotateSession, signIn, signOut, signUp, verifyEmail } from './service.js'
+import { passwordResetMessage, verificationMessage } from '../../mail/messages.js'
+import {
+  credentialsSchema,
+  emailSchema,
+  linkTokenSchema,
+  resetPasswordSchema,
+} from './schemas.js'
+import {
+  requestPasswordReset,
+  resetPassword,
+  rotateSession,
+  signIn,
+  signOut,
+  signUp,
+  verifyEmail,
+} from './service.js'
 import { REFRESH_TTL_DAYS } from './tokens.js'
 import type { Session } from './types.js'
 
@@ -113,6 +126,38 @@ authController.post('/sign-in', async (req, res) => {
 authController.post('/verify-email', async (req, res) => {
   const { token } = linkTokenSchema.parse(req.body)
   respondWithSession(res, await dbQueryUnscoped((tx) => verifyEmail(tx, token)))
+})
+
+/**
+ * Asks for a link to choose a new password.
+ *
+ * Answers 204 whether or not the address is registered, and takes the same
+ * amount of visible time either way. Anything else would make this form a way of
+ * asking whether somebody has an account here -- the exact fact sign-in goes to
+ * trouble to withhold.
+ */
+authController.post('/forgot-password', async (req, res) => {
+  const { email } = emailSchema.parse(req.body)
+  const token = await dbQueryUnscoped((tx) => requestPasswordReset(tx, email))
+  if (token) await sendMail(passwordResetMessage(email, token))
+  res.status(204).end()
+})
+
+/**
+ * Sets the new password, and signs nobody in.
+ *
+ * Every session that existed has just been revoked, the caller's included --
+ * which is what a reset is for. Returning a session here would contradict that
+ * in the same breath, so the collector signs in with the password they just
+ * chose. The cookie is cleared for the same reason: whatever this browser was
+ * holding is now dead, and leaving it would mean one failed refresh before the
+ * app noticed.
+ */
+authController.post('/reset-password', async (req, res) => {
+  const { token, password } = resetPasswordSchema.parse(req.body)
+  await dbQueryUnscoped((tx) => resetPassword(tx, token, password))
+  res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS)
+  res.status(204).end()
 })
 
 /**

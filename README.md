@@ -32,11 +32,23 @@ pnpm dev                                        # l'API sur 3001, l'app sur 5173
 
 `pnpm db:demo` imprime l'adresse et le mot de passe du compte de démonstration.
 
+Mailpit tourne avec la base : **aucun email ne quitte la machine**, tout est
+capturé et lisible sur **http://localhost:8025**. C'est là qu'on va chercher le
+lien de confirmation après une inscription.
+
 ### Comptes et sessions
 
-L'inscription ouvre directement une session : il n'y a pas encore de vérification
-d'adresse, parce qu'il n'y a pas encore de quoi envoyer un email. Le mot de passe
-oublié attend la même chose.
+L'inscription n'ouvre pas de session : une adresse est une affirmation tant que
+personne n'a ouvert la boîte qu'elle désigne. Le lien reçu confirme l'adresse
+*et* connecte — savoir lire la boîte est la seule chose que l'adresse prétendait.
+
+Se connecter avec une adresse non confirmée est refusé, et renvoie un lien neuf.
+C'est ce qui évite qu'un compte devienne inaccessible parce que le premier message
+s'est perdu ; le mot de passe correct est ce qui garde cette porte.
+
+Réinitialiser un mot de passe **révoque toutes les sessions**, y compris celle du
+navigateur qui vient de le faire — c'est l'essentiel de l'exercice. On se
+reconnecte ensuite avec le nouveau.
 
 Le jeton d'accès vit quinze minutes, en mémoire et jamais dans `localStorage`. Ce
 qui survit à un rechargement est le cookie de rafraîchissement, `httpOnly` et donc

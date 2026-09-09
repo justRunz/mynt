@@ -101,6 +101,36 @@ export async function verifyEmail(token: string): Promise<void> {
 }
 
 /**
+ * Asks for a link to choose a new password.
+ *
+ * Always succeeds, whether or not the address is registered -- the server
+ * answers the same either way, and the screen says the same thing, because the
+ * alternative is a form that tells anyone who asks whether somebody has an
+ * account here.
+ */
+export function requestPasswordReset(email: string): Promise<void> {
+  return apiFetch<void>('/auth/forgot-password', {
+    method: 'POST',
+    body: { email },
+    raw: true,
+  })
+}
+
+/**
+ * Sets the new password. Signs nobody in, deliberately.
+ *
+ * Every session has just been revoked, this browser's included, which is what a
+ * reset is for. The collector signs in with the password they have just chosen.
+ */
+export function resetPassword(token: string, password: string): Promise<void> {
+  return apiFetch<void>('/auth/reset-password', {
+    method: 'POST',
+    body: { token, password },
+    raw: true,
+  })
+}
+
+/**
  * Ends the session here and on the server, and erases what was cached.
  *
  * The cache outlives the session, so leaving it would show the next person to

@@ -6,7 +6,15 @@ import { closeDb, dbQueryAs, dbQueryUnscoped } from '../../db/index.js'
 import { oneTimeTokens, refreshTokens, userInfo, users } from '../../db/schema.js'
 import { DomainError } from '../../errors.js'
 import { readAccessToken } from './tokens.js'
-import { rotateSession, signIn, signOut, signUp, verifyEmail } from './service.js'
+import {
+  requestPasswordReset,
+  resetPassword,
+  rotateSession,
+  signIn,
+  signOut,
+  signUp,
+  verifyEmail,
+} from './service.js'
 
 /**
  * The session lifecycle against a real database.
@@ -272,5 +280,73 @@ describe('confirming an address', () => {
     await expect(dbQueryUnscoped((tx) => verifyEmail(tx, 'inventé'))).rejects.toThrow(
       'invalid_link',
     )
+  })
+})
+
+describe('resetting a forgotten password', () => {
+  const NEW_PASSWORD = 'un tout autre assemblage de mots'
+
+  test('an address nobody has gives nothing away', async () => {
+    // Null, and the route answers 204 either way. Distinguishing them would turn
+    // the form into a way of asking whether somebody has an account here.
+    expect(
+      await dbQueryUnscoped((tx) => requestPasswordReset(tx, 'personne@mynt.test')),
+    ).toBeNull()
+  })
+
+  test('the link sets a new password and retires the old one', async () => {
+    await openSession()
+    const token = await dbQueryUnscoped((tx) => requestPasswordReset(tx, EMAIL))
+    await dbQueryUnscoped((tx) => resetPassword(tx, token!, NEW_PASSWORD))
+
+    expect(await refused(() => dbQueryUnscoped((tx) => signIn(tx, EMAIL, PASSWORD)))).toBe(
+      'invalid_credentials',
+    )
+    const outcome = await dbQueryUnscoped((tx) => signIn(tx, EMAIL, NEW_PASSWORD))
+    expect(outcome.verified).toBe(true)
+  })
+
+  test('every session ends, which is most of the point', async () => {
+    // Somebody resets because they think the password is known to someone else.
+    // Leaving that someone's session running would make the exercise decorative.
+    const phone = await openSession()
+    const laptop = await signInVerified()
+
+    const token = await dbQueryUnscoped((tx) => requestPasswordReset(tx, EMAIL))
+    await dbQueryUnscoped((tx) => resetPassword(tx, token!, NEW_PASSWORD))
+
+    expect(await dbQueryUnscoped((tx) => rotateSession(tx, phone.refreshToken))).toBeNull()
+    expect(await dbQueryUnscoped((tx) => rotateSession(tx, laptop.refreshToken))).toBeNull()
+  })
+
+  test('it confirms the address too, so a lost first link is not a dead end', async () => {
+    const { userId } = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+    const token = await dbQueryUnscoped((tx) => requestPasswordReset(tx, EMAIL))
+    await dbQueryUnscoped((tx) => resetPassword(tx, token!, NEW_PASSWORD))
+
+    const [account] = await dbQueryUnscoped((tx) =>
+      tx.select().from(users).where(eq(users.userId, userId)),
+    )
+    expect(account!.emailVerifiedAt).not.toBeNull()
+  })
+
+  test('the link works once', async () => {
+    await openSession()
+    const token = await dbQueryUnscoped((tx) => requestPasswordReset(tx, EMAIL))
+    await dbQueryUnscoped((tx) => resetPassword(tx, token!, NEW_PASSWORD))
+
+    await expect(
+      dbQueryUnscoped((tx) => resetPassword(tx, token!, 'encore autre chose entirely')),
+    ).rejects.toThrow('invalid_link')
+  })
+
+  test('a confirmation link cannot be spent as a reset link', async () => {
+    // Both live in one table, so the purpose is the only thing keeping them
+    // apart -- and one of them lets the holder choose a password.
+    const { verificationToken } = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+
+    await expect(
+      dbQueryUnscoped((tx) => resetPassword(tx, verificationToken, NEW_PASSWORD)),
+    ).rejects.toThrow('invalid_link')
   })
 })
