@@ -75,6 +75,10 @@ jeton, ce qui est exactement ce que l'écran de chargement recouvre.
 | `pnpm db:catalog` | étend le catalogue jusqu'à l'année courante |
 | `pnpm db:demo` | remplit un compte de démonstration |
 
+`pnpm dev` surveille `.env` en plus des sources : changer une variable relance
+l'API. Sans ça, un serveur lancé une heure plus tôt garde son ancienne
+configuration en silence, et on cherche la panne partout ailleurs.
+
 Les migrations SQL sont la source de vérité. `apps/backend/src/db/schema.ts` en est
 une **vue typée** : drizzle-kit n'a jamais le droit d'écrire dans la base — ni
 `push` ni `migrate`, seulement `pull` — parce qu'il ne gère que ce qu'il sait
