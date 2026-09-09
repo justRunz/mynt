@@ -15,8 +15,22 @@
 
 import { execFileSync } from 'node:child_process'
 
+import { hash } from '@node-rs/argon2'
+
 const CONTAINER = 'mynt_db'
 const EMAIL = process.env.DEMO_EMAIL ?? 'demo@mynt.test'
+
+/**
+ * Hashed the same way the server hashes one, so this account signs in through
+ * the real sign-in route rather than through a shortcut.
+ *
+ * It used to be the literal string 'seeded-not-a-real-hash', which was honest
+ * while GoTrue still held the passwords and useless the moment it stopped: the
+ * demo collection existed and nobody could open it.
+ */
+const PASSWORD = process.env.DEMO_PASSWORD ?? 'collection de démonstration'
+const ARGON2ID = { algorithm: 2, memoryCost: 19_456, timeCost: 2, parallelism: 1 }
+
 const NICKNAME = 'Démo'
 
 /** Deterministic, so two runs produce the same collection. */
@@ -74,8 +88,9 @@ const NOTES = [
 const CURRENT_YEAR = new Date().getFullYear()
 const quote = (value) => (value === null ? 'null' : `'${String(value).replace(/'/g, "''")}'`)
 
-function main() {
+async function main() {
   const user = supabaseUserId()
+  const passwordHash = await hash(PASSWORD, ARGON2ID)
   const binderId = '5eed0000-0000-4000-8000-000000000001'
   const pageIds = [1, 2, 3].map((n) => `5eed0000-0000-4000-8000-00000000000${n + 1}`)
 
@@ -85,8 +100,10 @@ function main() {
   // Re-runnable: the account cascades to everything it owns.
   say(`delete from auth.users where user_id = ${quote(user.id)};`)
   say(`insert into auth.users (user_id, email, password_hash, email_verified_at)
-       values (${quote(user.id)}, ${quote(EMAIL)}, 'seeded-not-a-real-hash', now());`)
-  say(`insert into user_info (user_id, nickname) values (${quote(user.id)}, ${quote(NICKNAME)});`)
+       values (${quote(user.id)}, ${quote(EMAIL)}, ${quote(passwordHash)}, now());`)
+  // Updated rather than inserted: the trigger on auth.users has already put the
+  // row there, and writing it again would violate the primary key.
+  say(`update user_info set nickname = ${quote(NICKNAME)} where user_id = ${quote(user.id)};`)
 
   say(`insert into binders (binder_id, user_id, name)
        values (${quote(binderId)}, ${quote(user.id)}, 'Classeur Europe');`)
@@ -146,10 +163,11 @@ function main() {
     psql(['-U', 'postgres', '-d', 'mynt', '-tAc', what]).trim()
 
   console.log(`Compte       ${EMAIL}`)
+  console.log(`Mot de passe ${PASSWORD}`)
   console.log(`Identifiant  ${user.id}  (${user.source})`)
   console.log(`Collection   ${count(`select count(*) from coins where user_id = '${user.id}'`)} pièces, ` +
               `dont ${count(`select count(*) from coins where user_id = '${user.id}' and page_id is not null`)} rangées`)
   console.log(`Classeur     « Classeur Europe », 3 pages de 4 × 5`)
 }
 
-main()
+await main()

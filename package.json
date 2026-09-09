@@ -27,6 +27,7 @@
     "supabase:types": "supabase gen types typescript --local > packages/core/src/database.types.ts"
   },
   "devDependencies": {
+    "@node-rs/argon2": "^2.2.0",
     "dbmate": "^2.35.1",
     "supabase": "^2.116.0",
     "typescript": "catalog:"

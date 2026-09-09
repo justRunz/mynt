@@ -23,6 +23,9 @@ importers:
 
   .:
     devDependencies:
+      '@node-rs/argon2':
+        specifier: ^2.2.0
+        version: 2.2.0
       dbmate:
         specifier: ^2.35.1
         version: 2.35.1
