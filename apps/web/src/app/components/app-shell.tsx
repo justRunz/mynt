@@ -5,7 +5,7 @@ import { NavLink } from 'react-router-dom'
 
 import { Button } from '@/app/ui/button'
 import { Drawer } from '@/app/ui/drawer'
-import { supabase } from '@/app/lib/supabase'
+import { signOut } from '@/app/stores/auth'
 
 type IconProps = { className?: string }
 
@@ -111,7 +111,6 @@ function SignOutAction({ onSignOut }: { onSignOut: () => void }) {
 export function AppShell({ title, children }: { title: string; children: ReactNode }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
-  const signOut = () => void supabase.auth.signOut()
 
   return (
     // Two tracks rather than two flex children. minmax(0, 1fr) is the point:
@@ -134,7 +133,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
       >
         <span className="font-serif text-xl">{t('app.name')}</span>
         <NavLinks className="flex flex-col gap-3 self-stretch text-base" />
-        <SignOutAction onSignOut={signOut} />
+        <SignOutAction onSignOut={() => void signOut()} />
       </aside>
 
       <div>
@@ -179,7 +178,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
           onNavigate={() => setMenuOpen(false)}
           className="flex flex-col gap-2 text-lg"
         />
-        <SignOutAction onSignOut={signOut} />
+        <SignOutAction onSignOut={() => void signOut()} />
       </Drawer>
     </div>
   )

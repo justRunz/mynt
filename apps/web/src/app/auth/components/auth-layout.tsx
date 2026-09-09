@@ -33,10 +33,3 @@ export function FormError({ messageKey }: { messageKey: TranslationKey | null })
   )
 }
 
-export function FormNotice({ children }: { children: ReactNode }) {
-  return (
-    <p role="status" className="text-sm text-muted">
-      {children}
-    </p>
-  )
-}

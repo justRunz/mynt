@@ -1,63 +1,105 @@
-import type { Session } from '@supabase/supabase-js'
 import { create } from 'zustand'
 
+import { apiFetch, setSession, subscribeToSession, type Session } from '@/app/lib/api'
 import { clearPersistedCache, resumePersistence } from '@/app/lib/query-client'
-import { supabase } from '@/app/lib/supabase'
 
 interface AuthState {
   session: Session | null
-  /** True until the initial session has been resolved. */
+  /** True until the refresh cookie has been traded, or found wanting. */
   loading: boolean
-  /** Supabase returned the user through a password reset link. */
-  recovering: boolean
 }
 
 /**
- * Auth is the one piece of client state the whole app reads, and it comes from
- * outside React: Supabase pushes it in on its own schedule. A store rather than
- * a context, because the value is then readable without a hook -- a mutation or
- * a route guard can ask who is signed in without being a component -- and
- * because a subscriber only re-renders for the slice it selected.
+ * Who is signed in, as the whole app sees it.
+ *
+ * A store rather than a context, because the value is then readable without a
+ * hook -- and because a subscriber only re-renders for the slice it selected.
+ *
+ * The session itself is held in lib/api, which is the module that has to put the
+ * token on every request. This store mirrors it for React; the two are kept in
+ * step by a subscription rather than by both being written to, so there is one
+ * source and one direction.
  */
 export const useAuthStore = create<AuthState>(() => ({
   session: null,
   loading: true,
-  recovering: false,
 }))
 
 /**
- * The id of the signed-in profile, or null.
+ * Selected as a boolean rather than by reaching for the session object.
  *
- * Worth its own selector rather than reaching through the session: Supabase
- * hands back a brand-new session object on every token refresh, so a component
- * that only needs the id would re-render each time for a string that never
- * changed. Selecting the string compares equal and nothing moves.
+ * Every renewal produces a new object, so a component that only needs to know
+ * whether anybody is signed in would re-render every fifteen minutes for an
+ * answer that had not changed. A boolean compares equal and nothing moves.
  */
-export const useProfileId = (): string | null =>
-  useAuthStore((state) => state.session?.user.id ?? null)
-
-export const endRecovery = () => useAuthStore.setState({ recovering: false })
+export const useIsSignedIn = (): boolean =>
+  useAuthStore((state) => state.session !== null)
 
 /**
- * Subscribes the store to Supabase. Called once from main.tsx rather than from
- * an effect: the listener has nothing to do with any component's lifetime, and
- * starting it before the first render means the initial session is already on
- * its way while React mounts.
+ * Starts the session, from the cookie alone.
+ *
+ * Called once from main.tsx rather than from an effect: this has nothing to do
+ * with any component's lifetime, and starting it before the first render means
+ * the answer is already on its way while React mounts.
+ *
+ * The access token was never written down -- it lives in memory and a reload
+ * loses it -- so this is how the app finds out anybody is here. A refusal is the
+ * ordinary answer for a browser that has never signed in, not an error.
  */
 export function startAuthSync(): void {
-  void supabase.auth.getSession().then(({ data }) => {
-    useAuthStore.setState({ session: data.session, loading: false })
-  })
+  subscribeToSession((session) => useAuthStore.setState({ session }))
 
-  supabase.auth.onAuthStateChange((event, session) => {
-    useAuthStore.setState({ session, loading: false })
-    if (event === 'PASSWORD_RECOVERY') useAuthStore.setState({ recovering: true })
-    if (event === 'SIGNED_OUT') {
-      useAuthStore.setState({ recovering: false })
-      void clearPersistedCache()
-    } else if (session) {
-      // Signing in again in the same tab, after a sign-out closed the persister.
+  void apiFetch<Session>('/auth/refresh', { method: 'POST', raw: true })
+    .then((session) => {
+      setSession(session)
       resumePersistence()
-    }
-  })
+    })
+    .catch(() => setSession(null))
+    .finally(() => useAuthStore.setState({ loading: false }))
+}
+
+export async function signIn(email: string, password: string): Promise<void> {
+  setSession(
+    await apiFetch<Session>('/auth/sign-in', {
+      method: 'POST',
+      body: { email, password },
+      // raw: a 401 here is the answer, not an expired token to renew.
+      raw: true,
+    }),
+  )
+  // Reopened on every sign-in, or the cache would stop being saved for the rest
+  // of the tab's life after one sign-out -- and reading the collection without a
+  // signal is the reason it is saved at all.
+  resumePersistence()
+}
+
+export async function signUp(email: string, password: string): Promise<void> {
+  setSession(
+    await apiFetch<Session>('/auth/sign-up', {
+      method: 'POST',
+      body: { email, password },
+      raw: true,
+    }),
+  )
+  resumePersistence()
+}
+
+/**
+ * Ends the session here and on the server, and erases what was cached.
+ *
+ * The cache outlives the session, so leaving it would show the next person to
+ * use this browser the previous collection until the first fetch replaced it.
+ *
+ * The local half happens whatever the request did: a sign-out that fails because
+ * the network is down still has to sign the collector out of this browser.
+ */
+export async function signOut(): Promise<void> {
+  try {
+    await apiFetch<void>('/auth/sign-out', { method: 'POST', raw: true })
+  } catch {
+    // Nothing to do about it, and nothing to tell anyone.
+  } finally {
+    setSession(null)
+    await clearPersistedCache()
+  }
 }

@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { CoinType, Country } from '@mynt/core'
 
-import { supabase } from './supabase'
+import { apiFetch } from './api'
 
 /**
  * The catalog is shared, immutable and small (~4 000 rows). It is fetched once
@@ -14,32 +14,17 @@ export const catalogQueries = {
   countries: () =>
     queryOptions({
       queryKey: ['catalog', 'countries'],
-      queryFn: async (): Promise<Country[]> => {
-        const { data, error } = await supabase.from('country').select('*')
-        if (error) throw error
-        return data
-      },
+      queryFn: () => apiFetch<Country[]>('/catalog/countries'),
       ...IMMUTABLE,
     }),
 
   coinTypes: () =>
     queryOptions({
       queryKey: ['catalog', 'coin-types'],
-      queryFn: async (): Promise<CoinType[]> => {
-        // PostgREST caps a plain select, so page through explicit ranges.
-        const PAGE = 1000
-        const rows: CoinType[] = []
-        for (let from = 0; ; from += PAGE) {
-          const { data, error } = await supabase
-            .from('coin_type')
-            .select('*')
-            .order('id')
-            .range(from, from + PAGE - 1)
-          if (error) throw error
-          rows.push(...data)
-          if (data.length < PAGE) return rows
-        }
-      },
+      // One request for all four thousand. PostgREST capped a plain select at a
+      // thousand rows, which is why this used to walk explicit ranges; our own
+      // route has no such ceiling and the loop is gone.
+      queryFn: () => apiFetch<CoinType[]>('/catalog/coin-types'),
       ...IMMUTABLE,
     }),
 }

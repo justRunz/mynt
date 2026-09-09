@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/app/ui/button'
 import { Field } from '@/app/ui/field'
 import type { TranslationKey } from '@/app/i18n/types'
-import { supabase } from '@/app/lib/supabase'
+import { signIn } from '@/app/stores/auth'
 import { AuthLayout, FormError } from './components/auth-layout'
 import { authErrorKey } from './lib/auth-errors'
 
@@ -21,9 +21,14 @@ export function SignIn() {
     event.preventDefault()
     setBusy(true)
     setErrorKey(null)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setErrorKey(authErrorKey(error))
-    setBusy(false)
+    try {
+      await signIn(email, password)
+      // Nothing to do on success: the store gains a session and the router
+      // swaps the sign-in screen for the collection.
+    } catch (error) {
+      setErrorKey(authErrorKey(error))
+      setBusy(false)
+    }
   }
 
   return (
@@ -52,9 +57,6 @@ export function SignIn() {
       </form>
 
       <div className="mt-5 flex flex-col gap-2 border-t border-rule pt-4 text-sm">
-        <Link to="/reset-password" className="text-muted hover:text-ink">
-          {t('auth.signIn.forgot')}
-        </Link>
         <p className="text-muted">
           {t('auth.signIn.noAccount')}{' '}
           <Link

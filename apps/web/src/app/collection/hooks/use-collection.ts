@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Grade } from '@mynt/core'
 
-import { supabase } from '@/app/lib/supabase'
+import { apiFetch } from '@/app/lib/api'
 
 /**
  * A hole in a binder page, as the forms name one: where a coin is being sent.
@@ -41,11 +41,22 @@ export interface CollectionEntry {
   location: CoinLocation | null
 }
 
-const SELECT = `
-  id, grade, acquired_on, notes, slot_row, slot_column,
-  coin_type ( country_code, face_value_cents, year, variant ),
-  page ( id, number, binder ( id, name ) )
-`
+/**
+ * A coin as the API sends it. The join is already resolved and the location is
+ * already nested, so nothing here has to decide what four loose nullable fields
+ * meant together.
+ */
+interface ApiCoin {
+  coinId: string
+  gradeCode: string | null
+  acquiredOn: string | null
+  notes: string | null
+  countryCode: string
+  faceValueCents: number
+  year: number
+  variant: string
+  location: CoinLocation | null
+}
 
 /**
  * The whole collection is fetched once and filtered on the client. Even a
@@ -53,49 +64,21 @@ const SELECT = `
  * in memory, and it makes every filter instant. It is also what makes the app
  * readable without a signal: the persisted cache holds the whole thing.
  *
- * No profile_id filter here: row level security already restricts the rows to
- * the signed-in profile, and duplicating the rule in the client would be a
- * second place for it to go wrong.
+ * No owner is sent or asked for. The policy in the database narrows the rows to
+ * whoever the token names, and repeating that here would be a second place for
+ * the rule to go wrong.
  */
 async function fetchCollection(): Promise<CollectionEntry[]> {
-  const PAGE = 1000
-  const entries: CollectionEntry[] = []
+  const rows = await apiFetch<ApiCoin[]>('/collection')
 
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await supabase
-      .from('coin')
-      .select(SELECT)
-      .order('id')
-      .range(from, from + PAGE - 1)
-
-    if (error) throw error
-
-    for (const row of data) {
-      entries.push({
-        id: row.id,
-        countryCode: row.coin_type.country_code,
-        faceValueCents: row.coin_type.face_value_cents,
-        year: row.coin_type.year,
-        variant: row.coin_type.variant,
-        grade: row.grade,
-        acquiredOn: row.acquired_on,
-        notes: row.notes,
-        location:
-          row.page && row.slot_row !== null && row.slot_column !== null
-            ? {
-                pageId: row.page.id,
-                binderId: row.page.binder.id,
-                binderName: row.page.binder.name,
-                pageNumber: row.page.number,
-                row: row.slot_row,
-                column: row.slot_column,
-              }
-            : null,
-      })
-    }
-
-    if (data.length < PAGE) return entries
-  }
+  // Two renames and a cast, nothing more: `location` already arrives in the
+  // shape the screens draw. The names could be made to match and this could go,
+  // which is a tidy-up and not part of moving the app off Supabase.
+  return rows.map(({ coinId, gradeCode, ...coin }) => ({
+    ...coin,
+    id: coinId,
+    grade: gradeCode as Grade | null,
+  }))
 }
 
 export const collectionQueryKey = ['collection'] as const
@@ -126,7 +109,6 @@ export function useRefetchCollection() {
 }
 
 export interface AddCoinVariables {
-  profileId: string
   coinTypeId: number
   grade: Grade | null
   /**
@@ -140,20 +122,17 @@ export interface AddCoinVariables {
 export function useAddCoin() {
   const refetch = useRefetchCollection()
   return useMutation<void, Error, AddCoinVariables>({
-    mutationFn: async (input) => {
-      // The id is left to the database. Nothing on this side needs it before
-      // the row exists: the screen refetches rather than drawing the coin
-      // itself, so there is nothing to key on in the meantime.
-      const { error } = await supabase.from('coin').insert({
-        profile_id: input.profileId,
-        coin_type_id: input.coinTypeId,
-        grade: input.grade,
-        page_id: input.destination?.pageId ?? null,
-        slot_row: input.destination?.row ?? null,
-        slot_column: input.destination?.column ?? null,
-      })
-      if (error) throw error
-    },
+    // No owner in the body. The server takes it from the verified token, which
+    // is the only place it can come from that nobody can forge.
+    mutationFn: (input) =>
+      apiFetch<{ coinId: string }>('/collection', {
+        method: 'POST',
+        body: {
+          coinTypeId: input.coinTypeId,
+          gradeCode: input.grade,
+          location: input.destination,
+        },
+      }).then(() => undefined),
     onSuccess: refetch,
   })
 }
@@ -169,18 +148,16 @@ export interface UpdateCoinVariables {
 export function useUpdateCoin() {
   const refetch = useRefetchCollection()
   return useMutation<void, Error, UpdateCoinVariables>({
-    mutationFn: async (input) => {
-      const { error } = await supabase
-        .from('coin')
-        .update({
-          coin_type_id: input.coinTypeId,
-          grade: input.grade,
-          acquired_on: input.acquiredOn,
+    mutationFn: (input) =>
+      apiFetch<void>(`/collection/${input.coinId}`, {
+        method: 'PATCH',
+        body: {
+          coinTypeId: input.coinTypeId,
+          gradeCode: input.grade,
+          acquiredOn: input.acquiredOn,
           notes: input.notes,
-        })
-        .eq('id', input.coinId)
-      if (error) throw error
-    },
+        },
+      }),
     onSuccess: refetch,
   })
 }
@@ -188,10 +165,7 @@ export function useUpdateCoin() {
 export function useDeleteCoin() {
   const refetch = useRefetchCollection()
   return useMutation<void, Error, string>({
-    mutationFn: async (coinId) => {
-      const { error } = await supabase.from('coin').delete().eq('id', coinId)
-      if (error) throw error
-    },
+    mutationFn: (coinId) => apiFetch<void>(`/collection/${coinId}`, { method: 'DELETE' }),
     onSuccess: refetch,
   })
 }

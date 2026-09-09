@@ -4,7 +4,7 @@ import {
   useRefetchCollection,
   type SlotDestination,
 } from '@/app/collection/hooks/use-collection'
-import { supabase } from '@/app/lib/supabase'
+import { ApiError, apiFetch } from '@/app/lib/api'
 
 export interface BinderPage {
   id: string
@@ -21,40 +21,45 @@ export interface Binder {
 
 export const bindersQueryKey = ['binders'] as const
 
+/** A binder as the API sends it: pages already nested, already in order. */
+interface ApiBinder {
+  binderId: string
+  name: string
+  pages: { pageId: string; pageNumber: number; rowCount: number; columnCount: number }[]
+}
+
 export function useBinders() {
   return useQuery({
     queryKey: bindersQueryKey,
     queryFn: async (): Promise<Binder[]> => {
-      const { data, error } = await supabase
-        .from('binder')
-        .select('id, name, sort_order, page ( id, number, row_count, column_count )')
-        .order('sort_order')
-      if (error) throw error
-      return data.map((binder) => ({
-        id: binder.id,
+      const binders = await apiFetch<ApiBinder[]>('/binders')
+      // Renames only. The nesting and the ordering are the server's doing now --
+      // it joins once and groups, where this used to sort every binder's pages
+      // in the browser.
+      return binders.map((binder) => ({
+        id: binder.binderId,
         name: binder.name,
-        pages: binder.page
-          .map((page) => ({
-            id: page.id,
-            number: page.number,
-            rowCount: page.row_count,
-            columnCount: page.column_count,
-          }))
-          .sort((a, b) => a.number - b.number),
+        pages: binder.pages.map((page) => ({
+          id: page.pageId,
+          number: page.pageNumber,
+          rowCount: page.rowCount,
+          columnCount: page.columnCount,
+        })),
       }))
     },
   })
 }
 
-/** Postgres unique_violation: two coins aimed at the same hole. */
-const SLOT_TAKEN = '23505'
-
 /**
  * Told apart from any other failure because it is the one the user can act on:
  * the hole is gone, pick another. Both the binder view and the add form ask.
+ *
+ * The server names it rather than leaking a SQLSTATE. This used to read '23505'
+ * straight off a PostgREST error, which meant the interface depended on Postgres
+ * error numbering; now it depends on a word the API promises.
  */
 export function isSlotTaken(error: unknown): boolean {
-  return (error as { code?: string } | null)?.code === SLOT_TAKEN
+  return error instanceof ApiError && error.code === 'slot_taken'
 }
 
 // ---------------------------------------------------------------------------
@@ -67,19 +72,18 @@ function useRefetchBinders() {
 }
 
 export interface CreateBinderVariables {
-  profileId: string
   name: string
 }
 
 export function useCreateBinder() {
   const refetch = useRefetchBinders()
   return useMutation<void, Error, CreateBinderVariables>({
-    mutationFn: async (input) => {
-      const { error } = await supabase
-        .from('binder')
-        .insert({ profile_id: input.profileId, name: input.name })
-      if (error) throw error
-    },
+    // No owner in the body: it comes from the token.
+    mutationFn: (input) =>
+      apiFetch<{ binderId: string }>('/binders', {
+        method: 'POST',
+        body: { name: input.name },
+      }).then(() => undefined),
     onSuccess: refetch,
   })
 }
@@ -94,15 +98,17 @@ export interface CreatePageVariables {
 export function useCreatePage() {
   const refetch = useRefetchBinders()
   return useMutation<void, Error, CreatePageVariables>({
-    mutationFn: async (input) => {
-      const { error } = await supabase.from('page').insert({
-        binder_id: input.binderId,
-        number: input.number,
-        row_count: input.rowCount,
-        column_count: input.columnCount,
-      })
-      if (error) throw error
-    },
+    // The binder is in the path, because a sheet has no existence apart from
+    // one.
+    mutationFn: (input) =>
+      apiFetch<{ pageId: string }>(`/binders/${input.binderId}/pages`, {
+        method: 'POST',
+        body: {
+          pageNumber: input.number,
+          rowCount: input.rowCount,
+          columnCount: input.columnCount,
+        },
+      }).then(() => undefined),
     onSuccess: refetch,
   })
 }
@@ -118,13 +124,13 @@ export interface FileCoinVariables extends SlotDestination {
 export function useFileCoin() {
   const refetch = useRefetchCollection()
   return useMutation<void, Error, FileCoinVariables>({
-    mutationFn: async (input) => {
-      const { error } = await supabase
-        .from('coin')
-        .update({ page_id: input.pageId, slot_row: input.row, slot_column: input.column })
-        .eq('id', input.coinId)
-      if (error) throw error
-    },
+    // PUT, not PATCH: a coin is in exactly one hole or in none, so this replaces
+    // the location outright and repeating it changes nothing.
+    mutationFn: (input) =>
+      apiFetch<void>(`/collection/${input.coinId}/location`, {
+        method: 'PUT',
+        body: { pageId: input.pageId, row: input.row, column: input.column },
+      }),
     onSuccess: refetch,
   })
 }
@@ -132,13 +138,8 @@ export function useFileCoin() {
 export function useUnfileCoin() {
   const refetch = useRefetchCollection()
   return useMutation<void, Error, string>({
-    mutationFn: async (coinId) => {
-      const { error } = await supabase
-        .from('coin')
-        .update({ page_id: null, slot_row: null, slot_column: null })
-        .eq('id', coinId)
-      if (error) throw error
-    },
+    mutationFn: (coinId) =>
+      apiFetch<void>(`/collection/${coinId}/location`, { method: 'DELETE' }),
     onSuccess: refetch,
   })
 }
@@ -170,19 +171,14 @@ export interface MovePairVariables {
 export function useMovePair() {
   const refetch = useRefetchCollection()
   return useMutation<void, Error, MovePairVariables>({
-    mutationFn: async (input) => {
-      const { error } = await supabase.rpc('place_pair', {
-        first_coin: input.first.coinId,
-        first_page: input.first.destination.pageId,
-        first_row: input.first.destination.row,
-        first_column: input.first.destination.column,
-        second_coin: input.second.coinId,
-        second_page: input.second.destination.pageId,
-        second_row: input.second.destination.row,
-        second_column: input.second.destination.column,
-      })
-      if (error) throw error
-    },
+    mutationFn: (input) =>
+      apiFetch<void>('/collection/move-pair', {
+        method: 'POST',
+        body: {
+          first: { coinId: input.first.coinId, ...input.first.destination },
+          second: { coinId: input.second.coinId, ...input.second.destination },
+        },
+      }),
     onSuccess: refetch,
   })
 }

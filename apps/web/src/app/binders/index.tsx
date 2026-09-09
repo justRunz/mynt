@@ -4,7 +4,6 @@ import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
 import { useTranslation } from 'react-i18next'
 import { AppShell } from '@/app/components/app-shell'
 import { useIsOnline } from '@/app/hooks/use-is-online'
-import { useProfileId } from '@/app/stores/auth'
 import { useCollection } from '@/app/collection/hooks/use-collection'
 import type { TranslationKey } from '@/app/i18n/types'
 import { Button } from '@/app/ui/button'
@@ -34,7 +33,6 @@ export function BindersPage() {
 
 function Binders() {
   const { t } = useTranslation()
-  const profileId = useProfileId()
   const online = useIsOnline()
   const binders = useBinders()
   const collection = useCollection()
@@ -90,8 +88,7 @@ function Binders() {
       <NewBinderForm
         busy={!online || createBinder.isPending}
         onCreate={(name) => {
-          if (!profileId) return
-          createBinder.mutate({ profileId, name })
+          createBinder.mutate({ name })
           setNewBinderOpen(false)
         }}
       />

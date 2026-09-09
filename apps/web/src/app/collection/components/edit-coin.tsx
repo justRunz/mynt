@@ -59,7 +59,7 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
   // the coin to a country the user does not own yet.
   const countries = useQuery(catalogQueries.countries())
   const countryCodes = useMemo(
-    () => (countries.data ?? []).map((c) => c.code),
+    () => (countries.data ?? []).map((c) => c.countryCode),
     [countries.data],
   )
   const online = useIsOnline()

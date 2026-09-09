@@ -36,7 +36,7 @@ function Completeness() {
 
   const visibleCountries = useMemo(() => {
     const list = (countries.data ?? []).filter((c) => showCollectorOnly || c.circulating)
-    return sortCountryCodes(list.map((c) => c.code))
+    return sortCountryCodes(list.map((c) => c.countryCode))
   }, [countries.data, showCollectorOnly])
 
   const grid = useMemo(

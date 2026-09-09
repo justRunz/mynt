@@ -101,7 +101,7 @@ describe('adding', () => {
     // exists and is nowhere.
     await hers({ pageId: herPageId, row: 1, column: 1 })
     const [coin] = await dbQueryAs(ALICE, (tx) => listCoins(tx))
-    expect(coin!.pageId).toBe(herPageId)
+    expect(coin!.location?.pageId).toBe(herPageId)
   })
 
   test('a grade the grades table has never heard of is refused', async () => {
@@ -179,8 +179,8 @@ describe('editing and removing', () => {
     expect(coin!.gradeCode).toBe('UNCIRCULATED')
     expect(coin!.acquiredOn).toBe('2026-01-15')
     // Untouched, which is the point of filing having its own route.
-    expect(coin!.slotRow).toBe(2)
-    expect(coin!.slotColumn).toBe(3)
+    expect(coin!.location?.row).toBe(2)
+    expect(coin!.location?.column).toBe(3)
   })
 })
 
@@ -221,8 +221,7 @@ describe('filing', () => {
     await dbQueryAs(ALICE, (tx) => unfileCoin(tx, coinId))
 
     const [coin] = await dbQueryAs(ALICE, (tx) => listCoins(tx))
-    expect(coin!.pageId).toBeNull()
-    expect(coin!.slotRow).toBeNull()
+    expect(coin!.location).toBeNull()
   })
 })
 
@@ -241,8 +240,8 @@ describe('exchanging two coins', () => {
 
     const placed = await dbQueryAs(ALICE, (tx) => listCoins(tx))
     const at = (id: string) => placed.find((coin) => coin.coinId === id)!
-    expect([at(first).slotRow, at(first).slotColumn]).toEqual([1, 2])
-    expect([at(second).slotRow, at(second).slotColumn]).toEqual([1, 1])
+    expect([at(first).location?.row, at(first).location?.column]).toEqual([1, 2])
+    expect([at(second).location?.row, at(second).location?.column]).toEqual([1, 1])
   })
 
   test('one of them being somebody else s moves neither', async () => {

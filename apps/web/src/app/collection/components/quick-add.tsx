@@ -11,7 +11,6 @@ import {
 } from '@mynt/core'
 
 import { useIsOnline } from '@/app/hooks/use-is-online'
-import { useProfileId } from '@/app/stores/auth'
 import { catalogQueries } from '@/app/lib/catalog'
 import { countryFlag, countryName } from '@/app/lib/countries'
 import { formatFaceValue } from '@/app/lib/format'
@@ -45,7 +44,6 @@ interface RecentAdd {
 
 export function QuickAdd() {
   const { t } = useTranslation()
-  const profileId = useProfileId()
   const online = useIsOnline()
   const countries = useQuery(catalogQueries.countries())
   const coinTypes = useQuery(catalogQueries.coinTypes())
@@ -63,14 +61,16 @@ export function QuickAdd() {
   const firstValueRef = useRef<HTMLInputElement>(null)
   const nextKey = useRef(0)
   const index = useMemo(() => indexCoinTypes(coinTypes.data ?? []), [coinTypes.data])
-  const codes = useMemo(() => (countries.data ?? []).map((c) => c.code), [countries.data])
+  const codes = useMemo(
+    () => (countries.data ?? []).map((c) => c.countryCode),
+    [countries.data],
+  )
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
     setErrorKey(null)
     setNotInCatalog(null)
 
-    if (!profileId) return
     if (!countryCode) return setErrorKey('quickAdd.errors.countryRequired')
     if (faceValue === null) return setErrorKey('quickAdd.errors.faceValueRequired')
 
@@ -91,7 +91,7 @@ export function QuickAdd() {
     }
 
     addCoin.mutate(
-      { profileId, coinTypeId, grade: grade || null, destination },
+      { coinTypeId, grade: grade || null, destination },
       {
         onSuccess: () => {
           setRecent((list) =>

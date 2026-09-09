@@ -23,8 +23,8 @@ import type {
  * PostgREST returned nested objects the client had to flatten; a join returns
  * rows already flat, so half of that mapping disappears.
  */
-export function listCoins(tx: Tx): Promise<CollectionCoin[]> {
-  return tx
+export async function listCoins(tx: Tx): Promise<CollectionCoin[]> {
+  const rows = await tx
     .select({
       coinId: coins.coinId,
       gradeCode: coins.gradeCode,
@@ -49,6 +49,25 @@ export function listCoins(tx: Tx): Promise<CollectionCoin[]> {
     .leftJoin(pages, eq(pages.pageId, coins.pageId))
     .leftJoin(binders, eq(binders.binderId, pages.binderId))
     .orderBy(asc(coins.coinId))
+
+  // Gathered here rather than left to every client to reassemble. The four
+  // columns are null together or set together, and the join cannot say so; this
+  // shape can, so nobody downstream has to check three of them to trust the
+  // fourth.
+  return rows.map(({ pageId, pageNumber, binderId, binderName, slotRow, slotColumn, ...coin }) => ({
+    ...coin,
+    location:
+      pageId === null
+        ? null
+        : {
+            pageId,
+            pageNumber: pageNumber!,
+            binderId: binderId!,
+            binderName: binderName!,
+            row: slotRow!,
+            column: slotColumn!,
+          },
+  }))
 }
 
 /**

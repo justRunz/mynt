@@ -44,10 +44,16 @@ export default defineConfig({
         // a CDN would vanish in the cellar.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         navigateFallback: '/index.html',
-        // Deliberately no runtime caching of the Supabase API. Data lives in the
+        // Deliberately no runtime caching of the API. Data lives in the
         // persisted TanStack Query cache; a second cache in the service worker
         // would be a competing source of truth that can disagree with it.
-        navigateFallbackDenylist: [/^\/rest\//, /^\/auth\//],
+        //
+        // The denylist keeps index.html from being served in place of an API
+        // response. In production the app and the API share one origin, so
+        // every one of these paths is a real request that must go to the
+        // network -- /api covers all of them, where the old pair covered
+        // PostgREST and GoTrue under their own prefixes.
+        navigateFallbackDenylist: [/^\/api\//],
       },
       devOptions: { enabled: false },
     }),

@@ -16,31 +16,34 @@ import type {
  * deciding it should. These are the shapes the server means.
  */
 
+/** Where a coin physically sits, once it has been filed. */
+export interface CoinLocation {
+  pageId: string
+  pageNumber: number
+  binderId: string
+  binderName: string
+  row: number
+  column: number
+}
+
 /**
- * A held coin with its join already resolved.
+ * A held coin, with its join resolved and its location said properly.
  *
- * The four filing fields are nullable together -- a coin is either in a hole or
- * in the jar -- which this shape cannot say, so it permits fifteen combinations
- * that cannot occur. A nested `location: {...} | null` would say it properly, and
- * is what the front end already models. Left as is deliberately: changing it
- * changes the response, and this step is a refactor proved by the response not
- * changing. It belongs to the step where the front end moves.
+ * The four filing fields used to sit flat and nullable beside each other, which
+ * let the type describe fifteen states that cannot happen -- a coin with a page
+ * number and no page, a binder name and no binder. A coin is in a hole or it is
+ * in the jar, and one nullable object says exactly that.
  */
 export interface CollectionCoin {
   coinId: string
   gradeCode: string | null
   acquiredOn: string | null
   notes: string | null
-  slotRow: number | null
-  slotColumn: number | null
   countryCode: string
   faceValueCents: number
   year: number
   variant: string
-  pageId: string | null
-  pageNumber: number | null
-  binderId: string | null
-  binderName: string | null
+  location: CoinLocation | null
 }
 
 /**
