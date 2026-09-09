@@ -7,7 +7,7 @@ import { Button } from '@/app/ui/button'
 import { Field } from '@/app/ui/field'
 import type { TranslationKey } from '@/app/i18n/types'
 import { signUp } from '@/app/stores/auth'
-import { AuthLayout, FormError } from './components/auth-layout'
+import { AuthLayout, FormError, FormNotice } from './components/auth-layout'
 import { authErrorKey } from './lib/auth-errors'
 
 export function SignUp() {
@@ -15,26 +15,29 @@ export function SignUp() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
+  const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setBusy(true)
     setErrorKey(null)
-    // Signed straight in, with no confirmation step in between. Verifying an
-    // address needs somewhere to send the mail from, which this app does not yet
-    // have; until it does, pretending to have sent one would be worse than not
-    // claiming to.
+    // No session yet. The address is a claim until the mailbox it names is
+    // opened, so what follows is a message rather than the collection.
     try {
       await signUp(email, password)
+      setSent(true)
     } catch (error) {
       setErrorKey(authErrorKey(error))
-      setBusy(false)
     }
+    setBusy(false)
   }
 
   return (
     <AuthLayout title={t('auth.signUp.title')}>
+      {sent ? (
+        <FormNotice>{t('auth.signUp.checkEmail', { email })}</FormNotice>
+      ) : (
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Field
           label={t('auth.fields.email')}
@@ -62,6 +65,7 @@ export function SignUp() {
           {busy ? t('common.loading') : t('auth.signUp.submit')}
         </Button>
       </form>
+      )}
 
       <p className="mt-5 border-t border-rule pt-4 text-sm text-muted">
         {t('auth.signUp.haveAccount')}{' '}

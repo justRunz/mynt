@@ -10,3 +10,14 @@ export interface Session {
    *  expires rather than after a request has already failed. */
   expiresIn: number
 }
+
+/**
+ * What signing in produced.
+ *
+ * A union rather than a session or an exception, because "the password was right
+ * but the address is unproven" is not a failure to report -- it is a state with a
+ * fresh link attached, and the link has to survive the request.
+ */
+export type SignInOutcome =
+  | { verified: true; session: Session }
+  | { verified: false; verificationToken: string }

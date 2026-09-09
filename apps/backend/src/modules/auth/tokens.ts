@@ -66,15 +66,20 @@ export async function readAccessToken(token: string): Promise<string | null> {
 }
 
 /**
- * A fresh refresh token: the secret to hand out, and the hash to keep.
+ * A fresh opaque token: the secret to hand out, and the hash to keep.
  *
  * 32 bytes from the system's CSPRNG. Opaque on purpose -- unlike the access
  * token it carries no claims, because its holder's identity is looked up rather
  * than asserted, and a token that says nothing cannot say something false.
+ *
+ * The same primitive serves refresh tokens and the links sent by email. They
+ * differ in how long they last and in what they entitle the holder to, not in
+ * what they are made of, and having one function means one place where the
+ * length of that randomness is decided.
  */
-export function mintRefreshToken(): { token: string; tokenHash: string } {
+export function mintOpaqueToken(): { token: string; tokenHash: string } {
   const token = randomBytes(32).toString('base64url')
-  return { token, tokenHash: hashRefreshToken(token) }
+  return { token, tokenHash: hashOpaqueToken(token) }
 }
 
 /**
@@ -84,10 +89,25 @@ export function mintRefreshToken(): { token: string; tokenHash: string } {
  * cracking many hashes at once, which needs the inputs to be guessable. These
  * are 256 bits of randomness. There is no table to build.
  */
-export function hashRefreshToken(token: string): string {
+export function hashOpaqueToken(token: string): string {
   return createHash('sha256').update(token).digest('hex')
 }
 
 export function refreshExpiry(from: Date = new Date()): Date {
   return new Date(from.getTime() + REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000)
+}
+
+/**
+ * How long a link sent by email stays good.
+ *
+ * A day to confirm an address, because that mail is often read the next morning
+ * and nothing is at stake in waiting. An hour to reset a password, because that
+ * one is a live route into an account and the window is the only thing limiting
+ * a message read over somebody's shoulder.
+ */
+export const EMAIL_VERIFICATION_TTL_HOURS = 24
+export const PASSWORD_RESET_TTL_HOURS = 1
+
+export function hoursFromNow(hours: number, from: Date = new Date()): Date {
+  return new Date(from.getTime() + hours * 60 * 60 * 1000)
 }

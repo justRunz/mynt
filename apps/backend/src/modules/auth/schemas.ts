@@ -25,3 +25,14 @@ export const credentialsSchema = z.object({
 })
 
 export type Credentials = z.infer<typeof credentialsSchema>
+
+/**
+ * A token out of a link in an email.
+ *
+ * Bounded rather than left open: it arrives in a query string that anybody can
+ * edit, and a megabyte of text should be refused before it reaches a hash
+ * function or a query.
+ */
+export const linkTokenSchema = z.object({
+  token: z.string().min(1).max(500),
+})

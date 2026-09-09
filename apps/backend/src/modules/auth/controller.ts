@@ -2,8 +2,10 @@ import { Router, type CookieOptions, type Response } from 'express'
 
 import { dbQueryUnscoped } from '../../db/index.js'
 import { env } from '../../env.js'
-import { credentialsSchema } from './schemas.js'
-import { rotateSession, signIn, signOut, signUp } from './service.js'
+import { sendMail } from '../../mail/index.js'
+import { verificationMessage } from '../../mail/messages.js'
+import { credentialsSchema, linkTokenSchema } from './schemas.js'
+import { rotateSession, signIn, signOut, signUp, verifyEmail } from './service.js'
 import { REFRESH_TTL_DAYS } from './tokens.js'
 import type { Session } from './types.js'
 
@@ -67,14 +69,50 @@ function refuseSession(res: Response): void {
   res.status(401).json({ error: 'invalid_refresh' })
 }
 
+/**
+ * Opens an account, and hands back no session.
+ *
+ * The address is a claim until somebody opens the mailbox it names. Answering
+ * 202 rather than 201 says what actually happened: the account exists, and
+ * something is now in flight that has to happen before it can be used.
+ *
+ * The message goes out after the transaction has committed, never inside it. A
+ * mail sent from within one that then rolls back is a link to an account that
+ * does not exist -- and unlike the row, the mail cannot be taken back.
+ */
 authController.post('/sign-up', async (req, res) => {
   const { email, password } = credentialsSchema.parse(req.body)
-  respondWithSession(res, await dbQueryUnscoped((tx) => signUp(tx, email, password)))
+  const { verificationToken } = await dbQueryUnscoped((tx) => signUp(tx, email, password))
+  await sendMail(verificationMessage(email, verificationToken))
+  res.status(202).json({ status: 'verification_sent' })
 })
 
 authController.post('/sign-in', async (req, res) => {
   const { email, password } = credentialsSchema.parse(req.body)
-  respondWithSession(res, await dbQueryUnscoped((tx) => signIn(tx, email, password)))
+  const outcome = await dbQueryUnscoped((tx) => signIn(tx, email, password))
+
+  if (!outcome.verified) {
+    // The password was right, so this is not a refusal to be vague about: the
+    // collector is told plainly, and given a fresh link because the first one is
+    // the thing most likely to have gone missing.
+    await sendMail(verificationMessage(email, outcome.verificationToken))
+    res.status(403).json({ error: 'email_not_verified' })
+    return
+  }
+
+  respondWithSession(res, outcome.session)
+})
+
+/**
+ * Confirms an address and signs the collector in.
+ *
+ * Following the link proves they can read the mailbox, which is all the address
+ * ever claimed -- so asking for the password again would add a step and prove
+ * nothing new.
+ */
+authController.post('/verify-email', async (req, res) => {
+  const { token } = linkTokenSchema.parse(req.body)
+  respondWithSession(res, await dbQueryUnscoped((tx) => verifyEmail(tx, token)))
 })
 
 /**

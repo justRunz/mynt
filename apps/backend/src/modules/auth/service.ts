@@ -3,17 +3,19 @@ import { randomUUID } from 'node:crypto'
 import { and, eq, isNull } from 'drizzle-orm'
 
 import type { Tx } from '../../db/index.js'
-import { refreshTokens, users } from '../../db/schema.js'
+import { oneTimeTokens, refreshTokens, users } from '../../db/schema.js'
 import { DomainError, postgresErrorCode } from '../../errors.js'
 import { hashPassword, verifyPassword } from './passwords.js'
 import {
   ACCESS_TTL_SECONDS,
-  hashRefreshToken,
-  mintRefreshToken,
+  EMAIL_VERIFICATION_TTL_HOURS,
+  hashOpaqueToken,
+  hoursFromNow,
+  mintOpaqueToken,
   refreshExpiry,
   signAccessToken,
 } from './tokens.js'
-import type { Session } from './types.js'
+import type { Session, SignInOutcome } from './types.js'
 
 /**
  * Creating and renewing sessions.
@@ -28,6 +30,42 @@ import type { Session } from './types.js'
 /** Postgres unique_violation. Here it can only be the email address. */
 const UNIQUE_VIOLATION = '23505'
 
+const EMAIL_VERIFICATION = 'EMAIL_VERIFICATION'
+
+/**
+ * Issues a link token, and revokes the ones it replaces.
+ *
+ * Outstanding tokens of the same purpose are marked spent rather than deleted:
+ * asking for a second link has to invalidate the first, or a message forwarded
+ * or left in an old mailbox keeps working for as long as it has left to live.
+ * Kept rather than removed, so a click on the superseded link is a token that
+ * was used, not a token that never was.
+ */
+async function issueLinkToken(
+  tx: Tx,
+  userId: string,
+  purpose: string,
+  ttlHours: number,
+): Promise<string> {
+  const now = new Date()
+  await tx
+    .update(oneTimeTokens)
+    .set({ usedAt: now })
+    .where(
+      and(
+        eq(oneTimeTokens.userId, userId),
+        eq(oneTimeTokens.purpose, purpose),
+        isNull(oneTimeTokens.usedAt),
+      ),
+    )
+
+  const { token, tokenHash } = mintOpaqueToken()
+  await tx
+    .insert(oneTimeTokens)
+    .values({ userId, purpose, tokenHash, expiresAt: hoursFromNow(ttlHours, now) })
+  return token
+}
+
 /**
  * Mints a session and records its refresh half.
  *
@@ -36,7 +74,7 @@ const UNIQUE_VIOLATION = '23505'
  * device's succession can be revoked together.
  */
 async function issueSession(tx: Tx, userId: string, familyId: string): Promise<Session> {
-  const { token, tokenHash } = mintRefreshToken()
+  const { token, tokenHash } = mintOpaqueToken()
   const expiresAt = refreshExpiry()
 
   await tx.insert(refreshTokens).values({ userId, familyId, tokenHash, expiresAt })
@@ -58,7 +96,11 @@ async function issueSession(tx: Tx, userId: string, familyId: string): Promise<S
  * account cannot exist in one schema and not the other because this function
  * returned early or was rewritten carelessly.
  */
-export async function signUp(tx: Tx, email: string, password: string): Promise<Session> {
+export async function signUp(
+  tx: Tx,
+  email: string,
+  password: string,
+): Promise<{ userId: string; verificationToken: string }> {
   const passwordHash = await hashPassword(password)
 
   let userId: string
@@ -78,7 +120,18 @@ export async function signUp(tx: Tx, email: string, password: string): Promise<S
     throw error
   }
 
-  return issueSession(tx, userId, randomUUID())
+  // No session. The address is unproven until somebody opens the mailbox it
+  // names, and handing out a session first would make the confirmation a
+  // formality that could be skipped by simply never clicking.
+  return {
+    userId,
+    verificationToken: await issueLinkToken(
+      tx,
+      userId,
+      EMAIL_VERIFICATION,
+      EMAIL_VERIFICATION_TTL_HOURS,
+    ),
+  }
 }
 
 /**
@@ -89,10 +142,28 @@ export async function signUp(tx: Tx, email: string, password: string): Promise<S
  * verifyPassword even when the lookup found nothing. Sign-up is the deliberate
  * exception: it has to say the address is taken, or nobody could ever recover
  * from a forgotten account.
+ *
+ * An unverified address comes back as an outcome rather than a thrown error,
+ * because answering it means issuing a fresh link -- and a throw would roll that
+ * insert back with the transaction, leaving the collector told to check a mailbox
+ * nothing was sent to.
+ *
+ * Resending on every attempt is deliberate. The first message gets lost, filed as
+ * spam, or expires while somebody is away, and without this there would be no way
+ * back into an account that exists. It is not a way to send mail to strangers:
+ * the correct password is required to reach this line at all.
  */
-export async function signIn(tx: Tx, email: string, password: string): Promise<Session> {
+export async function signIn(
+  tx: Tx,
+  email: string,
+  password: string,
+): Promise<SignInOutcome> {
   const [account] = await tx
-    .select({ userId: users.userId, passwordHash: users.passwordHash })
+    .select({
+      userId: users.userId,
+      passwordHash: users.passwordHash,
+      emailVerifiedAt: users.emailVerifiedAt,
+    })
     .from(users)
     .where(eq(users.email, email))
 
@@ -100,7 +171,65 @@ export async function signIn(tx: Tx, email: string, password: string): Promise<S
     throw new DomainError('invalid_credentials')
   }
 
-  return issueSession(tx, account!.userId, randomUUID())
+  if (account!.emailVerifiedAt === null) {
+    return {
+      verified: false,
+      verificationToken: await issueLinkToken(
+        tx,
+        account!.userId,
+        EMAIL_VERIFICATION,
+        EMAIL_VERIFICATION_TTL_HOURS,
+      ),
+    }
+  }
+
+  return { verified: true, session: await issueSession(tx, account!.userId, randomUUID()) }
+}
+
+/**
+ * Confirms an address, and signs the collector in.
+ *
+ * Following the link is proof they can read the mailbox, which is the only thing
+ * the address was ever a claim about -- so asking for the password again would
+ * add a step and prove nothing new.
+ *
+ * Every failure is one refusal: unknown token, already spent, expired, wrong
+ * purpose. The distinctions matter to nobody holding a link that does not work,
+ * and each one told apart is a fact given away.
+ */
+export async function verifyEmail(tx: Tx, presented: string): Promise<Session> {
+  const [token] = await tx
+    .select()
+    .from(oneTimeTokens)
+    .where(
+      and(
+        eq(oneTimeTokens.tokenHash, hashOpaqueToken(presented)),
+        eq(oneTimeTokens.purpose, EMAIL_VERIFICATION),
+      ),
+    )
+
+  if (!token || token.usedAt !== null || token.expiresAt.getTime() <= Date.now()) {
+    throw new DomainError('invalid_link')
+  }
+
+  // Conditional on still being unspent, so two clicks arriving together cannot
+  // both consume it: the second updates nothing and is refused.
+  const spent = await tx
+    .update(oneTimeTokens)
+    .set({ usedAt: new Date() })
+    .where(and(eq(oneTimeTokens.tokenId, token.tokenId), isNull(oneTimeTokens.usedAt)))
+    .returning({ tokenId: oneTimeTokens.tokenId })
+
+  if (spent.length === 0) throw new DomainError('invalid_link')
+
+  // Only if it was not already: re-confirming should not move the date, which is
+  // a record of when this address was first proved.
+  await tx
+    .update(users)
+    .set({ emailVerifiedAt: new Date() })
+    .where(and(eq(users.userId, token.userId), isNull(users.emailVerifiedAt)))
+
+  return issueSession(tx, token.userId, randomUUID())
 }
 
 /**
@@ -120,7 +249,7 @@ export async function rotateSession(tx: Tx, presented: string): Promise<Session 
   const [existing] = await tx
     .select()
     .from(refreshTokens)
-    .where(eq(refreshTokens.tokenHash, hashRefreshToken(presented)))
+    .where(eq(refreshTokens.tokenHash, hashOpaqueToken(presented)))
 
   if (!existing) return null
 
@@ -165,7 +294,7 @@ export async function signOut(tx: Tx, presented: string): Promise<void> {
   const [existing] = await tx
     .select({ familyId: refreshTokens.familyId })
     .from(refreshTokens)
-    .where(eq(refreshTokens.tokenHash, hashRefreshToken(presented)))
+    .where(eq(refreshTokens.tokenHash, hashOpaqueToken(presented)))
 
   if (!existing) return
 

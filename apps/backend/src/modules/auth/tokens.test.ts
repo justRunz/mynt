@@ -2,8 +2,8 @@ import { SignJWT } from 'jose'
 import { describe, expect, test } from 'vitest'
 
 import {
-  hashRefreshToken,
-  mintRefreshToken,
+  hashOpaqueToken,
+  mintOpaqueToken,
   readAccessToken,
   refreshExpiry,
   REFRESH_TTL_DAYS,
@@ -57,21 +57,21 @@ describe('access tokens', () => {
   })
 })
 
-describe('refresh tokens', () => {
+describe('opaque tokens', () => {
   test('two mints are never the same token', () => {
-    const seen = new Set(Array.from({ length: 100 }, () => mintRefreshToken().token))
+    const seen = new Set(Array.from({ length: 100 }, () => mintOpaqueToken().token))
     expect(seen.size).toBe(100)
   })
 
   test('the hash it hands back is the hash of the token it hands out', () => {
-    const { token, tokenHash } = mintRefreshToken()
-    expect(hashRefreshToken(token)).toBe(tokenHash)
+    const { token, tokenHash } = mintOpaqueToken()
+    expect(hashOpaqueToken(token)).toBe(tokenHash)
   })
 
   test('the hash does not resemble the token', () => {
     // What the table stores must not be usable as what the cookie carries. Said
     // as a test because storing the token itself is a one-character mistake.
-    const { token, tokenHash } = mintRefreshToken()
+    const { token, tokenHash } = mintOpaqueToken()
     expect(tokenHash).not.toContain(token)
     expect(tokenHash).toMatch(/^[0-9a-f]{64}$/)
   })

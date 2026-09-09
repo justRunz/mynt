@@ -20,25 +20,47 @@
   "auth": {
     "fields": {
       "email": "Adresse email",
-      "password": "Mot de passe"
+      "password": "Mot de passe",
+      "newPassword": "Nouveau mot de passe"
     },
     "signIn": {
       "title": "Connexion",
       "submit": "Se connecter",
       "noAccount": "Pas encore de compte ?",
-      "createAccount": "Créer un compte"
+      "createAccount": "Créer un compte",
+      "forgot": "Mot de passe oublié ?"
     },
     "signUp": {
       "title": "Créer un compte",
       "submit": "Créer le compte",
       "haveAccount": "Déjà un compte ?",
-      "signIn": "Se connecter"
+      "signIn": "Se connecter",
+      "checkEmail": "Un message vient d'être envoyé à {{email}}. Ouvrez le lien qu'il contient pour confirmer votre adresse — il est valable 24 heures."
     },
     "errors": {
       "generic": "Une erreur est survenue. Réessayez.",
       "invalid_credentials": "Adresse email ou mot de passe incorrect.",
       "email_taken": "Un compte existe déjà pour cette adresse.",
-      "weak_password": "Mot de passe trop court : utilisez au moins 10 caractères."
+      "weak_password": "Mot de passe trop court : utilisez au moins 10 caractères.",
+      "email_not_verified": "Votre adresse n'est pas encore confirmée. Un nouveau lien vient de vous être envoyé.",
+      "invalid_link": "Ce lien n'est plus valable. Demandez-en un nouveau."
+    },
+    "verifyEmail": {
+      "title": "Confirmation de l'adresse",
+      "pending": "Un instant…",
+      "backToSignIn": "Retour à la connexion"
+    },
+    "reset": {
+      "title": "Mot de passe oublié",
+      "intro": "Indiquez votre adresse : si un compte existe, un lien vous y sera envoyé.",
+      "submit": "Envoyer le lien",
+      "sent": "Si un compte existe pour {{email}}, un lien vient d'y être envoyé. Il est valable une heure.",
+      "backToSignIn": "Retour à la connexion"
+    },
+    "updatePassword": {
+      "title": "Choisir un nouveau mot de passe",
+      "submit": "Enregistrer le mot de passe",
+      "done": "Mot de passe enregistré. Vous pouvez vous connecter."
     }
   },
   "grade": {

@@ -17,6 +17,11 @@ const STATUS: Record<string, number> = {
   // Deliberately one answer for a wrong password and an unknown address alike.
   invalid_credentials: 401,
 
+  // The link is unknown, spent, expired, or for something else. One answer for
+  // all four: none of the distinctions helps somebody holding a link that does
+  // not work, and each one told apart is a fact given away.
+  invalid_link: 410,
+
   // A coin that is not there, or is somebody else's -- the policy makes those
   // the same thing, and so does this. 404 rather than 403: a refusal that
   // distinguishes them tells a stranger which ids are real.

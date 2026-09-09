@@ -73,11 +73,27 @@ export async function signIn(email: string, password: string): Promise<void> {
   resumePersistence()
 }
 
+/**
+ * Opens an account. Deliberately does not sign anybody in.
+ *
+ * The address is a claim until the mailbox it names is opened, so what comes
+ * back is an acknowledgement and the screen says to go and read the message.
+ */
 export async function signUp(email: string, password: string): Promise<void> {
+  await apiFetch<{ status: string }>('/auth/sign-up', {
+    method: 'POST',
+    body: { email, password },
+    raw: true,
+  })
+}
+
+/** Confirms an address from the link, which also signs the collector in --
+ *  opening the mailbox is the only thing the address was ever a claim about. */
+export async function verifyEmail(token: string): Promise<void> {
   setSession(
-    await apiFetch<Session>('/auth/sign-up', {
+    await apiFetch<Session>('/auth/verify-email', {
       method: 'POST',
-      body: { email, password },
+      body: { token },
       raw: true,
     }),
   )

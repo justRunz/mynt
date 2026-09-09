@@ -57,6 +57,9 @@ export function SignIn() {
       </form>
 
       <div className="mt-5 flex flex-col gap-2 border-t border-rule pt-4 text-sm">
+        <Link to="/reset-password" className="text-muted hover:text-ink">
+          {t('auth.signIn.forgot')}
+        </Link>
         <p className="text-muted">
           {t('auth.signIn.noAccount')}{' '}
           <Link

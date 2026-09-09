@@ -1,12 +1,12 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import pg from 'pg'
 import { afterAll, beforeEach, describe, expect, test } from 'vitest'
 
 import { closeDb, dbQueryAs, dbQueryUnscoped } from '../../db/index.js'
-import { refreshTokens, userInfo } from '../../db/schema.js'
+import { oneTimeTokens, refreshTokens, userInfo, users } from '../../db/schema.js'
 import { DomainError } from '../../errors.js'
 import { readAccessToken } from './tokens.js'
-import { rotateSession, signIn, signOut, signUp } from './service.js'
+import { rotateSession, signIn, signOut, signUp, verifyEmail } from './service.js'
 
 /**
  * The session lifecycle against a real database.
@@ -43,6 +43,19 @@ async function clean() {
   await owner.query(`delete from auth.users where email like '%@mynt.test'`)
 }
 
+/** Signs up and follows the link, which is the only way to a session now. */
+async function openSession(email = EMAIL) {
+  const { verificationToken } = await dbQueryUnscoped((tx) => signUp(tx, email, PASSWORD))
+  return dbQueryUnscoped((tx) => verifyEmail(tx, verificationToken))
+}
+
+/** Signs in an account already verified, and insists it worked. */
+async function signInVerified(email = EMAIL) {
+  const outcome = await dbQueryUnscoped((tx) => signIn(tx, email, PASSWORD))
+  if (!outcome.verified) throw new Error('expected a verified account')
+  return outcome.session
+}
+
 beforeEach(clean)
 afterAll(async () => {
   await clean()
@@ -51,7 +64,7 @@ afterAll(async () => {
 
 describe('signing up', () => {
   test('an account arrives whole, in both schemas', async () => {
-    const session = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+    const session = await openSession()
 
     // The service writes auth.users only. The user_info row is the trigger's
     // doing, and this is the assertion that it actually fires.
@@ -86,12 +99,10 @@ describe('signing up', () => {
 })
 
 describe('signing in', () => {
-  beforeEach(async () => {
-    await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
-  })
+  beforeEach(() => openSession())
 
   test('the right password opens a session', async () => {
-    const session = await dbQueryUnscoped((tx) => signIn(tx, EMAIL, PASSWORD))
+    const session = await signInVerified()
     expect(await readAccessToken(session.accessToken)).toBe(session.userId)
   })
 
@@ -109,7 +120,7 @@ describe('signing in', () => {
 
 describe('rotating', () => {
   test('spending a token yields a different one', async () => {
-    const first = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+    const first = await openSession()
     const second = await dbQueryUnscoped((tx) => rotateSession(tx, first.refreshToken))
 
     expect(second).not.toBeNull()
@@ -118,7 +129,7 @@ describe('rotating', () => {
   })
 
   test('spending it twice revokes the whole chain', async () => {
-    const first = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+    const first = await openSession()
     const second = await dbQueryUnscoped((tx) => rotateSession(tx, first.refreshToken))
 
     // The theft, as it actually looks: somebody presents a token that has
@@ -136,7 +147,7 @@ describe('rotating', () => {
   })
 
   test('an expired token is refused and cleared away', async () => {
-    const session = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+    const session = await openSession()
     await dbQueryUnscoped((tx) =>
       tx
         .update(refreshTokens)
@@ -153,7 +164,7 @@ describe('rotating', () => {
   })
 
   test('a token nobody issued is refused without ceremony', async () => {
-    await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+    await openSession()
     expect(await dbQueryUnscoped((tx) => rotateSession(tx, 'inventé'))).toBeNull()
   })
 })
@@ -162,8 +173,8 @@ describe('signing out', () => {
   test('it ends this chain and leaves the other devices alone', async () => {
     // Two sign-ins for one person: two families, which is what a phone and a
     // laptop are.
-    const phone = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
-    const laptop = await dbQueryUnscoped((tx) => signIn(tx, EMAIL, PASSWORD))
+    const phone = await openSession()
+    const laptop = await signInVerified()
 
     await dbQueryUnscoped((tx) => signOut(tx, phone.refreshToken))
 
@@ -174,8 +185,92 @@ describe('signing out', () => {
   })
 
   test('signing out with a token nobody issued does nothing at all', async () => {
-    const session = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+    const session = await openSession()
     await dbQueryUnscoped((tx) => signOut(tx, 'inventé'))
     expect(await dbQueryUnscoped((tx) => rotateSession(tx, session.refreshToken))).not.toBeNull()
+  })
+})
+
+describe('confirming an address', () => {
+  test('signing up hands out no session at all', async () => {
+    const { userId } = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+    const [account] = await dbQueryUnscoped((tx) =>
+      tx.select().from(users).where(eq(users.userId, userId)),
+    )
+    expect(account!.emailVerifiedAt).toBeNull()
+    expect(
+      await dbQueryUnscoped((tx) =>
+        tx.select().from(refreshTokens).where(eq(refreshTokens.userId, userId)),
+      ),
+    ).toHaveLength(0)
+  })
+
+  test('signing in unverified refuses, and sends another link', async () => {
+    await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+    const outcome = await dbQueryUnscoped((tx) => signIn(tx, EMAIL, PASSWORD))
+
+    expect(outcome.verified).toBe(false)
+    // The first message gets lost or expires; without a second there would be no
+    // way back into an account that exists. The password is what gates it.
+    if (!outcome.verified) expect(outcome.verificationToken).toBeTruthy()
+  })
+
+  test('the second link works and the first one no longer does', async () => {
+    const { verificationToken: first } = await dbQueryUnscoped((tx) =>
+      signUp(tx, EMAIL, PASSWORD),
+    )
+    const outcome = await dbQueryUnscoped((tx) => signIn(tx, EMAIL, PASSWORD))
+    if (outcome.verified) throw new Error('expected an unverified account')
+
+    // Asking for a new link has to retire the old one, or a message left in an
+    // old mailbox keeps working for as long as it has left to live.
+    await expect(dbQueryUnscoped((tx) => verifyEmail(tx, first))).rejects.toThrow(
+      'invalid_link',
+    )
+    expect(await dbQueryUnscoped((tx) => verifyEmail(tx, outcome.verificationToken))).toBeTruthy()
+  })
+
+  test('following the link confirms the address and opens a session', async () => {
+    const { userId, verificationToken } = await dbQueryUnscoped((tx) =>
+      signUp(tx, EMAIL, PASSWORD),
+    )
+    const session = await dbQueryUnscoped((tx) => verifyEmail(tx, verificationToken))
+
+    expect(session.userId).toBe(userId)
+    const [account] = await dbQueryUnscoped((tx) =>
+      tx.select().from(users).where(eq(users.userId, userId)),
+    )
+    expect(account!.emailVerifiedAt).not.toBeNull()
+  })
+
+  test('the same link cannot be followed twice', async () => {
+    const { verificationToken } = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
+    await dbQueryUnscoped((tx) => verifyEmail(tx, verificationToken))
+
+    await expect(dbQueryUnscoped((tx) => verifyEmail(tx, verificationToken))).rejects.toThrow(
+      'invalid_link',
+    )
+  })
+
+  test('an expired link is refused like any other bad one', async () => {
+    const { userId, verificationToken } = await dbQueryUnscoped((tx) =>
+      signUp(tx, EMAIL, PASSWORD),
+    )
+    await dbQueryUnscoped((tx) =>
+      tx
+        .update(oneTimeTokens)
+        .set({ expiresAt: new Date(Date.now() - 1000) })
+        .where(and(eq(oneTimeTokens.userId, userId))),
+    )
+
+    await expect(
+      dbQueryUnscoped((tx) => verifyEmail(tx, verificationToken)),
+    ).rejects.toThrow('invalid_link')
+  })
+
+  test('and so is a link nobody ever sent', async () => {
+    await expect(dbQueryUnscoped((tx) => verifyEmail(tx, 'inventé'))).rejects.toThrow(
+      'invalid_link',
+    )
   })
 })

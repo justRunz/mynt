@@ -16,6 +16,8 @@ import type { TranslationKey } from '@/app/i18n/types'
 const MESSAGES: Record<string, TranslationKey> = {
   invalid_credentials: 'auth.errors.invalid_credentials',
   email_taken: 'auth.errors.email_taken',
+  email_not_verified: 'auth.errors.email_not_verified',
+  invalid_link: 'auth.errors.invalid_link',
   // The only shape a sign-in or sign-up body can get wrong, in practice, is a
   // password below the minimum -- the address is already checked by the field.
   invalid_request: 'auth.errors.weak_password',
