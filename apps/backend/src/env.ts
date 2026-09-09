@@ -38,4 +38,24 @@ export const env = {
    * server issues its own tokens.
    */
   supabaseJwksUrl: required('SUPABASE_JWKS_URL'),
+
+  /**
+   * The key this server signs its own access tokens with.
+   *
+   * Symmetric, so the same value verifies them -- see modules/auth/tokens.ts for
+   * why that is the right trade here. Whoever holds it can mint a token for any
+   * account, which is the whole reason it is read from the environment and never
+   * written down in the repository.
+   *
+   * The length check is not decoration: HS256 keys shorter than the 256-bit hash
+   * are the standard way this algorithm is weakened, and a value someone typed
+   * by hand in a hurry is exactly how that happens.
+   */
+  authSecret: (() => {
+    const value = required('AUTH_SECRET')
+    if (value.length < 32) {
+      throw new Error('AUTH_SECRET must be at least 32 characters. See .env.example.')
+    }
+    return value
+  })(),
 } as const
