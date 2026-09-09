@@ -3,9 +3,10 @@ import express from 'express'
 
 import { env } from './env.js'
 import { authenticate } from './middleware/authenticate.js'
-import { binderRoutes } from './routes/binders.js'
-import { catalogRoutes } from './routes/catalog.js'
-import { collectionRoutes } from './routes/collection.js'
+import { errorHandler } from './middleware/error-handler.js'
+import { binderController } from './modules/binders/controller.js'
+import { catalogController } from './modules/catalog/controller.js'
+import { collectionController } from './modules/collection/controller.js'
 
 const app = express()
 
@@ -15,7 +16,7 @@ const app = express()
  * front end next to /api -- so there is no cross-origin request to permit, and
  * none of this runs.
  *
- * credentials is on for the cookie step 4 brings; today the token travels in an
+ * credentials is on for the refresh cookie the auth step brings; today the token travels in an
  * Authorization header, which does not need it.
  */
 app.use(cors({ origin: env.webOrigin, credentials: true }))
@@ -25,28 +26,11 @@ app.use(express.json())
 // than repeated inside each of them, so adding a route cannot forget it.
 app.use('/api', authenticate)
 
-app.use('/api/catalog', catalogRoutes)
-app.use('/api/collection', collectionRoutes)
-app.use('/api/binders', binderRoutes)
+app.use('/api/catalog', catalogController)
+app.use('/api/collection', collectionController)
+app.use('/api/binders', binderController)
 
-/**
- * The last word on failure.
- *
- * A thrown error must not reach the client as a stack trace or a SQL string: a
- * database message names tables and columns, which is free reconnaissance. It
- * is logged in full here and answered with nothing.
- */
-app.use(
-  (
-    error: unknown,
-    _req: express.Request,
-    res: express.Response,
-    _next: express.NextFunction,
-  ) => {
-    console.error(error)
-    res.status(500).json({ error: 'internal' })
-  },
-)
+app.use(errorHandler)
 
 app.listen(env.port, () => {
   console.log(`API sur http://localhost:${env.port}`)

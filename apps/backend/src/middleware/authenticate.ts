@@ -58,3 +58,21 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     res.status(401).json({ error: 'unauthenticated' })
   }
 }
+
+/**
+ * The signed-in caller, as a value a controller can hold.
+ *
+ * Express types userId as optional because it is: the property exists on every
+ * Request, set on none of them until this middleware runs. Controllers used to
+ * answer that with `req.userId!`, which tells the compiler to trust a promise
+ * nothing enforces.
+ *
+ * This enforces it. The throw is unreachable while every route lives under the
+ * /api mount -- and it is exactly the bug worth catching loudly if one ever does
+ * not, because such a route would run with no identity at all.
+ */
+export function requireUserId(req: Request): string {
+  const { userId } = req
+  if (!userId) throw new Error('route reached without authenticate; check the mount')
+  return userId
+}

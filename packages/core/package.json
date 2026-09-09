@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./catalog-types": "./src/catalog-types.ts"
   },
   "scripts": {
     "build": "echo \"@mynt/core is consumed as source, nothing to build\"",
