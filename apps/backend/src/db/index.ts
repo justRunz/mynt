@@ -25,9 +25,9 @@ const pool = new pg.Pool({ connectionString })
  *
  * There is nothing else to import, so reaching the collection without saying
  * who is asking is not a mistake to avoid -- it is a thing that cannot be
- * written. Signing in will need its own way through, since it has to read an
- * account before anyone's identity is known; that will be a second function
- * with a name loud enough to be noticed in review, never this one made public.
+ * written. Signing in needs its own way through, since it reads an account
+ * before anyone's identity is known; that is dbQueryUnscoped below, named to be
+ * noticed in review, never this handle made public.
  */
 const db = drizzle(pool, { schema })
 
@@ -60,6 +60,30 @@ export function dbQueryAs<T>(userId: string, run: (tx: Tx) => Promise<T>): Promi
 
     return run(tx)
   })
+}
+
+/**
+ * Runs a query as the server itself, wearing no costume.
+ *
+ * Authentication cannot be scoped to a collector, because it is what decides
+ * which collector it is: sign-in reads an account from an email address, and a
+ * refresh reads a session from a cookie. Both happen before there is an identity
+ * to state.
+ *
+ * The name is deliberately alarming, and reviewing a use of it is a two-second
+ * job: it belongs in the auth module and nowhere else. Seeing it above a query
+ * on coins should stop a reader cold.
+ *
+ * What keeps it honest is not discipline, though. mynt_app holds privileges on
+ * auth.users and auth.refresh_tokens and on nothing else whatsoever -- and it
+ * holds the authenticated role WITH INHERIT FALSE, so none of that role's access
+ * arrives until the costume is actually put on. This function never puts it on.
+ * A query against the collection through here does not come back empty, which
+ * would be a result and would get believed; it fails with "permission denied for
+ * table coins". There is a test for exactly that.
+ */
+export function dbQueryUnscoped<T>(run: (tx: Tx) => Promise<T>): Promise<T> {
+  return db.transaction(run)
 }
 
 /** Lets a test process exit instead of waiting on an idle pool. */

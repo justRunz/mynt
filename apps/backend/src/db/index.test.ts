@@ -2,8 +2,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { eq } from 'drizzle-orm'
 import pg from 'pg'
 
-import { closeDb, dbQueryAs } from './index.js'
-import { binders, coins, coinTypes, pages } from './schema.js'
+import { closeDb, dbQueryAs, dbQueryUnscoped } from './index.js'
+import { binders, coins, coinTypes, pages, users } from './schema.js'
 
 /**
  * The isolation boundary, asserted rather than trusted.
@@ -47,12 +47,14 @@ let coinTypeId = 0
 beforeAll(async () => {
   await owner.query('delete from auth.users where user_id = any($1)', [[ALICE, BOB]])
 
+  // One insert, not two: the trigger on auth.users attaches the user_info row.
+  // This fixture used to write it by hand, and now cannot -- which is the
+  // invariant working.
   for (const [id, email] of [[ALICE, 'alice@test'], [BOB, 'bob@test']]) {
     await owner.query(
       `insert into auth.users (user_id, email, password_hash) values ($1, $2, 'x')`,
       [id, email],
     )
-    await owner.query('insert into user_info (user_id) values ($1)', [id])
   }
 
   const type = await owner.query(
@@ -178,5 +180,26 @@ describe('the net under the wrapper', () => {
         coinTypeId,
       ]),
     ).rejects.toThrow(/permission denied for table coins/)
+  })
+})
+
+describe('the door authentication uses', () => {
+  test('it reaches the credentials, which is the whole reason it exists', async () => {
+    // Sign-in has to find an account from an email address, before anybody's
+    // identity is known. No scoped transaction can do that: auth.users is
+    // granted to the server role and to no policy-bound costume.
+    const rows = await dbQueryUnscoped((tx) =>
+      tx.select().from(users).where(eq(users.userId, ALICE)),
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.email).toBe('alice@test')
+  })
+
+  test('and it reaches nothing else', async () => {
+    // The same function, one table over. If this ever returns rows instead of
+    // throwing, the auth module has become a way into the collection.
+    const error = await refusal(() => dbQueryUnscoped((tx) => tx.select().from(coins)))
+    expect(error.code).toBe('42501')
+    expect(error.message).toMatch(/permission denied for table coins/)
   })
 })
