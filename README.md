@@ -111,7 +111,11 @@ comprises — d'où Inter auto-hébergée plutôt que servie par un CDN. Il ne s
 que sur un build de production : `pnpm --filter @mynt/web preview`.
 
 Les **données** vivent dans le cache TanStack Query persisté en IndexedDB, gardé
-une semaine. Seules les lectures y sont écrites : `shouldDehydrateMutation` est
+une semaine. Ce cache survit au code qui l'a écrit : `CACHE_SHAPE` dans
+`app/app.tsx` est à incrémenter dès qu'une réponse mise en cache change de forme,
+sinon un navigateur ayant utilisé la version d'avant garde l'ancienne — et le
+catalogue, gardé avec `staleTime: Infinity`, ne serait jamais rechargé pour la
+corriger. Seules les lectures y sont écrites : `shouldDehydrateMutation` est
 explicitement à `false`, et les mutations utilisent `networkMode: 'always'` pour
 **échouer tout de suite** au lieu d'attendre en silence un retour de réseau qui
 ne serait plus exploité.
