@@ -36,6 +36,11 @@ Mailpit tourne avec la base : **aucun email ne quitte la machine**, tout est
 capturé et lisible sur **http://localhost:8025**. C'est là qu'on va chercher le
 lien de confirmation après une inscription.
 
+En production, l'envoi passe par Resend, et la seule chose qui change est le bloc
+SMTP de l'environnement — voir `.env.example`. Le code est identique : même
+transport, même message, et c'est précisément pourquoi le chemin complet passe
+par Mailpit en local plutôt que par un `console.log`.
+
 ### Comptes et sessions
 
 L'inscription n'ouvre pas de session : une adresse est une affirmation tant que
