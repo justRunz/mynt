@@ -74,6 +74,34 @@ export const refreshTokens = auth.table(
   ],
 )
 
+/**
+ * Links sent by email: confirm this address, choose a new password.
+ *
+ * One table for both. They are the same object -- a secret handed over through a
+ * channel nobody controls, good once and not for long -- differing only in what
+ * it lets the holder do.
+ */
+export const oneTimeTokens = auth.table(
+  'one_time_tokens',
+  {
+    tokenId: uuid('token_id').primaryKey().default(sql`uuidv7()`),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    /** EMAIL_VERIFICATION or PASSWORD_RESET; the check constraint is in the
+     *  migration, which Drizzle cannot express here. */
+    purpose: text('purpose').notNull(),
+    /** SHA-256 of the token, never the token. */
+    tokenHash: text('token_hash').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    /** Null until spent. Kept on use, so a second click can be told apart from a
+     *  link that never existed. */
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('one_time_tokens_user_purpose_idx').on(table.userId, table.purpose)],
+)
+
 /** The same person, seen from the application side, and the only owner every
  *  foreign key in the collection points at. */
 export const userInfo = pgTable('user_info', {
