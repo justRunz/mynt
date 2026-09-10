@@ -2,7 +2,7 @@ import { asc, eq } from 'drizzle-orm'
 
 import type { Tx } from '../../db/index.js'
 import { binders, pages } from '../../db/schema.js'
-import { DomainError, postgresErrorCode } from '../../errors.js'
+import { DomainError, PG, postgresErrorCode } from '../../errors.js'
 import type { Binder, CreateBinder, CreatePage } from './types.js'
 
 /**
@@ -56,14 +56,6 @@ export async function listBinders(tx: Tx): Promise<Binder[]> {
 // Writes
 // ---------------------------------------------------------------------------
 
-/** Two sheets claiming the same number in one binder. */
-const UNIQUE_VIOLATION = '23505'
-/** The binder does not exist. */
-const FOREIGN_KEY_VIOLATION = '23503'
-/** The binder exists and is not the caller's, which the policy refuses on the
- *  way in. Answered as though it did not exist -- see below. */
-const POLICY_VIOLATION = '42501'
-
 export async function createBinder(
   tx: Tx,
   userId: string,
@@ -105,8 +97,11 @@ export async function createPage(
     return created!.pageId
   } catch (error) {
     const code = postgresErrorCode(error)
-    if (code === UNIQUE_VIOLATION) throw new DomainError('page_number_taken')
-    if (code === FOREIGN_KEY_VIOLATION || code === POLICY_VIOLATION) {
+    // Two sheets claiming the same number in one binder.
+    if (code === PG.UNIQUE_VIOLATION) throw new DomainError('page_number_taken')
+    // No such binder, or one that is not the caller's, which the policy refuses
+    // on the way in. Answered identically -- see above.
+    if (code === PG.FOREIGN_KEY_VIOLATION || code === PG.INSUFFICIENT_PRIVILEGE) {
       throw new DomainError('not_found')
     }
     throw error

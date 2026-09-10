@@ -4,7 +4,7 @@ import { and, eq, isNull } from 'drizzle-orm'
 
 import type { Tx } from '../../db/index.js'
 import { oneTimeTokens, refreshTokens, users } from '../../db/schema.js'
-import { DomainError, postgresErrorCode } from '../../errors.js'
+import { DomainError, PG, postgresErrorCode } from '../../errors.js'
 import { hashPassword, verifyPassword } from './passwords.js'
 import {
   ACCESS_TTL_SECONDS,
@@ -27,9 +27,6 @@ import type { Session, SignInOutcome } from './types.js'
  * transaction cannot do. See dbQueryUnscoped, and the test that it reaches
  * auth.users and nothing else.
  */
-
-/** Postgres unique_violation. Here it can only be the email address. */
-const UNIQUE_VIOLATION = '23505'
 
 const EMAIL_VERIFICATION = 'EMAIL_VERIFICATION'
 const PASSWORD_RESET = 'PASSWORD_RESET'
@@ -116,7 +113,8 @@ export async function signUp(
     // Let the database decide, rather than checking first: between a SELECT and
     // an INSERT another request can take the address, and the unique constraint
     // is the only check that cannot lose that race.
-    if (postgresErrorCode(error) === UNIQUE_VIOLATION) {
+    // On users, the only unique column is the email address.
+    if (postgresErrorCode(error) === PG.UNIQUE_VIOLATION) {
       throw new DomainError('email_taken')
     }
     throw error

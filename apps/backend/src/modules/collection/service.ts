@@ -2,7 +2,7 @@ import { asc, count, eq, sql } from 'drizzle-orm'
 
 import type { Tx } from '../../db/index.js'
 import { binders, coins, coinTypes, pages } from '../../db/schema.js'
-import { DomainError, postgresErrorConstraint, postgresErrorCode } from '../../errors.js'
+import { DomainError, PG, postgresErrorConstraint, postgresErrorCode } from '../../errors.js'
 import type {
   AddCoin,
   CollectionCoin,
@@ -92,15 +92,6 @@ export async function countOwnedByType(tx: Tx): Promise<OwnedTypeCounts> {
 // Writes
 // ---------------------------------------------------------------------------
 
-/** Two coins aimed at one hole. The only conflict the collector can act on, so
- *  it has to arrive as itself rather than as a generic failure. */
-const UNIQUE_VIOLATION = '23505'
-/** A row that is not there -- or is somebody else's, which the policy makes the
- *  same thing. Also what the triggers raise for a page nobody can see. */
-const NOT_FOUND = '23503'
-/** A slot outside the sheet's dimensions, from the coin_fits_page trigger. */
-const CHECK_VIOLATION = '23514'
-
 /**
  * Turns a refusal by the database into one the collector can be told about.
  *
@@ -115,13 +106,17 @@ const CHECK_VIOLATION = '23514'
 function translate(error: unknown): never {
   const code = postgresErrorCode(error)
 
-  if (code === UNIQUE_VIOLATION) {
+  // Two coins aimed at one hole. The only conflict the collector can act on, so
+  // it has to arrive as itself rather than as a generic failure.
+  if (code === PG.UNIQUE_VIOLATION) {
     throw new DomainError(
       postgresErrorConstraint(error) === 'coins_slot_key' ? 'slot_taken' : 'conflict',
     )
   }
 
-  if (code === NOT_FOUND) {
+  // A row that is not there -- or is somebody else's, which the policy makes
+  // the same thing. Also what the triggers raise for a page nobody can see.
+  if (code === PG.FOREIGN_KEY_VIOLATION) {
     const constraint = postgresErrorConstraint(error)
     if (constraint === 'coins_grade_code_fkey') throw new DomainError('unknown_grade')
     if (constraint === 'coins_coin_type_id_fkey') throw new DomainError('unknown_coin_type')
@@ -129,7 +124,8 @@ function translate(error: unknown): never {
     throw new DomainError('not_found')
   }
 
-  if (code === CHECK_VIOLATION) throw new DomainError('slot_out_of_bounds')
+  // A slot outside the sheet's dimensions, from the coin_fits_page trigger.
+  if (code === PG.CHECK_VIOLATION) throw new DomainError('slot_out_of_bounds')
 
   throw error
 }

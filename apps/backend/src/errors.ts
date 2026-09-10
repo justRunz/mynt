@@ -25,6 +25,31 @@ export class DomainError extends Error {
 }
 
 /**
+ * The SQLSTATEs this server acts on, under the names Postgres gives them.
+ *
+ * Kept once, here, because the same five characters were being redeclared in
+ * every service -- and under different names: 23503 was FOREIGN_KEY_VIOLATION in
+ * one file and NOT_FOUND in another. A value copied three times is three places
+ * for it to drift.
+ *
+ * The names are Postgres's, not ours, so they say what the database refused and
+ * nothing about what that means to a collector. That meaning differs by case --
+ * a unique violation is a taken hole in one table and a taken address in another
+ * -- and it is written where each is caught, not here.
+ */
+export const PG = {
+  /** A unique constraint: two rows claiming the same key. */
+  UNIQUE_VIOLATION: '23505',
+  /** A foreign key pointing at nothing -- and the code this project's triggers
+   *  raise for a row the caller's policies hide. */
+  FOREIGN_KEY_VIOLATION: '23503',
+  /** A check constraint, or a trigger raising in its name. */
+  CHECK_VIOLATION: '23514',
+  /** Not allowed: in practice, a row level security policy refusing a write. */
+  INSUFFICIENT_PRIVILEGE: '42501',
+} as const
+
+/**
  * The SQLSTATE under whatever wrapper it arrived in.
  *
  * Drizzle rethrows a database failure with the SQL as the message and the real
