@@ -18,6 +18,7 @@ const MESSAGES: Record<string, TranslationKey> = {
   email_taken: 'auth.errors.email_taken',
   email_not_verified: 'auth.errors.email_not_verified',
   invalid_link: 'auth.errors.invalid_link',
+  too_many_requests: 'auth.errors.too_many_requests',
   // The only shape a sign-in or sign-up body can get wrong, in practice, is a
   // password below the minimum -- the address is already checked by the field.
   invalid_request: 'auth.errors.weak_password',

@@ -43,7 +43,8 @@
       "email_taken": "Un compte existe déjà pour cette adresse.",
       "weak_password": "Mot de passe trop court : utilisez au moins 10 caractères.",
       "email_not_verified": "Votre adresse n'est pas encore confirmée. Un nouveau lien vient de vous être envoyé.",
-      "invalid_link": "Ce lien n'est plus valable. Demandez-en un nouveau."
+      "invalid_link": "Ce lien n'est plus valable. Demandez-en un nouveau.",
+      "too_many_requests": "Trop de tentatives. Réessayez dans quelques minutes."
     },
     "verifyEmail": {
       "title": "Confirmation de l'adresse",

@@ -26,6 +26,9 @@ export function createApp(): Express {
   app.disable('x-powered-by')
   app.use(securityHeaders)
 
+  // Where the caller's address comes from when a proxy stands in front. See env.
+  app.set('trust proxy', env.trustProxy)
+
 
   /**
    * Cross-origin only exists in development, where the app is on 5173 and this is

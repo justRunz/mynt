@@ -61,3 +61,46 @@ describe('every response', () => {
     expect(response.headers.get('x-powered-by')).toBeNull()
   })
 })
+
+describe('the routes that can be abused', () => {
+  function json(path: string, body: object) {
+    return post(path, JSON.stringify(body))
+  }
+
+  test('ten wrong passwords for one address, then a refusal to keep guessing', async () => {
+    const codes: number[] = []
+    for (let attempt = 0; attempt < 11; attempt++) {
+      const response = await json('/auth/sign-in', {
+        email: 'cible@mynt.test',
+        password: `essai numero ${attempt}`,
+      })
+      codes.push(response.status)
+    }
+    expect(codes.slice(0, 10).every((code) => code === 401)).toBe(true)
+    expect(codes[10]).toBe(429)
+  })
+
+  test('three messages an hour to one mailbox, whether or not it has an account', async () => {
+    // An address with no account, so nothing is sent -- and the fourth request
+    // is still refused. Counting only real sends would reveal which addresses
+    // are registered.
+    const codes: number[] = []
+    for (let attempt = 0; attempt < 4; attempt++) {
+      codes.push((await json('/auth/forgot-password', { email: 'boite@exemple.test' })).status)
+    }
+    expect(codes).toEqual([204, 204, 204, 429])
+
+    const refused = await json('/auth/forgot-password', { email: 'boite@exemple.test' })
+    expect(await refused.json()).toEqual({ error: 'too_many_requests' })
+  })
+
+  test('and a ceiling per caller across all of them', async () => {
+    // Bogus confirmation links: cheap to answer, and each one counts.
+    const codes: number[] = []
+    for (let attempt = 0; attempt < 35; attempt++) {
+      codes.push((await json('/auth/verify-email', { token: `invente-${attempt}` })).status)
+    }
+    expect(codes).toContain(429)
+    expect(codes.filter((code) => code !== 429).length).toBeLessThanOrEqual(30)
+  })
+})

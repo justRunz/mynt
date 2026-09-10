@@ -34,6 +34,17 @@ export const env = {
   isProduction: process.env.NODE_ENV === 'production',
 
   /**
+   * How many proxies stand between the caller and this process.
+   *
+   * Unset locally, where requests arrive directly. Behind Dokploy's Traefik it is
+   * 1: without it every request appears to come from the proxy's own address,
+   * and the per-caller rate limits would throttle everyone together as one
+   * client. Too high a number is its own mistake -- a caller could then choose
+   * their apparent address with a forged X-Forwarded-For.
+   */
+  trustProxy: process.env.TRUST_PROXY ? Number(process.env.TRUST_PROXY) : false,
+
+  /**
    * The key this server signs its own access tokens with.
    *
    * Symmetric, so the same value verifies them -- see modules/auth/tokens.ts for
