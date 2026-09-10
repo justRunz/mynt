@@ -58,7 +58,14 @@ export function signAccessToken(userId: string): Promise<string> {
  */
 export async function readAccessToken(token: string): Promise<string | null> {
   try {
-    const { payload } = await jwtVerify(token, secret, { issuer: ISSUER })
+    // The algorithm is pinned, not inferred from the token's own header. jose
+    // already refuses `none` and anything asymmetric for a shared secret, but it
+    // would accept HS384 or HS512 signed with it -- a token this server never
+    // issues has no business being accepted by it.
+    const { payload } = await jwtVerify(token, secret, {
+      issuer: ISSUER,
+      algorithms: ['HS256'],
+    })
     return typeof payload.sub === 'string' ? payload.sub : null
   } catch {
     return null

@@ -39,6 +39,19 @@ describe('access tokens', () => {
     expect(await readAccessToken(forged)).toBeNull()
   })
 
+  test('the right secret under another algorithm still says nobody', async () => {
+    // HS512 with the genuine key: every part of it would verify except the one
+    // fact that this server only ever signs with HS256.
+    const other = await new SignJWT()
+      .setProtectedHeader({ alg: 'HS512' })
+      .setSubject(ALICE)
+      .setIssuer('mynt')
+      .setExpirationTime('15m')
+      .sign(new TextEncoder().encode(process.env.AUTH_SECRET!))
+
+    expect(await readAccessToken(other)).toBeNull()
+  })
+
   test('an expired token says nobody, however genuine', async () => {
     const stale = await new SignJWT()
       .setProtectedHeader({ alg: 'HS256' })
