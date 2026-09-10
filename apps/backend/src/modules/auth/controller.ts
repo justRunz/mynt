@@ -116,16 +116,23 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
 /**
  * Asks for a link to choose a new password.
  *
- * Answers 204 whether or not the address is registered, and takes the same
- * amount of visible time either way. Anything else would make this form a way of
+ * Answers 204 whether or not the address is registered, and as fast either way:
+ * the mail leaves after the response. What remains is the two small writes that
+ * issue a token when there is an account -- milliseconds, lost in network noise,
+ * and behind a rate limit that caps how many samples anyone gets. Anything else would make this form a way of
  * asking whether somebody has an account here -- the exact fact sign-in goes to
  * trouble to withhold.
  */
 export async function forgotPassword(req: Request, res: Response): Promise<void> {
   const { email } = emailSchema.parse(req.body)
   const token = await dbQueryUnscoped((tx) => service.requestPasswordReset(tx, email))
-  if (token) await sendMail(passwordResetMessage(email, token))
+
+  // Answered before the message goes out, never after. Awaiting the relay only
+  // when there is an account made the response six times slower for a real
+  // address than for an unknown one -- a stopwatch was enough to tell them
+  // apart. sendMail never throws, so letting it finish on its own loses nothing.
   res.status(204).end()
+  if (token) void sendMail(passwordResetMessage(email, token))
 }
 
 /**
