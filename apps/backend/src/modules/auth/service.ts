@@ -291,15 +291,13 @@ export async function rotateSession(tx: Tx, presented: string): Promise<Session 
   // rotating the same token waits for that row lock, then updates nothing: it
   // lost the race rather than presenting a stolen copy, so it is inside the
   // grace window by definition and gets a session of its own.
-  const spent = await tx
+  //
+  // So how many rows this touches does not change the answer, and is not read.
+  await tx
     .update(refreshTokens)
     .set({ usedAt: new Date() })
     .where(and(eq(refreshTokens.tokenId, existing.tokenId), isNull(refreshTokens.usedAt)))
-    .returning({ tokenId: refreshTokens.tokenId })
 
-  // Whether this request did the spending or lost the race to one that did, the
-  // answer is a session: spent.length only says which.
-  void spent
   return issueSession(tx, existing.userId, existing.familyId)
 }
 
