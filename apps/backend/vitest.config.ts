@@ -1,8 +1,11 @@
 import { defineConfig } from 'vitest/config'
 
-// The repo's .env, since the suite needs the same connection strings the rest
-// of the tooling uses. Node reads it natively, so no dotenv dependency.
+// Both files, because the suite straddles both: the root .env has the test
+// database the fixtures build on, and this package's .env has the settings the
+// server code under test refuses to start without. Node reads them natively, so
+// no dotenv dependency.
 process.loadEnvFile(new URL('../../.env', import.meta.url).pathname)
+process.loadEnvFile(new URL('./.env', import.meta.url).pathname)
 
 // The code under test connects as mynt_app, and it has to. Pointing it at the
 // owner would make every isolation assertion pass while proving nothing, since

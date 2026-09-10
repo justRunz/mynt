@@ -23,8 +23,9 @@ Prérequis : Node ≥ 20.19, pnpm, Docker.
 
 ```bash
 pnpm install
-cp .env.example .env                            # y mettre AUTH_SECRET
-cp apps/web/.env.example apps/web/.env.local
+cp .env.example .env                            # la base
+cp apps/backend/.env.example apps/backend/.env  # le serveur : y mettre AUTH_SECRET
+cp apps/web/.env.example apps/web/.env.local    # le front
 pnpm db:up                                      # Postgres 18 + migrations
 pnpm db:demo                                    # un compte et 62 pièces
 pnpm dev                                        # l'API sur 3001, l'app sur 5173
@@ -37,7 +38,7 @@ capturé et lisible sur **http://localhost:8025**. C'est là qu'on va chercher l
 lien de confirmation après une inscription.
 
 En production, l'envoi passe par Resend, et la seule chose qui change est le bloc
-SMTP de l'environnement — voir `.env.example`. Le code est identique : même
+SMTP de l'environnement — voir `apps/backend/.env.example`. Le code est identique : même
 transport, même message, et c'est précisément pourquoi le chemin complet passe
 par Mailpit en local plutôt que par un `console.log`.
 
@@ -75,7 +76,7 @@ jeton, ce qui est exactement ce que l'écran de chargement recouvre.
 | `pnpm db:catalog` | étend le catalogue jusqu'à l'année courante |
 | `pnpm db:demo` | remplit un compte de démonstration |
 
-`pnpm dev` surveille `.env` en plus des sources : changer une variable relance
+`pnpm dev` surveille `apps/backend/.env` en plus des sources : changer une variable relance
 l'API. Sans ça, un serveur lancé une heure plus tôt garde son ancienne
 configuration en silence, et on cherche la panne partout ailleurs.
 

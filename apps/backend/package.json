@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --include ../../.env --env-file=../../.env src/server.ts",
-    "start": "node --env-file=../../.env dist/server.js",
+    "dev": "node --import tsx --watch-path=. --env-file=.env src/server.ts",
+    "start": "node --env-file=.env dist/server.js",
     "build": "tsc -p tsconfig.json",
     "lint": "oxlint",
     "test": "vitest run",
