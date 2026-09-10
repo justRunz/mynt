@@ -1,48 +1,6 @@
-import cookieParser from 'cookie-parser'
-import cors from 'cors'
-import express from 'express'
-
+import { createApp } from './app.js'
 import { env } from './env.js'
-import { authenticate } from './middleware/authenticate.js'
-import { errorHandler } from './middleware/error-handler.js'
-import { authRoutes } from './modules/auth/routes.js'
-import { binderRoutes } from './modules/binders/routes.js'
-import { catalogRoutes } from './modules/catalog/routes.js'
-import { collectionRoutes } from './modules/collection/routes.js'
 
-const app = express()
-
-/**
- * Cross-origin only exists in development, where the app is on 5173 and this is
- * on 3001. In production both sit behind one domain -- Express serves the built
- * front end next to /api -- so there is no cross-origin request to permit, and
- * none of this runs.
- *
- * credentials is on for the refresh cookie the auth step brings; today the token travels in an
- * Authorization header, which does not need it.
- */
-app.use(cors({ origin: env.appUrl, credentials: true }))
-app.use(express.json())
-
-// The refresh token arrives as a cookie and nowhere else, so it has to be parsed
-// before any route can look for it.
-app.use(cookieParser())
-
-// Above the middleware on purpose, and the only thing that is: these are the
-// routes reached while holding no token, so requiring one would close the door
-// from the inside.
-app.use('/api/auth', authRoutes)
-
-// Everything below needs a signed-in caller. Mounted before the routes rather
-// than repeated inside each of them, so adding a route cannot forget it.
-app.use('/api', authenticate)
-
-app.use('/api/catalog', catalogRoutes)
-app.use('/api/collection', collectionRoutes)
-app.use('/api/binders', binderRoutes)
-
-app.use(errorHandler)
-
-app.listen(env.port, () => {
+createApp().listen(env.port, () => {
   console.log(`API sur http://localhost:${env.port}`)
 })
