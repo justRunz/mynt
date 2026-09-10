@@ -9,7 +9,7 @@ import { VerifyEmail } from '@/app/auth/verify-email'
 import { BindersPage } from '@/app/binders'
 import { CollectionPage } from '@/app/collection'
 import { CompletenessPage } from '@/app/completeness'
-import { useAuthStore, useIsSignedIn } from '@/app/stores/auth'
+import { useAuthStatus } from '@/app/stores/auth'
 
 function Splash() {
   const { t } = useTranslation()
@@ -21,14 +21,15 @@ function Splash() {
 }
 
 export function AppRoutes() {
-  const signedIn = useIsSignedIn()
-  const loading = useAuthStore((state) => state.loading)
+  const status = useAuthStatus()
 
   // The splash is what the trade of the refresh cookie for an access token
   // looks like: one request, on load, before anyone can be shown anything.
-  if (loading) return <Splash />
+  if (status === 'loading') return <Splash />
 
-  if (!signedIn) {
+  // Offline counts as in: the persisted collection is shown, read-only, and the
+  // session is renewed or found gone the moment the network answers again.
+  if (status === 'signed-out') {
     return (
       <Routes>
         <Route path="/sign-in" element={<SignIn />} />

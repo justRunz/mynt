@@ -69,41 +69,60 @@ export class ApiError extends Error {
 }
 
 /**
- * At most one refresh in flight, however many requests hit a 401 together.
+ * What trying to renew the session found out.
  *
- * Loading the app fires several queries at once. Fifteen minutes in they all
- * expire at once too, and without this each would spend the refresh token
- * separately -- the second would be presenting a token the first had already
- * consumed, which the server correctly reads as theft and answers by revoking
- * the whole family. The app would sign itself out.
+ * Three answers, because two were being conflated. "refused" means the server
+ * looked at the cookie and said no: nobody is signed in any more. "unreachable"
+ * means nothing was learned at all -- no network, or a server that is down or
+ * broken -- and that is not a reason to sign anyone out, least of all offline,
+ * where the persisted collection is the whole point.
  */
-let refreshing: Promise<boolean> | null = null
+export type RenewalOutcome = 'renewed' | 'refused' | 'unreachable'
 
-async function refreshSession(): Promise<boolean> {
-  refreshing ??= (async () => {
-    try {
-      const response = await fetch(`${BASE}/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include',
-      })
-      if (!response.ok) {
-        // The cookie is gone, expired, or was revoked. Either way this browser
-        // is no longer signed in, and saying so puts the sign-in screen up
-        // rather than leaving the app to fail one request at a time.
-        setSession(null)
-        return false
-      }
-      setSession((await response.json()) as Session)
-      return true
-    } catch {
-      // Offline. Not a sign-out: the collection is readable from the persisted
-      // cache, and the token can be renewed when the signal returns.
-      return false
-    } finally {
-      refreshing = null
-    }
-  })()
-  return refreshing
+async function requestRenewal(): Promise<RenewalOutcome> {
+  let response: Response
+  try {
+    response = await fetch(`${BASE}/auth/refresh`, { method: 'POST', credentials: 'include' })
+  } catch {
+    return 'unreachable'
+  }
+
+  // Only a 401 is a verdict on the session. A 500 says the server is unwell,
+  // and used to sign the collector out for it.
+  if (response.status === 401) {
+    setSession(null)
+    return 'refused'
+  }
+  if (!response.ok) return 'unreachable'
+
+  setSession((await response.json()) as Session)
+  return 'renewed'
+}
+
+/**
+ * One renewal at a time -- in this tab, and across every tab of the app.
+ *
+ * Within a tab: loading fires several queries at once, fifteen minutes later
+ * they all expire at once, and they share one request instead of each spending
+ * the token.
+ *
+ * Across tabs: two tabs restored at browser start used to renew with the same
+ * cookie at the same instant. The server now forgives that race, but the Web
+ * Locks API avoids it altogether -- the second tab waits, then sends the cookie
+ * the first one has just rotated. Without the API (very old browsers) the
+ * server's grace window is what keeps both tabs signed in.
+ */
+let renewing: Promise<RenewalOutcome> | null = null
+
+export function renewSession(): Promise<RenewalOutcome> {
+  renewing ??= (
+    typeof navigator !== 'undefined' && navigator.locks
+      ? navigator.locks.request('mynt-session-renewal', requestRenewal)
+      : requestRenewal()
+  ).finally(() => {
+    renewing = null
+  })
+  return renewing
 }
 
 interface Options {
@@ -143,7 +162,7 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
   let response = await send(path, options)
 
   if (response.status === 401 && !options.raw) {
-    if (await refreshSession()) response = await send(path, options)
+    if ((await renewSession()) === 'renewed') response = await send(path, options)
   }
 
   if (!response.ok) {
