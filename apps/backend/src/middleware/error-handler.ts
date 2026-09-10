@@ -77,6 +77,19 @@ export function errorHandler(
     }
   }
 
+  // body-parser's own refusals: JSON that does not parse, a body over the size
+  // limit. They arrive as http-errors carrying a 4xx status and `expose: true`,
+  // which is the library saying the fault is the client's and the fact is safe
+  // to tell them. Answered as that, and not logged -- a malformed request is not
+  // a bug in this server, and treating it as one fills the log with false alarms.
+  const http = error as { status?: number; expose?: boolean }
+  if (http.expose && http.status !== undefined && http.status >= 400 && http.status < 500) {
+    res
+      .status(http.status)
+      .json({ error: http.status === 413 ? 'payload_too_large' : 'invalid_request' })
+    return
+  }
+
   if (error instanceof ZodError) {
     res.status(400).json({ error: 'invalid_request' })
     return
