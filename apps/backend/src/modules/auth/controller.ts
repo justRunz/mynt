@@ -1,4 +1,4 @@
-import { Router, type CookieOptions, type Response } from 'express'
+import type { CookieOptions, Request, Response } from 'express'
 
 import { dbQueryUnscoped } from '../../db/index.js'
 import { env } from '../../env.js'
@@ -10,27 +10,12 @@ import {
   linkTokenSchema,
   resetPasswordSchema,
 } from './schemas.js'
-import {
-  requestPasswordReset,
-  resetPassword,
-  rotateSession,
-  signIn,
-  signOut,
-  signUp,
-  verifyEmail,
-} from './service.js'
+import * as service from './service.js'
 import { REFRESH_TTL_DAYS } from './tokens.js'
 import type { Session } from './types.js'
 
-/**
- * Sessions over HTTP.
- *
- * Mounted above the authenticate middleware rather than under it, which is the
- * one exception in this server and has to be: these are the routes somebody
- * reaches while holding nothing. Every other route is below the middleware
- * precisely so it cannot be forgotten.
- */
-export const authController = Router()
+/** Sessions over HTTP. Where they are mounted, and why above the authenticate
+ *  middleware, is routes.ts's business. */
 
 const REFRESH_COOKIE = 'mynt_refresh'
 
@@ -93,16 +78,16 @@ function refuseSession(res: Response): void {
  * mail sent from within one that then rolls back is a link to an account that
  * does not exist -- and unlike the row, the mail cannot be taken back.
  */
-authController.post('/sign-up', async (req, res) => {
+export async function signUp(req: Request, res: Response): Promise<void> {
   const { email, password } = credentialsSchema.parse(req.body)
-  const { verificationToken } = await dbQueryUnscoped((tx) => signUp(tx, email, password))
+  const { verificationToken } = await dbQueryUnscoped((tx) => service.signUp(tx, email, password))
   await sendMail(verificationMessage(email, verificationToken))
   res.status(202).json({ status: 'verification_sent' })
-})
+}
 
-authController.post('/sign-in', async (req, res) => {
+export async function signIn(req: Request, res: Response): Promise<void> {
   const { email, password } = credentialsSchema.parse(req.body)
-  const outcome = await dbQueryUnscoped((tx) => signIn(tx, email, password))
+  const outcome = await dbQueryUnscoped((tx) => service.signIn(tx, email, password))
 
   if (!outcome.verified) {
     // The password was right, so this is not a refusal to be vague about: the
@@ -114,7 +99,7 @@ authController.post('/sign-in', async (req, res) => {
   }
 
   respondWithSession(res, outcome.session)
-})
+}
 
 /**
  * Confirms an address and signs the collector in.
@@ -123,10 +108,10 @@ authController.post('/sign-in', async (req, res) => {
  * ever claimed -- so asking for the password again would add a step and prove
  * nothing new.
  */
-authController.post('/verify-email', async (req, res) => {
+export async function verifyEmail(req: Request, res: Response): Promise<void> {
   const { token } = linkTokenSchema.parse(req.body)
-  respondWithSession(res, await dbQueryUnscoped((tx) => verifyEmail(tx, token)))
-})
+  respondWithSession(res, await dbQueryUnscoped((tx) => service.verifyEmail(tx, token)))
+}
 
 /**
  * Asks for a link to choose a new password.
@@ -136,12 +121,12 @@ authController.post('/verify-email', async (req, res) => {
  * asking whether somebody has an account here -- the exact fact sign-in goes to
  * trouble to withhold.
  */
-authController.post('/forgot-password', async (req, res) => {
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
   const { email } = emailSchema.parse(req.body)
-  const token = await dbQueryUnscoped((tx) => requestPasswordReset(tx, email))
+  const token = await dbQueryUnscoped((tx) => service.requestPasswordReset(tx, email))
   if (token) await sendMail(passwordResetMessage(email, token))
   res.status(204).end()
-})
+}
 
 /**
  * Sets the new password, and signs nobody in.
@@ -153,12 +138,12 @@ authController.post('/forgot-password', async (req, res) => {
  * holding is now dead, and leaving it would mean one failed refresh before the
  * app noticed.
  */
-authController.post('/reset-password', async (req, res) => {
+export async function resetPassword(req: Request, res: Response): Promise<void> {
   const { token, password } = resetPasswordSchema.parse(req.body)
-  await dbQueryUnscoped((tx) => resetPassword(tx, token, password))
+  await dbQueryUnscoped((tx) => service.resetPassword(tx, token, password))
   res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS)
   res.status(204).end()
-})
+}
 
 /**
  * Renews a session from the cookie alone.
@@ -167,14 +152,14 @@ authController.post('/reset-password', async (req, res) => {
  * access token is held in memory and is therefore gone after a reload; the
  * cookie is what survives, so the first thing the front end does is ask here.
  */
-authController.post('/refresh', async (req, res) => {
+export async function refresh(req: Request, res: Response): Promise<void> {
   const presented: unknown = req.cookies?.[REFRESH_COOKIE]
   if (typeof presented !== 'string') {
     refuseSession(res)
     return
   }
 
-  const session = await dbQueryUnscoped((tx) => rotateSession(tx, presented))
+  const session = await dbQueryUnscoped((tx) => service.rotateSession(tx, presented))
   if (!session) {
     // rotateSession returns rather than throws, so a revoked family stays
     // revoked: a throw would roll its deletion back with the transaction.
@@ -183,7 +168,7 @@ authController.post('/refresh', async (req, res) => {
   }
 
   respondWithSession(res, session)
-})
+}
 
 /**
  * Ends this device's session.
@@ -191,11 +176,11 @@ authController.post('/refresh', async (req, res) => {
  * Answers the same way whether or not the token meant anything, and never fails:
  * a sign-out that can error is a sign-out somebody is left unsure about.
  */
-authController.post('/sign-out', async (req, res) => {
+export async function signOut(req: Request, res: Response): Promise<void> {
   const presented: unknown = req.cookies?.[REFRESH_COOKIE]
   if (typeof presented === 'string') {
-    await dbQueryUnscoped((tx) => signOut(tx, presented))
+    await dbQueryUnscoped((tx) => service.signOut(tx, presented))
   }
   res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS)
   res.status(204).end()
-})
+}

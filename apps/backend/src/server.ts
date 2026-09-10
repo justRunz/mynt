@@ -5,10 +5,10 @@ import express from 'express'
 import { env } from './env.js'
 import { authenticate } from './middleware/authenticate.js'
 import { errorHandler } from './middleware/error-handler.js'
-import { authController } from './modules/auth/controller.js'
-import { binderController } from './modules/binders/controller.js'
-import { catalogController } from './modules/catalog/controller.js'
-import { collectionController } from './modules/collection/controller.js'
+import { authRoutes } from './modules/auth/routes.js'
+import { binderRoutes } from './modules/binders/routes.js'
+import { catalogRoutes } from './modules/catalog/routes.js'
+import { collectionRoutes } from './modules/collection/routes.js'
 
 const app = express()
 
@@ -31,15 +31,15 @@ app.use(cookieParser())
 // Above the middleware on purpose, and the only thing that is: these are the
 // routes reached while holding no token, so requiring one would close the door
 // from the inside.
-app.use('/api/auth', authController)
+app.use('/api/auth', authRoutes)
 
 // Everything below needs a signed-in caller. Mounted before the routes rather
 // than repeated inside each of them, so adding a route cannot forget it.
 app.use('/api', authenticate)
 
-app.use('/api/catalog', catalogController)
-app.use('/api/collection', collectionController)
-app.use('/api/binders', binderController)
+app.use('/api/catalog', catalogRoutes)
+app.use('/api/collection', collectionRoutes)
+app.use('/api/binders', binderRoutes)
 
 app.use(errorHandler)
 
