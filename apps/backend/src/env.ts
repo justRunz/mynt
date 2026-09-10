@@ -17,6 +17,14 @@ export const env = {
   port: Number(process.env.PORT ?? 3001),
 
   /**
+   * The interface the server listens on. Loopback by default, so a development
+   * server is reachable from this machine and from nothing else on the network.
+   * Inside a container it has to be 0.0.0.0, or the proxy in front could not
+   * reach it either.
+   */
+  host: process.env.HOST ?? '127.0.0.1',
+
+  /**
    * Where the app is served from.
    *
    * Two jobs, which is why it is one variable rather than two that could
