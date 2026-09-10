@@ -49,3 +49,15 @@ describe('a body the parser refuses', () => {
     expect(await response.json()).toEqual({ error: 'payload_too_large' })
   })
 })
+
+describe('every response', () => {
+  test('carries the headers a browser needs, and does not name the framework', async () => {
+    // A 401 is as good a response as any: the headers are set before routing.
+    const response = await fetch(`${base}/collection`)
+
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(response.headers.get('x-frame-options')).toBe('DENY')
+    expect(response.headers.get('referrer-policy')).toBe('no-referrer')
+    expect(response.headers.get('x-powered-by')).toBeNull()
+  })
+})

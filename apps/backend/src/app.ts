@@ -5,6 +5,7 @@ import express, { type Express } from 'express'
 import { env } from './env.js'
 import { authenticate } from './middleware/authenticate.js'
 import { errorHandler } from './middleware/error-handler.js'
+import { securityHeaders } from './middleware/security-headers.js'
 import { authRoutes } from './modules/auth/routes.js'
 import { binderRoutes } from './modules/binders/routes.js'
 import { catalogRoutes } from './modules/catalog/routes.js'
@@ -19,6 +20,11 @@ import { collectionRoutes } from './modules/collection/routes.js'
  */
 export function createApp(): Express {
   const app = express()
+
+  // "X-Powered-By: Express" tells whoever asks which framework's advisories to
+  // read first, and tells nobody else anything.
+  app.disable('x-powered-by')
+  app.use(securityHeaders)
 
 
   /**
