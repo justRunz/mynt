@@ -60,13 +60,23 @@ function SignOutIcon({ className }: IconProps) {
   )
 }
 
+const RAIL_KEY = 'mynt.rail-collapsed'
+
 const LINKS = [
   { to: '/', labelKey: 'nav.collection', Icon: CollectionIcon },
   { to: '/completeness', labelKey: 'nav.completeness', Icon: CompletenessIcon },
   { to: '/binders', labelKey: 'nav.binders', Icon: BindersIcon },
 ] as const
 
-function NavLinks({ onNavigate, className }: { onNavigate?: () => void; className: string }) {
+function NavLinks({
+  onNavigate,
+  className,
+  collapsed = false,
+}: {
+  onNavigate?: () => void
+  className: string
+  collapsed?: boolean
+}) {
   const { t } = useTranslation()
   return (
     <nav className={className}>
@@ -76,8 +86,11 @@ function NavLinks({ onNavigate, className }: { onNavigate?: () => void; classNam
           to={link.to}
           end={link.to === '/'}
           onClick={onNavigate}
+          // The label stays in the accessibility tree when folded away; the
+          // title gives sighted mouse users the same name on hover.
+          title={collapsed ? t(link.labelKey) : undefined}
           className={({ isActive }) =>
-            `flex items-center gap-3 rounded-md px-2 py-0.5 ${
+            `flex items-center gap-3 rounded-md px-3 py-2 ${collapsed ? 'justify-center' : ''} ${
               isActive ? 'bg-accent-wash font-[480] text-accent' : 'text-muted hover:bg-hover hover:text-ink'
             }`
           }
@@ -85,7 +98,7 @@ function NavLinks({ onNavigate, className }: { onNavigate?: () => void; classNam
           {/* The glyph inherits the link's colour, so the active state is said
               once and applies to both halves. */}
           <link.Icon className="size-4 shrink-0" />
-          {t(link.labelKey)}
+          <span className={collapsed ? 'sr-only' : undefined}>{t(link.labelKey)}</span>
         </NavLink>
       ))}
     </nav>
@@ -96,13 +109,24 @@ function NavLinks({ onNavigate, className }: { onNavigate?: () => void; classNam
  * Set off by a rule and pushed to the foot of whichever container holds it, so
  * it reads as the way out rather than as a fourth destination.
  */
-function SignOutAction({ onSignOut }: { onSignOut: () => void }) {
+function SignOutAction({
+  onSignOut,
+  collapsed = false,
+}: {
+  onSignOut: () => void
+  collapsed?: boolean
+}) {
   const { t } = useTranslation()
   return (
     <div className="mt-auto w-full border-t border-rule pt-4">
-      <Button variant="quiet" className="-ml-2" onClick={onSignOut}>
+      <Button
+        variant="quiet"
+        className={collapsed ? 'w-full justify-center' : '-ml-2'}
+        title={collapsed ? t('common.signOut') : undefined}
+        onClick={onSignOut}
+      >
         <SignOutIcon className="size-4 shrink-0" />
-        {t('common.signOut')}
+        <span className={collapsed ? 'sr-only' : undefined}>{t('common.signOut')}</span>
       </Button>
     </div>
   )
@@ -121,6 +145,24 @@ export function AppShell({
 }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
+  // Remembered per browser: a preference about this screen, not about the
+  // account, and nothing breaks if storage is unavailable.
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(RAIL_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  const toggleRail = () => {
+    const next = !collapsed
+    setCollapsed(next)
+    try {
+      localStorage.setItem(RAIL_KEY, next ? '1' : '0')
+    } catch {
+      // Private mode or blocked storage: the toggle still works for this visit.
+    }
+  }
 
   return (
     // Two tracks rather than two flex children. minmax(0, 1fr) is the point:
@@ -128,7 +170,14 @@ export function AppShell({
     // content column needed min-w-0 bolted on or the completeness grid would
     // push the page wider than the window. Here the track simply cannot exceed
     // its share, and the rule lives with the columns instead of on a child.
-    <div className="md:grid md:min-h-dvh md:grid-cols-[14rem_minmax(0,1fr)]">
+    <div
+      // The track width animates rather than snapping; labels are nowrap and
+      // the rail clips, so text never reflows mid-slide.
+      className={`md:grid md:min-h-dvh md:transition-[grid-template-columns] md:duration-200
+                  md:ease-out motion-reduce:transition-none ${
+        collapsed ? 'md:grid-cols-[4.5rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'
+      }`}
+    >
       {/* Flush against the left edge of the window rather than inset in the
           centred column: a navigation bar is part of the frame, not a card
           floating in the page. Sticky and the full height of the viewport, so
@@ -137,13 +186,30 @@ export function AppShell({
         // self-start matters: a grid item is stretched to the row by default,
         // and an item as tall as the thing it scrolls within has nowhere to
         // stick.
-        className="hidden md:sticky md:top-0 md:flex md:h-dvh md:self-start
+        className={`hidden md:sticky md:top-0 md:flex md:h-dvh md:self-start
                    md:flex-col md:items-start md:gap-6 md:border-r md:border-rule
-                   md:px-6 md:py-10 md:shadow-rail"
+                   md:overflow-hidden md:whitespace-nowrap md:py-10 md:shadow-rail ${collapsed ? 'md:px-3' : 'md:px-6'}`}
       >
-        <span className="font-serif text-xl">{t('app.name')}</span>
-        <NavLinks className="flex flex-col gap-3 self-stretch text-base" />
-        <SignOutAction onSignOut={() => void signOut()} />
+        <div className={`flex items-center self-stretch ${collapsed ? 'justify-center' : 'justify-between'}`}>
+          {!collapsed && <span className="font-serif text-xl">{t('app.name')}</span>}
+          <button
+            type="button"
+            onClick={toggleRail}
+            aria-expanded={!collapsed}
+            aria-label={t(collapsed ? 'nav.expand' : 'nav.collapse')}
+            title={t(collapsed ? 'nav.expand' : 'nav.collapse')}
+            className="flex size-9 items-center justify-center rounded-md text-muted
+                       hover:bg-hover hover:text-ink"
+          >
+            <svg {...iconBase} className="size-4">
+              <rect x="2.25" y="2.25" width="11.5" height="11.5" rx="1.5" />
+              <path d="M6 2.25v11.5" />
+              <path d={collapsed ? 'M8.75 6.5 10.25 8l-1.5 1.5' : 'M10.25 6.5 8.75 8l1.5 1.5'} />
+            </svg>
+          </button>
+        </div>
+        <NavLinks collapsed={collapsed} className="flex flex-col gap-1 self-stretch text-base" />
+        <SignOutAction collapsed={collapsed} onSignOut={() => void signOut()} />
       </aside>
 
       <div>

@@ -15,7 +15,9 @@
     "collection": "Collection",
     "completeness": "Complétude",
     "binders": "Classeurs",
-    "openMenu": "Ouvrir le menu"
+    "openMenu": "Ouvrir le menu",
+    "collapse": "Replier la barre latérale",
+    "expand": "Déplier la barre latérale"
   },
   "auth": {
     "fields": {
