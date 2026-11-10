@@ -105,7 +105,13 @@
       "actions": "Actions"
     },
     "unfiled": "Au bocal",
-    "slot": "{{binder}} · p. {{page}} · L{{row}} C{{column}}"
+    "slot": "{{binder}} · p. {{page}} · L{{row}} C{{column}}",
+    "stats": {
+      "coins": "Pièces",
+      "countries": "Pays",
+      "unfiled": "Non classées",
+      "duplicates": "Doublons"
+    }
   },
   "filters": {
     "country": "Pays",
@@ -168,7 +174,8 @@
       "missing": "{{country}}, {{value}}, {{year}} : manquante",
       "notMinted": "{{country}}, {{value}}, {{year}} : jamais frappée"
     },
-    "empty": "Aucun type au catalogue pour ce pays."
+    "empty": "Aucun type au catalogue pour ce pays.",
+    "progressBar": "Progression de la collection"
   },
   "binders": {
     "title": "Classeurs",
@@ -213,7 +220,8 @@
       "overFilled": "Sur la ligne {{row}}, colonne {{column}}, occupée par {{coin}}. Poser ici échangera les deux pièces.",
       "dropped": "Pièce posée ligne {{row}}, colonne {{column}}.",
       "cancelled": "Déplacement annulé, la pièce reste à sa place."
-    }
+    },
+    "pageTab": "Page {{number}} · {{filled}}/{{total}}"
   },
   "status": {
     "offline": "Hors ligne",

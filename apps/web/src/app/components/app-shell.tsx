@@ -77,8 +77,8 @@ function NavLinks({ onNavigate, className }: { onNavigate?: () => void; classNam
           end={link.to === '/'}
           onClick={onNavigate}
           className={({ isActive }) =>
-            `flex items-center gap-3 py-0.5 ${
-              isActive ? 'font-[480] text-ink' : 'text-muted hover:text-ink'
+            `flex items-center gap-3 rounded-md px-2 py-0.5 ${
+              isActive ? 'bg-accent-wash font-[480] text-accent' : 'text-muted hover:bg-hover hover:text-ink'
             }`
           }
         >
@@ -108,7 +108,17 @@ function SignOutAction({ onSignOut }: { onSignOut: () => void }) {
   )
 }
 
-export function AppShell({ title, children }: { title: string; children: ReactNode }) {
+export function AppShell({
+  title,
+  subtitle,
+  actions,
+  children,
+}: {
+  title: string
+  subtitle?: ReactNode
+  actions?: ReactNode
+  children: ReactNode
+}) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -166,7 +176,13 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         </div>
 
         <main className="mx-auto max-w-[1200px] px-6 pb-20 md:pt-10">
-          <h1 className="mb-8 text-3xl">{title}</h1>
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-3xl">{title}</h1>
+              {subtitle && <p className="mt-1 text-base text-muted">{subtitle}</p>}
+            </div>
+            {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
+          </div>
           {children}
         </main>
       </div>

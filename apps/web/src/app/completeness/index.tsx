@@ -44,6 +44,8 @@ function Completeness() {
     [countryCode, coinTypes.data, owned.data],
   )
 
+  const percent = grid.mintedTypes ? Math.round((grid.ownedTypes / grid.mintedTypes) * 100) : 0
+
   if (coinTypes.isPending || owned.isPending || countries.isPending) {
     return <p className="text-sm text-muted">{t('common.loading')}</p>
   }
@@ -68,9 +70,22 @@ function Completeness() {
         </p>
       </div>
 
-      <CompletenessGrid grid={grid} />
+      <div
+        role="progressbar"
+        aria-label={t('completeness.progressBar')}
+        aria-valuenow={percent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        className="h-2 overflow-hidden rounded-full bg-card"
+      >
+        <div className="h-full bg-accent" style={{ width: `${percent}%` }} />
+      </div>
 
-      <Legend />
+      <div className="flex flex-col gap-6 overflow-x-auto rounded-xl border border-rule p-4">
+        <CompletenessGrid grid={grid} />
+
+        <Legend />
+      </div>
 
       <label className="flex items-start gap-2 border-t border-rule pt-4 text-sm text-muted">
         <input

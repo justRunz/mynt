@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FACE_VALUES_CENTS, hasActiveFilters, type CollectionFilters } from '@mynt/core'
 
@@ -8,9 +7,6 @@ import { countryFlag, countryName } from '@/app/lib/countries'
 import { formatFaceValue } from '@/app/lib/format'
 
 interface Props {
-  /** Rendered at the end of the same flex row, so the action sits with the
-      filters instead of wrapping onto its own line. */
-  children?: ReactNode
   filters: CollectionFilters
   onChange: (filters: CollectionFilters) => void
   search: string
@@ -21,7 +17,6 @@ interface Props {
 }
 
 export function FiltersBar({
-  children,
   filters,
   onChange,
   search,
@@ -141,8 +136,6 @@ export function FiltersBar({
           </svg>
         </button>
       </div>
-
-      {children && <div className="shrink-0">{children}</div>}
     </div>
   )
 }
