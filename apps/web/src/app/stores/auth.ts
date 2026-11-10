@@ -16,7 +16,6 @@ import { clearPersistedCache, resumePersistence } from '@/app/lib/query-client'
 export type AuthStatus = 'loading' | 'signed-in' | 'signed-out' | 'offline'
 
 interface AuthState {
-  session: Session | null
   status: AuthStatus
 }
 
@@ -27,18 +26,12 @@ interface AuthState {
  * hook -- and because a subscriber only re-renders for the slice it selected.
  *
  * The session itself is held in lib/api, which is the module that has to put the
- * token on every request. This store mirrors it for React; the two are kept in
+ * token on every request. This store mirrors its status for React; the two are kept in
  * step by a subscription rather than by both being written to, so there is one
  * source and one direction.
  */
-export const useAuthStore = create<AuthState>(() => ({
-  session: null,
-  status: 'loading',
-}))
+const useAuthStore = create<AuthState>(() => ({ status: 'loading' }))
 
-/** Selected as a string, not through the session object: every renewal makes a
- *  new session, and a component that only needs the status would otherwise
- *  re-render every fifteen minutes for an answer that had not changed. */
 export const useAuthStatus = (): AuthStatus => useAuthStore((state) => state.status)
 
 /**
@@ -51,14 +44,14 @@ export const useAuthStatus = (): AuthStatus => useAuthStore((state) => state.sta
 export function startAuthSync(): void {
   subscribeToSession((session) => {
     if (session) {
-      useAuthStore.setState({ session, status: 'signed-in' })
+      useAuthStore.setState({ status: 'signed-in' })
       // Reopened on every sign-in, or the cache would stop being saved for the
       // rest of the tab's life after one sign-out.
       resumePersistence()
       return
     }
 
-    useAuthStore.setState({ session: null, status: 'signed-out' })
+    useAuthStore.setState({ status: 'signed-out' })
     // Every way of becoming signed out empties the cache, not only the button.
     // A session revoked from another device, or a cookie that simply expired,
     // used to leave the previous collection in IndexedDB -- and whoever signed
