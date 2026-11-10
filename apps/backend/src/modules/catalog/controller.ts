@@ -1,8 +1,8 @@
-import type { Request, Response } from 'express'
+import type { Request, Response } from "express";
 
-import { dbQueryAs } from '../../db/index.js'
-import { requireUserId } from '../../middleware/authenticate.js'
-import * as service from './service.js'
+import { dbQueryAs } from "../../db/index.js";
+import { requireUserId } from "../../middleware/authenticate.js";
+import * as service from "./service.js";
 
 /**
  * The catalog over HTTP, as handlers and nothing else.
@@ -22,12 +22,18 @@ import * as service from './service.js'
  * being crossed is visible at the call.
  */
 
-export async function listCountries(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  res.json(await dbQueryAs(userId, (tx) => service.listCountries(tx)))
+export async function listCountries(
+    req: Request,
+    res: Response,
+): Promise<void> {
+    const userId = requireUserId(req);
+    res.json(await dbQueryAs(userId, (tx) => service.listCountries(tx)));
 }
 
-export async function listCoinTypes(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  res.json(await dbQueryAs(userId, (tx) => service.listCoinTypes(tx)))
+export async function listCoinTypes(
+    req: Request,
+    res: Response,
+): Promise<void> {
+    const userId = requireUserId(req);
+    res.json(await dbQueryAs(userId, (tx) => service.listCoinTypes(tx)));
 }

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 /**
  * The shape of every write to the collection.
@@ -13,10 +13,10 @@ import { z } from 'zod'
  *  largest sheet anyone sells; the real limit is the page's own size, which only
  *  the database knows and its trigger enforces. */
 const slot = z.object({
-  pageId: z.uuid(),
-  row: z.int().min(1).max(20),
-  column: z.int().min(1).max(20),
-})
+    pageId: z.uuid(),
+    row: z.int().min(1).max(20),
+    column: z.int().min(1).max(20),
+});
 
 /**
  * Grades are not listed here on purpose.
@@ -27,26 +27,26 @@ const slot = z.object({
  * comes back as a named constraint violation, which the service turns into a
  * plain 400 -- the same answer this would have given, without the duplicate.
  */
-const gradeCode = z.string().max(40).nullable()
+const gradeCode = z.string().max(40).nullable();
 
 export const addCoinSchema = z.object({
-  coinTypeId: z.int().positive(),
-  gradeCode,
-  /** Filed on the spot by the add form, in the same insert rather than a second
-   *  write -- so there is no instant where the coin exists but is nowhere. */
-  location: slot.nullable().default(null),
-})
+    coinTypeId: z.int().positive(),
+    gradeCode,
+    /** Filed on the spot by the add form, in the same insert rather than a second
+     *  write -- so there is no instant where the coin exists but is nowhere. */
+    location: slot.nullable().default(null),
+});
 
 /**
  * What the import hands over once the collector has confirmed the proposals.
  * No location: a batch of coins is not placed hole by hole, they land in the jar.
  */
 export const bulkAddSchema = z.object({
-  coins: z
-    .array(z.object({ coinTypeId: z.int().positive(), gradeCode }))
-    .min(1)
-    .max(500),
-})
+    coins: z
+        .array(z.object({ coinTypeId: z.int().positive(), gradeCode }))
+        .min(1)
+        .max(500),
+});
 
 /**
  * All four fields, every time, rather than a partial patch.
@@ -57,19 +57,19 @@ export const bulkAddSchema = z.object({
  * them: moving a coin is its own route, because it is its own action.
  */
 export const updateCoinSchema = z.object({
-  coinTypeId: z.int().positive(),
-  gradeCode,
-  acquiredOn: z.iso.date().nullable(),
-  notes: z.string().max(2000).nullable(),
-})
+    coinTypeId: z.int().positive(),
+    gradeCode,
+    acquiredOn: z.iso.date().nullable(),
+    notes: z.string().max(2000).nullable(),
+});
 
-export const fileCoinSchema = slot
+export const fileCoinSchema = slot;
 
 /** Two coins and where each ends up, rather than "swap these two": the caller
  *  says the destination, so the server never has to infer an intent. */
 export const movePairSchema = z.object({
-  first: slot.extend({ coinId: z.uuid() }),
-  second: slot.extend({ coinId: z.uuid() }),
-})
+    first: slot.extend({ coinId: z.uuid() }),
+    second: slot.extend({ coinId: z.uuid() }),
+});
 
-export const coinIdSchema = z.object({ coinId: z.uuid() })
+export const coinIdSchema = z.object({ coinId: z.uuid() });

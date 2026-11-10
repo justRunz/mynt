@@ -1,6 +1,11 @@
-import type { z } from 'zod'
+import type { z } from "zod";
 
-import type { addCoinSchema, fileCoinSchema, movePairSchema, updateCoinSchema } from './schemas.js'
+import type {
+    addCoinSchema,
+    fileCoinSchema,
+    movePairSchema,
+    updateCoinSchema,
+} from "./schemas.js";
 
 /**
  * What the collection endpoints promise, independent of both the column layout
@@ -13,12 +18,12 @@ import type { addCoinSchema, fileCoinSchema, movePairSchema, updateCoinSchema } 
 
 /** Where a coin physically sits, once it has been filed. */
 export interface CoinLocation {
-  pageId: string
-  pageNumber: number
-  binderId: string
-  binderName: string
-  row: number
-  column: number
+    pageId: string;
+    pageNumber: number;
+    binderId: string;
+    binderName: string;
+    row: number;
+    column: number;
 }
 
 /**
@@ -30,15 +35,15 @@ export interface CoinLocation {
  * in the jar, and one nullable object says exactly that.
  */
 export interface CollectionCoin {
-  coinId: string
-  gradeCode: string | null
-  acquiredOn: string | null
-  notes: string | null
-  countryCode: string
-  faceValueCents: number
-  year: number
-  variant: string
-  location: CoinLocation | null
+    coinId: string;
+    gradeCode: string | null;
+    acquiredOn: string | null;
+    notes: string | null;
+    countryCode: string;
+    faceValueCents: number;
+    year: number;
+    variant: string;
+    location: CoinLocation | null;
 }
 
 /**
@@ -48,7 +53,7 @@ export interface CollectionCoin {
  * persisted to IndexedDB as JSON, and a Map rehydrates as {} -- every read of it
  * would then throw. This project has had that bug once already.
  */
-export type OwnedTypeCounts = Record<number, number>
+export type OwnedTypeCounts = Record<number, number>;
 
 // ---------------------------------------------------------------------------
 // What a write is given
@@ -59,7 +64,7 @@ export type OwnedTypeCounts = Record<number, number>
  * validator cannot be forgotten in the type -- there is only one description of
  * a request body, and it is the one that actually rejects things.
  */
-export type Slot = z.infer<typeof fileCoinSchema>
-export type AddCoin = z.infer<typeof addCoinSchema>
-export type UpdateCoin = z.infer<typeof updateCoinSchema>
-export type MovePair = z.infer<typeof movePairSchema>
+export type Slot = z.infer<typeof fileCoinSchema>;
+export type AddCoin = z.infer<typeof addCoinSchema>;
+export type UpdateCoin = z.infer<typeof updateCoinSchema>;
+export type MovePair = z.infer<typeof movePairSchema>;

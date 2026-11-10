@@ -1,18 +1,26 @@
-import type { CookieOptions, Request, Response } from 'express'
+import type { CookieOptions, Request, Response } from "express";
 
-import { dbQueryUnscoped } from '../../db/index.js'
-import { env } from '../../env.js'
-import { sendMail } from '../../mail/index.js'
-import { passwordResetMessage, verificationMessage } from '../../mail/messages.js'
-import { credentialsSchema, emailSchema, linkTokenSchema, resetPasswordSchema } from './schemas.js'
-import * as service from './service.js'
-import { REFRESH_TTL_DAYS } from './tokens.js'
-import type { Session } from './types.js'
+import { dbQueryUnscoped } from "../../db/index.js";
+import { env } from "../../env.js";
+import { sendMail } from "../../mail/index.js";
+import {
+    passwordResetMessage,
+    verificationMessage,
+} from "../../mail/messages.js";
+import {
+    credentialsSchema,
+    emailSchema,
+    linkTokenSchema,
+    resetPasswordSchema,
+} from "./schemas.js";
+import * as service from "./service.js";
+import { REFRESH_TTL_DAYS } from "./tokens.js";
+import type { Session } from "./types.js";
 
 /** Sessions over HTTP. Where they are mounted, and why above the authenticate
  *  middleware, is routes.ts's business. */
 
-const REFRESH_COOKIE = 'mynt_refresh'
+const REFRESH_COOKIE = "mynt_refresh";
 
 /**
  * Where the refresh token lives, and why not in the response body.
@@ -30,11 +38,11 @@ const REFRESH_COOKIE = 'mynt_refresh'
  * shares one origin and one certificate.
  */
 const COOKIE_OPTIONS: CookieOptions = {
-  httpOnly: true,
-  sameSite: 'lax',
-  secure: env.isProduction,
-  path: '/api/auth',
-}
+    httpOnly: true,
+    sameSite: "lax",
+    secure: env.isProduction,
+    path: "/api/auth",
+};
 
 /**
  * The one place a session becomes a response.
@@ -44,22 +52,22 @@ const COOKIE_OPTIONS: CookieOptions = {
  * held in memory and forgotten when the tab closes.
  */
 function respondWithSession(res: Response, session: Session): void {
-  res.cookie(REFRESH_COOKIE, session.refreshToken, {
-    ...COOKIE_OPTIONS,
-    maxAge: REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000,
-  })
-  res.json({
-    userId: session.userId,
-    accessToken: session.accessToken,
-    expiresIn: session.expiresIn,
-  })
+    res.cookie(REFRESH_COOKIE, session.refreshToken, {
+        ...COOKIE_OPTIONS,
+        maxAge: REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000,
+    });
+    res.json({
+        userId: session.userId,
+        accessToken: session.accessToken,
+        expiresIn: session.expiresIn,
+    });
 }
 
 /** Answers a refusal identically whatever caused it, and takes the cookie back
  *  so a browser stops presenting something that will never work again. */
 function refuseSession(res: Response): void {
-  res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS)
-  res.status(401).json({ error: 'invalid_refresh' })
+    res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS);
+    res.status(401).json({ error: "invalid_refresh" });
 }
 
 /**
@@ -74,26 +82,30 @@ function refuseSession(res: Response): void {
  * does not exist -- and unlike the row, the mail cannot be taken back.
  */
 export async function signUp(req: Request, res: Response): Promise<void> {
-  const { email, password } = credentialsSchema.parse(req.body)
-  const { verificationToken } = await dbQueryUnscoped((tx) => service.signUp(tx, email, password))
-  await sendMail(verificationMessage(email, verificationToken))
-  res.status(202).json({ status: 'verification_sent' })
+    const { email, password } = credentialsSchema.parse(req.body);
+    const { verificationToken } = await dbQueryUnscoped((tx) =>
+        service.signUp(tx, email, password),
+    );
+    await sendMail(verificationMessage(email, verificationToken));
+    res.status(202).json({ status: "verification_sent" });
 }
 
 export async function signIn(req: Request, res: Response): Promise<void> {
-  const { email, password } = credentialsSchema.parse(req.body)
-  const outcome = await dbQueryUnscoped((tx) => service.signIn(tx, email, password))
+    const { email, password } = credentialsSchema.parse(req.body);
+    const outcome = await dbQueryUnscoped((tx) =>
+        service.signIn(tx, email, password),
+    );
 
-  if (!outcome.verified) {
-    // The password was right, so this is not a refusal to be vague about: the
-    // collector is told plainly, and given a fresh link because the first one is
-    // the thing most likely to have gone missing.
-    await sendMail(verificationMessage(email, outcome.verificationToken))
-    res.status(403).json({ error: 'email_not_verified' })
-    return
-  }
+    if (!outcome.verified) {
+        // The password was right, so this is not a refusal to be vague about: the
+        // collector is told plainly, and given a fresh link because the first one is
+        // the thing most likely to have gone missing.
+        await sendMail(verificationMessage(email, outcome.verificationToken));
+        res.status(403).json({ error: "email_not_verified" });
+        return;
+    }
 
-  respondWithSession(res, outcome.session)
+    respondWithSession(res, outcome.session);
 }
 
 /**
@@ -104,8 +116,11 @@ export async function signIn(req: Request, res: Response): Promise<void> {
  * nothing new.
  */
 export async function verifyEmail(req: Request, res: Response): Promise<void> {
-  const { token } = linkTokenSchema.parse(req.body)
-  respondWithSession(res, await dbQueryUnscoped((tx) => service.verifyEmail(tx, token)))
+    const { token } = linkTokenSchema.parse(req.body);
+    respondWithSession(
+        res,
+        await dbQueryUnscoped((tx) => service.verifyEmail(tx, token)),
+    );
 }
 
 /**
@@ -118,16 +133,21 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
  * asking whether somebody has an account here -- the exact fact sign-in goes to
  * trouble to withhold.
  */
-export async function forgotPassword(req: Request, res: Response): Promise<void> {
-  const { email } = emailSchema.parse(req.body)
-  const token = await dbQueryUnscoped((tx) => service.requestPasswordReset(tx, email))
+export async function forgotPassword(
+    req: Request,
+    res: Response,
+): Promise<void> {
+    const { email } = emailSchema.parse(req.body);
+    const token = await dbQueryUnscoped((tx) =>
+        service.requestPasswordReset(tx, email),
+    );
 
-  // Answered before the message goes out, never after. Awaiting the relay only
-  // when there is an account made the response six times slower for a real
-  // address than for an unknown one -- a stopwatch was enough to tell them
-  // apart. sendMail never throws, so letting it finish on its own loses nothing.
-  res.status(204).end()
-  if (token) void sendMail(passwordResetMessage(email, token))
+    // Answered before the message goes out, never after. Awaiting the relay only
+    // when there is an account made the response six times slower for a real
+    // address than for an unknown one -- a stopwatch was enough to tell them
+    // apart. sendMail never throws, so letting it finish on its own loses nothing.
+    res.status(204).end();
+    if (token) void sendMail(passwordResetMessage(email, token));
 }
 
 /**
@@ -140,11 +160,14 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
  * holding is now dead, and leaving it would mean one failed refresh before the
  * app noticed.
  */
-export async function resetPassword(req: Request, res: Response): Promise<void> {
-  const { token, password } = resetPasswordSchema.parse(req.body)
-  await dbQueryUnscoped((tx) => service.resetPassword(tx, token, password))
-  res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS)
-  res.status(204).end()
+export async function resetPassword(
+    req: Request,
+    res: Response,
+): Promise<void> {
+    const { token, password } = resetPasswordSchema.parse(req.body);
+    await dbQueryUnscoped((tx) => service.resetPassword(tx, token, password));
+    res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS);
+    res.status(204).end();
 }
 
 /**
@@ -155,21 +178,23 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
  * cookie is what survives, so the first thing the front end does is ask here.
  */
 export async function refresh(req: Request, res: Response): Promise<void> {
-  const presented: unknown = req.cookies?.[REFRESH_COOKIE]
-  if (typeof presented !== 'string') {
-    refuseSession(res)
-    return
-  }
+    const presented: unknown = req.cookies?.[REFRESH_COOKIE];
+    if (typeof presented !== "string") {
+        refuseSession(res);
+        return;
+    }
 
-  const session = await dbQueryUnscoped((tx) => service.rotateSession(tx, presented))
-  if (!session) {
-    // rotateSession returns rather than throws, so a revoked family stays
-    // revoked: a throw would roll its deletion back with the transaction.
-    refuseSession(res)
-    return
-  }
+    const session = await dbQueryUnscoped((tx) =>
+        service.rotateSession(tx, presented),
+    );
+    if (!session) {
+        // rotateSession returns rather than throws, so a revoked family stays
+        // revoked: a throw would roll its deletion back with the transaction.
+        refuseSession(res);
+        return;
+    }
 
-  respondWithSession(res, session)
+    respondWithSession(res, session);
 }
 
 /**
@@ -179,10 +204,10 @@ export async function refresh(req: Request, res: Response): Promise<void> {
  * a sign-out that can error is a sign-out somebody is left unsure about.
  */
 export async function signOut(req: Request, res: Response): Promise<void> {
-  const presented: unknown = req.cookies?.[REFRESH_COOKIE]
-  if (typeof presented === 'string') {
-    await dbQueryUnscoped((tx) => service.signOut(tx, presented))
-  }
-  res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS)
-  res.status(204).end()
+    const presented: unknown = req.cookies?.[REFRESH_COOKIE];
+    if (typeof presented === "string") {
+        await dbQueryUnscoped((tx) => service.signOut(tx, presented));
+    }
+    res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS);
+    res.status(204).end();
 }

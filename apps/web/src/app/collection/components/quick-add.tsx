@@ -1,23 +1,29 @@
-import { useMemo, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
-import { GRADES, findCoinTypeId, indexCoinTypes, type FaceValueCents, type Grade } from '@mynt/core'
+import { useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import {
+    GRADES,
+    findCoinTypeId,
+    indexCoinTypes,
+    type FaceValueCents,
+    type Grade,
+} from "@mynt/core";
 
-import { useIsOnline } from '@/app/hooks/use-is-online'
-import { catalogQueries } from '@/app/lib/catalog'
-import { countryFlag, countryName } from '@/app/lib/countries'
-import { formatFaceValue } from '@/app/lib/format'
-import { Button } from '@/app/ui/button'
-import { modalError, MODAL_TOASTER } from '@/app/ui/toast'
-import { CountryCombobox } from './country-combobox'
-import { FaceValuePicker } from './face-value-picker'
-import { isSlotTaken } from '@/app/binders/hooks/use-binders'
-import { SlotSelect } from './slot-select'
-import { useAddCoin, type SlotDestination } from '../hooks/use-collection'
+import { useIsOnline } from "@/app/hooks/use-is-online";
+import { catalogQueries } from "@/app/lib/catalog";
+import { countryFlag, countryName } from "@/app/lib/countries";
+import { formatFaceValue } from "@/app/lib/format";
+import { Button } from "@/app/ui/button";
+import { modalError, MODAL_TOASTER } from "@/app/ui/toast";
+import { CountryCombobox } from "./country-combobox";
+import { FaceValuePicker } from "./face-value-picker";
+import { isSlotTaken } from "@/app/binders/hooks/use-binders";
+import { SlotSelect } from "./slot-select";
+import { useAddCoin, type SlotDestination } from "../hooks/use-collection";
 
-const CURRENT_YEAR = new Date().getFullYear()
+const CURRENT_YEAR = new Date().getFullYear();
 
 /**
  * A line in the confirmation strip. Not a CollectionEntry: this is a record of
@@ -29,176 +35,231 @@ const CURRENT_YEAR = new Date().getFullYear()
  * assigns and this screen never asks for.
  */
 interface RecentAdd {
-  key: number
-  countryCode: string
-  faceValueCents: FaceValueCents
-  year: number
-  grade: Grade | null
-  slot: { row: number; column: number } | null
+    key: number;
+    countryCode: string;
+    faceValueCents: FaceValueCents;
+    year: number;
+    grade: Grade | null;
+    slot: { row: number; column: number } | null;
 }
 
 export function QuickAdd() {
-  const { t } = useTranslation()
-  const online = useIsOnline()
-  const countries = useQuery(catalogQueries.countries())
-  const coinTypes = useQuery(catalogQueries.coinTypes())
-  const addCoin = useAddCoin()
+    const { t } = useTranslation();
+    const online = useIsOnline();
+    const countries = useQuery(catalogQueries.countries());
+    const coinTypes = useQuery(catalogQueries.coinTypes());
+    const addCoin = useAddCoin();
 
-  const [countryCode, setCountryCode] = useState<string | null>(null)
-  const [faceValue, setFaceValue] = useState<FaceValueCents | null>(null)
-  const [year, setYear] = useState('')
-  const [grade, setGrade] = useState<Grade | ''>('')
-  const [destination, setDestination] = useState<SlotDestination | null>(null)
-  const [recent, setRecent] = useState<RecentAdd[]>([])
+    const [countryCode, setCountryCode] = useState<string | null>(null);
+    const [faceValue, setFaceValue] = useState<FaceValueCents | null>(null);
+    const [year, setYear] = useState("");
+    const [grade, setGrade] = useState<Grade | "">("");
+    const [destination, setDestination] = useState<SlotDestination | null>(
+        null,
+    );
+    const [recent, setRecent] = useState<RecentAdd[]>([]);
 
-  const firstValueRef = useRef<HTMLInputElement>(null)
-  const nextKey = useRef(0)
-  const index = useMemo(() => indexCoinTypes(coinTypes.data ?? []), [coinTypes.data])
-  const codes = useMemo(() => (countries.data ?? []).map((c) => c.countryCode), [countries.data])
+    const firstValueRef = useRef<HTMLInputElement>(null);
+    const nextKey = useRef(0);
+    const index = useMemo(
+        () => indexCoinTypes(coinTypes.data ?? []),
+        [coinTypes.data],
+    );
+    const codes = useMemo(
+        () => (countries.data ?? []).map((c) => c.countryCode),
+        [countries.data],
+    );
 
-  function onSubmit(event: FormEvent) {
-    event.preventDefault()
+    function onSubmit(event: FormEvent) {
+        event.preventDefault();
 
-    if (!countryCode) return modalError(t('quickAdd.errors.countryRequired'))
-    if (faceValue === null) return modalError(t('quickAdd.errors.faceValueRequired'))
+        if (!countryCode)
+            return modalError(t("quickAdd.errors.countryRequired"));
+        if (faceValue === null)
+            return modalError(t("quickAdd.errors.faceValueRequired"));
 
-    const parsedYear = Number(year)
-    if (!/^\d{4}$/.test(year) || parsedYear < 1999 || parsedYear > CURRENT_YEAR) {
-      return modalError(t('quickAdd.errors.yearRequired'))
+        const parsedYear = Number(year);
+        if (
+            !/^\d{4}$/.test(year) ||
+            parsedYear < 1999 ||
+            parsedYear > CURRENT_YEAR
+        ) {
+            return modalError(t("quickAdd.errors.yearRequired"));
+        }
+
+        const coinTypeId = findCoinTypeId(
+            index,
+            countryCode,
+            faceValue,
+            parsedYear,
+        );
+        if (coinTypeId === null) {
+            return modalError(
+                t("quickAdd.errors.notInCatalog", {
+                    country: countryName(countryCode),
+                    value: formatFaceValue(faceValue),
+                    year: parsedYear,
+                }),
+            );
+        }
+
+        const saving = addCoin.mutateAsync(
+            { coinTypeId, grade: grade || null, destination },
+            {
+                onSuccess: () => {
+                    setRecent((list) =>
+                        [
+                            {
+                                key: nextKey.current++,
+                                countryCode,
+                                faceValueCents: faceValue,
+                                year: parsedYear,
+                                grade: grade || null,
+                                slot: destination,
+                            },
+                            ...list,
+                        ].slice(0, 6),
+                    );
+                    // Cleared once the coin is actually saved, not on submit. A write
+                    // that fails now leaves the form as it was, so nothing has to be
+                    // retyped from memory.
+                    //
+                    // The country stays either way: a pile is usually sorted by country,
+                    // and re-picking it on every coin is the friction that makes people
+                    // quit.
+                    setFaceValue(null);
+                    setYear("");
+                    setGrade("");
+                    setDestination(null);
+                    firstValueRef.current?.focus();
+                },
+            },
+        );
+        // The modal stays open between coins, so the whole lifecycle -- saving,
+        // saved, failed -- is told in the modal's own toaster.
+        toast.promise(saving, {
+            toasterId: MODAL_TOASTER,
+            loading: t("common.saving"),
+            success: t("quickAdd.saved"),
+            error: (error: unknown) =>
+                // A hole taken between choosing it and the write landing is worth its
+                // own message: "try again" would send the user back to the same
+                // occupied slot.
+                t(
+                    isSlotTaken(error)
+                        ? "quickAdd.errors.slotTaken"
+                        : "quickAdd.errors.save",
+                ),
+        });
     }
 
-    const coinTypeId = findCoinTypeId(index, countryCode, faceValue, parsedYear)
-    if (coinTypeId === null) {
-      return modalError(
-        t('quickAdd.errors.notInCatalog', {
-          country: countryName(countryCode),
-          value: formatFaceValue(faceValue),
-          year: parsedYear,
-        }),
-      )
-    }
+    return (
+        <div className="flex flex-col gap-8">
+            <p className="max-w-prose text-sm text-muted">
+                {t("quickAdd.intro")}
+            </p>
 
-    const saving = addCoin.mutateAsync(
-      { coinTypeId, grade: grade || null, destination },
-      {
-        onSuccess: () => {
-          setRecent((list) =>
-            [
-              {
-                key: nextKey.current++,
-                countryCode,
-                faceValueCents: faceValue,
-                year: parsedYear,
-                grade: grade || null,
-                slot: destination,
-              },
-              ...list,
-            ].slice(0, 6),
-          )
-          // Cleared once the coin is actually saved, not on submit. A write
-          // that fails now leaves the form as it was, so nothing has to be
-          // retyped from memory.
-          //
-          // The country stays either way: a pile is usually sorted by country,
-          // and re-picking it on every coin is the friction that makes people
-          // quit.
-          setFaceValue(null)
-          setYear('')
-          setGrade('')
-          setDestination(null)
-          firstValueRef.current?.focus()
-        },
-      },
-    )
-    // The modal stays open between coins, so the whole lifecycle -- saving,
-    // saved, failed -- is told in the modal's own toaster.
-    toast.promise(saving, {
-      toasterId: MODAL_TOASTER,
-      loading: t('common.saving'),
-      success: t('quickAdd.saved'),
-      error: (error: unknown) =>
-        // A hole taken between choosing it and the write landing is worth its
-        // own message: "try again" would send the user back to the same
-        // occupied slot.
-        t(isSlotTaken(error) ? 'quickAdd.errors.slotTaken' : 'quickAdd.errors.save'),
-    })
-  }
+            <form onSubmit={onSubmit} className="flex flex-col gap-6">
+                <CountryCombobox
+                    codes={codes}
+                    value={countryCode}
+                    onChange={setCountryCode}
+                />
 
-  return (
-    <div className="flex flex-col gap-8">
-      <p className="max-w-prose text-sm text-muted">{t('quickAdd.intro')}</p>
+                <FaceValuePicker
+                    name="quick-add-face-value"
+                    value={faceValue}
+                    onChange={setFaceValue}
+                    firstRef={firstValueRef}
+                />
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-6">
-        <CountryCombobox codes={codes} value={countryCode} onChange={setCountryCode} />
+                <SlotSelect value={destination} onChange={setDestination} />
 
-        <FaceValuePicker
-          name="quick-add-face-value"
-          value={faceValue}
-          onChange={setFaceValue}
-          firstRef={firstValueRef}
-        />
+                <div className="flex flex-wrap items-end gap-4">
+                    <div className="flex flex-col gap-2">
+                        <label
+                            htmlFor="year"
+                            className="text-sm font-[450] text-muted"
+                        >
+                            {t("quickAdd.year")}
+                        </label>
+                        <input
+                            id="year"
+                            inputMode="numeric"
+                            pattern="\d{4}"
+                            maxLength={4}
+                            placeholder="2003"
+                            value={year}
+                            onChange={(e) =>
+                                setYear(e.target.value.replace(/\D/g, ""))
+                            }
+                            className="tnum h-11 w-28 rounded-md border border-field bg-raised px-4 text-base"
+                        />
+                    </div>
 
-        <SlotSelect value={destination} onChange={setDestination} />
+                    <div className="flex flex-col gap-2">
+                        <label
+                            htmlFor="grade"
+                            className="text-sm font-[450] text-muted"
+                        >
+                            {t("quickAdd.grade")}
+                        </label>
+                        <select
+                            id="grade"
+                            value={grade}
+                            onChange={(e) =>
+                                setGrade(e.target.value as Grade | "")
+                            }
+                            className="h-11 rounded-md border border-field bg-raised px-3 text-base"
+                        >
+                            <option value="">{t("quickAdd.gradeNone")}</option>
+                            {GRADES.map((g) => (
+                                <option key={g} value={g}>
+                                    {t(`grade.${g}`)}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="year" className="text-sm font-[450] text-muted">
-              {t('quickAdd.year')}
-            </label>
-            <input
-              id="year"
-              inputMode="numeric"
-              pattern="\d{4}"
-              maxLength={4}
-              placeholder="2003"
-              value={year}
-              onChange={(e) => setYear(e.target.value.replace(/\D/g, ''))}
-              className="tnum h-11 w-28 rounded-md border border-field bg-raised px-4 text-base"
-            />
-          </div>
+                    <Button
+                        type="submit"
+                        disabled={!online}
+                        loading={addCoin.isPending && !addCoin.isPaused}
+                    >
+                        {t("quickAdd.submit")}
+                    </Button>
+                </div>
+            </form>
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="grade" className="text-sm font-[450] text-muted">
-              {t('quickAdd.grade')}
-            </label>
-            <select
-              id="grade"
-              value={grade}
-              onChange={(e) => setGrade(e.target.value as Grade | '')}
-              className="h-11 rounded-md border border-field bg-raised px-3 text-base"
-            >
-              <option value="">{t('quickAdd.gradeNone')}</option>
-              {GRADES.map((g) => (
-                <option key={g} value={g}>
-                  {t(`grade.${g}`)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <Button type="submit" disabled={!online} loading={addCoin.isPending && !addCoin.isPaused}>
-            {t('quickAdd.submit')}
-          </Button>
+            {recent.length > 0 && (
+                <section
+                    aria-live="polite"
+                    className="border-t border-rule pt-6"
+                >
+                    <h2 className="text-lg">
+                        {t("quickAdd.recent")} ·{" "}
+                        {t("quickAdd.added", { count: recent.length })}
+                    </h2>
+                    <ul className="tnum mt-3 flex flex-col gap-1 text-base text-muted">
+                        {recent.map((add) => (
+                            <li key={add.key}>
+                                <span aria-hidden>
+                                    {countryFlag(add.countryCode)}
+                                </span>{" "}
+                                {countryName(add.countryCode)} ·{" "}
+                                {formatFaceValue(add.faceValueCents)} ·{" "}
+                                {add.year}
+                                {add.grade
+                                    ? ` · ${t(`grade.short.${add.grade}`)}`
+                                    : ""}
+                                {add.slot
+                                    ? ` · ${t("binders.slotShort", add.slot)}`
+                                    : ""}
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            )}
         </div>
-      </form>
-
-      {recent.length > 0 && (
-        <section aria-live="polite" className="border-t border-rule pt-6">
-          <h2 className="text-lg">
-            {t('quickAdd.recent')} · {t('quickAdd.added', { count: recent.length })}
-          </h2>
-          <ul className="tnum mt-3 flex flex-col gap-1 text-base text-muted">
-            {recent.map((add) => (
-              <li key={add.key}>
-                <span aria-hidden>{countryFlag(add.countryCode)}</span>{' '}
-                {countryName(add.countryCode)} · {formatFaceValue(add.faceValueCents)} · {add.year}
-                {add.grade ? ` · ${t(`grade.short.${add.grade}`)}` : ''}
-                {add.slot ? ` · ${t('binders.slotShort', add.slot)}` : ''}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-    </div>
-  )
+    );
 }

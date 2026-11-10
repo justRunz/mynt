@@ -1,35 +1,40 @@
-import type { Request, Response } from 'express'
+import type { Request, Response } from "express";
 
-import { dbQueryAs } from '../../db/index.js'
-import { requireUserId } from '../../middleware/authenticate.js'
+import { dbQueryAs } from "../../db/index.js";
+import { requireUserId } from "../../middleware/authenticate.js";
 import {
-  addCoinSchema,
-  bulkAddSchema,
-  coinIdSchema,
-  fileCoinSchema,
-  movePairSchema,
-  updateCoinSchema,
-} from './schemas.js'
-import * as service from './service.js'
+    addCoinSchema,
+    bulkAddSchema,
+    coinIdSchema,
+    fileCoinSchema,
+    movePairSchema,
+    updateCoinSchema,
+} from "./schemas.js";
+import * as service from "./service.js";
 
 export async function listCoins(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  res.json(await dbQueryAs(userId, (tx) => service.listCoins(tx)))
+    const userId = requireUserId(req);
+    res.json(await dbQueryAs(userId, (tx) => service.listCoins(tx)));
 }
 
-export async function countOwnedByType(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  res.json(await dbQueryAs(userId, (tx) => service.countOwnedByType(tx)))
+export async function countOwnedByType(
+    req: Request,
+    res: Response,
+): Promise<void> {
+    const userId = requireUserId(req);
+    res.json(await dbQueryAs(userId, (tx) => service.countOwnedByType(tx)));
 }
 
 export async function addCoin(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  const input = addCoinSchema.parse(req.body)
-  // The owner is the caller, taken from the verified token. It is never read
-  // from the body -- not because the policy would let it through, but because a
-  // route that accepts an owner is a route somebody will one day trust.
-  const coinId = await dbQueryAs(userId, (tx) => service.addCoin(tx, userId, input))
-  res.status(201).json({ coinId })
+    const userId = requireUserId(req);
+    const input = addCoinSchema.parse(req.body);
+    // The owner is the caller, taken from the verified token. It is never read
+    // from the body -- not because the policy would let it through, but because a
+    // route that accepts an owner is a route somebody will one day trust.
+    const coinId = await dbQueryAs(userId, (tx) =>
+        service.addCoin(tx, userId, input),
+    );
+    res.status(201).json({ coinId });
 }
 
 /**
@@ -37,14 +42,14 @@ export async function addCoin(req: Request, res: Response): Promise<void> {
  * so a failure halfway never leaves a half-imported collection to untangle.
  */
 export async function addCoins(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  const { coins } = bulkAddSchema.parse(req.body)
-  await dbQueryAs(userId, async (tx) => {
-    for (const coin of coins) {
-      await service.addCoin(tx, userId, { ...coin, location: null })
-    }
-  })
-  res.status(201).json({ count: coins.length })
+    const userId = requireUserId(req);
+    const { coins } = bulkAddSchema.parse(req.body);
+    await dbQueryAs(userId, async (tx) => {
+        for (const coin of coins) {
+            await service.addCoin(tx, userId, { ...coin, location: null });
+        }
+    });
+    res.status(201).json({ count: coins.length });
 }
 
 /**
@@ -53,18 +58,18 @@ export async function addCoins(req: Request, res: Response): Promise<void> {
  * grade should not be able to move a coin by accident.
  */
 export async function updateCoin(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  const { coinId } = coinIdSchema.parse(req.params)
-  const input = updateCoinSchema.parse(req.body)
-  await dbQueryAs(userId, (tx) => service.updateCoin(tx, coinId, input))
-  res.status(204).end()
+    const userId = requireUserId(req);
+    const { coinId } = coinIdSchema.parse(req.params);
+    const input = updateCoinSchema.parse(req.body);
+    await dbQueryAs(userId, (tx) => service.updateCoin(tx, coinId, input));
+    res.status(204).end();
 }
 
 export async function deleteCoin(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  const { coinId } = coinIdSchema.parse(req.params)
-  await dbQueryAs(userId, (tx) => service.deleteCoin(tx, coinId))
-  res.status(204).end()
+    const userId = requireUserId(req);
+    const { coinId } = coinIdSchema.parse(req.params);
+    await dbQueryAs(userId, (tx) => service.deleteCoin(tx, coinId));
+    res.status(204).end();
 }
 
 /**
@@ -74,18 +79,18 @@ export async function deleteCoin(req: Request, res: Response): Promise<void> {
  * replaces the location outright and repeating the call changes nothing.
  */
 export async function fileCoin(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  const { coinId } = coinIdSchema.parse(req.params)
-  const slot = fileCoinSchema.parse(req.body)
-  await dbQueryAs(userId, (tx) => service.fileCoin(tx, coinId, slot))
-  res.status(204).end()
+    const userId = requireUserId(req);
+    const { coinId } = coinIdSchema.parse(req.params);
+    const slot = fileCoinSchema.parse(req.body);
+    await dbQueryAs(userId, (tx) => service.fileCoin(tx, coinId, slot));
+    res.status(204).end();
 }
 
 export async function unfileCoin(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  const { coinId } = coinIdSchema.parse(req.params)
-  await dbQueryAs(userId, (tx) => service.unfileCoin(tx, coinId))
-  res.status(204).end()
+    const userId = requireUserId(req);
+    const { coinId } = coinIdSchema.parse(req.params);
+    await dbQueryAs(userId, (tx) => service.unfileCoin(tx, coinId));
+    res.status(204).end();
 }
 
 /**
@@ -96,8 +101,8 @@ export async function unfileCoin(req: Request, res: Response): Promise<void> {
  * its path is not /:coinId/location -- it belongs to neither coin.
  */
 export async function movePair(req: Request, res: Response): Promise<void> {
-  const userId = requireUserId(req)
-  const input = movePairSchema.parse(req.body)
-  await dbQueryAs(userId, (tx) => service.movePair(tx, input))
-  res.status(204).end()
+    const userId = requireUserId(req);
+    const input = movePairSchema.parse(req.body);
+    await dbQueryAs(userId, (tx) => service.movePair(tx, input));
+    res.status(204).end();
 }

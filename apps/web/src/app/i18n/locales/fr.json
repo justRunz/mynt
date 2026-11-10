@@ -1,288 +1,288 @@
 {
-  "app": {
-    "name": "Mynt",
-    "tagline": "Votre collection de pièces euro"
-  },
-  "common": {
-    "loading": "Chargement…",
-    "saving": "Enregistrement…",
-    "cancel": "Annuler",
-    "signOut": "Se déconnecter",
-    "retry": "Réessayer",
-    "close": "Fermer",
-    "offlineWrite": "Indisponible hors ligne"
-  },
-  "nav": {
-    "collection": "Collection",
-    "completeness": "Complétude",
-    "binders": "Classeurs",
-    "openMenu": "Ouvrir le menu",
-    "collapse": "Replier la barre latérale",
-    "expand": "Déplier la barre latérale"
-  },
-  "auth": {
-    "fields": {
-      "email": "Adresse email",
-      "password": "Mot de passe",
-      "newPassword": "Nouveau mot de passe"
+    "app": {
+        "name": "Mynt",
+        "tagline": "Votre collection de pièces euro"
     },
-    "signIn": {
-      "title": "Connexion",
-      "submit": "Se connecter",
-      "noAccount": "Pas encore de compte ?",
-      "createAccount": "Créer un compte",
-      "forgot": "Mot de passe oublié ?"
+    "common": {
+        "loading": "Chargement…",
+        "saving": "Enregistrement…",
+        "cancel": "Annuler",
+        "signOut": "Se déconnecter",
+        "retry": "Réessayer",
+        "close": "Fermer",
+        "offlineWrite": "Indisponible hors ligne"
     },
-    "signUp": {
-      "title": "Créer un compte",
-      "submit": "Créer le compte",
-      "haveAccount": "Déjà un compte ?",
-      "signIn": "Se connecter",
-      "checkEmail": "Un message vient d'être envoyé à {{email}}. Ouvrez le lien qu'il contient pour confirmer votre adresse — il est valable 24 heures."
+    "nav": {
+        "collection": "Collection",
+        "completeness": "Complétude",
+        "binders": "Classeurs",
+        "openMenu": "Ouvrir le menu",
+        "collapse": "Replier la barre latérale",
+        "expand": "Déplier la barre latérale"
     },
-    "errors": {
-      "generic": "Une erreur est survenue. Réessayez.",
-      "invalid_credentials": "Adresse email ou mot de passe incorrect.",
-      "email_taken": "Un compte existe déjà pour cette adresse.",
-      "weak_password": "Mot de passe trop court : utilisez au moins 10 caractères.",
-      "email_not_verified": "Votre adresse n'est pas encore confirmée. Un nouveau lien vient de vous être envoyé.",
-      "invalid_link": "Ce lien n'est plus valable. Demandez-en un nouveau.",
-      "too_many_requests": "Trop de tentatives. Réessayez dans quelques minutes."
+    "auth": {
+        "fields": {
+            "email": "Adresse email",
+            "password": "Mot de passe",
+            "newPassword": "Nouveau mot de passe"
+        },
+        "signIn": {
+            "title": "Connexion",
+            "submit": "Se connecter",
+            "noAccount": "Pas encore de compte ?",
+            "createAccount": "Créer un compte",
+            "forgot": "Mot de passe oublié ?"
+        },
+        "signUp": {
+            "title": "Créer un compte",
+            "submit": "Créer le compte",
+            "haveAccount": "Déjà un compte ?",
+            "signIn": "Se connecter",
+            "checkEmail": "Un message vient d'être envoyé à {{email}}. Ouvrez le lien qu'il contient pour confirmer votre adresse — il est valable 24 heures."
+        },
+        "errors": {
+            "generic": "Une erreur est survenue. Réessayez.",
+            "invalid_credentials": "Adresse email ou mot de passe incorrect.",
+            "email_taken": "Un compte existe déjà pour cette adresse.",
+            "weak_password": "Mot de passe trop court : utilisez au moins 10 caractères.",
+            "email_not_verified": "Votre adresse n'est pas encore confirmée. Un nouveau lien vient de vous être envoyé.",
+            "invalid_link": "Ce lien n'est plus valable. Demandez-en un nouveau.",
+            "too_many_requests": "Trop de tentatives. Réessayez dans quelques minutes."
+        },
+        "verifyEmail": {
+            "title": "Confirmation de l'adresse",
+            "pending": "Un instant…",
+            "backToSignIn": "Retour à la connexion"
+        },
+        "reset": {
+            "title": "Mot de passe oublié",
+            "intro": "Indiquez votre adresse : si un compte existe, un lien vous y sera envoyé.",
+            "submit": "Envoyer le lien",
+            "sent": "Si un compte existe pour {{email}}, un lien vient d'y être envoyé. Il est valable une heure.",
+            "backToSignIn": "Retour à la connexion"
+        },
+        "updatePassword": {
+            "title": "Choisir un nouveau mot de passe",
+            "submit": "Enregistrer le mot de passe",
+            "done": "Mot de passe enregistré. Vous pouvez vous connecter."
+        }
     },
-    "verifyEmail": {
-      "title": "Confirmation de l'adresse",
-      "pending": "Un instant…",
-      "backToSignIn": "Retour à la connexion"
+    "grade": {
+        "label": "État",
+        "unknown": "Non renseigné",
+        "VERY_FINE": "TB — Très Beau",
+        "EXTREMELY_FINE": "TTB — Très Très Beau",
+        "ABOUT_UNCIRCULATED": "SUP — Superbe",
+        "UNCIRCULATED": "FDC — Fleur de Coin",
+        "short": {
+            "VERY_FINE": "TB",
+            "EXTREMELY_FINE": "TTB",
+            "ABOUT_UNCIRCULATED": "SUP",
+            "UNCIRCULATED": "FDC"
+        }
     },
-    "reset": {
-      "title": "Mot de passe oublié",
-      "intro": "Indiquez votre adresse : si un compte existe, un lien vous y sera envoyé.",
-      "submit": "Envoyer le lien",
-      "sent": "Si un compte existe pour {{email}}, un lien vient d'y être envoyé. Il est valable une heure.",
-      "backToSignIn": "Retour à la connexion"
+    "metal": {
+        "COPPER": "Cuivre",
+        "NORDIC_GOLD": "Or nordique",
+        "BIMETAL": "Bimétallique"
     },
-    "updatePassword": {
-      "title": "Choisir un nouveau mot de passe",
-      "submit": "Enregistrer le mot de passe",
-      "done": "Mot de passe enregistré. Vous pouvez vous connecter."
+    "collection": {
+        "title": "Collection",
+        "count_one": "{{count}} pièce",
+        "count_other": "{{count}} pièces",
+        "error": "Impossible de charger la collection.",
+        "empty": {
+            "title": "Votre collection est vide",
+            "body": "Ajoutez votre première pièce pour la voir apparaître ici."
+        },
+        "noResults": {
+            "title": "Aucune pièce ne correspond",
+            "body": "Modifiez ou réinitialisez les filtres."
+        },
+        "columns": {
+            "country": "Pays",
+            "faceValue": "Valeur",
+            "year": "Année",
+            "grade": "État",
+            "location": "Rangement",
+            "actions": "Actions"
+        },
+        "unfiled": "Au bocal",
+        "slot": "{{binder}} · p. {{page}} · L{{row}} C{{column}}",
+        "stats": {
+            "coins": "Pièces",
+            "countries": "Pays",
+            "unfiled": "Non classées",
+            "duplicates": "Doublons"
+        }
+    },
+    "filters": {
+        "country": "Pays",
+        "allCountries": "Tous les pays",
+        "faceValue": "Valeur",
+        "allFaceValues": "Toutes les valeurs",
+        "year": "Année",
+        "allYears": "Toutes les années",
+        "filing": "Rangement",
+        "filingANY": "Toutes",
+        "filingFILED": "Rangées",
+        "filingUNFILED": "Au bocal",
+        "search": "Rechercher",
+        "searchPlaceholder": "Pays, notes…",
+        "reset": "Réinitialiser les filtres"
+    },
+    "quickAdd": {
+        "saved": "Pièce ajoutée",
+        "title": "Ajout rapide",
+        "intro": "Le pays reste sélectionné après validation, pour enchaîner une pile de pièces sans repartir de zéro.",
+        "country": "Pays",
+        "countryPlaceholder": "Taper les premières lettres…",
+        "countryNoResult": "Aucun pays",
+        "faceValue": "Valeur faciale",
+        "year": "Année",
+        "grade": "État",
+        "gradeNone": "Non renseigné",
+        "filing": "Rangement",
+        "slot": "Emplacement",
+        "slotNone": "Au bocal",
+        "pageFull": "Cette page est pleine. Choisissez-en une autre.",
+        "noBinders": "Créez un classeur avec au moins une page pour pouvoir ranger une pièce dès l’ajout.",
+        "submit": "Ajouter",
+        "added_one": "{{count}} pièce ajoutée",
+        "added_other": "{{count}} pièces ajoutées",
+        "recent": "Ajoutées à l’instant",
+        "errors": {
+            "notInCatalog": "Cette pièce n’est pas au catalogue : {{country}} {{value}} {{year}}. Vérifiez l’année — ce pays n’avait peut-être pas encore l’euro.",
+            "countryRequired": "Choisissez un pays.",
+            "faceValueRequired": "Choisissez une valeur faciale.",
+            "yearRequired": "Indiquez une année à quatre chiffres.",
+            "save": "L’ajout a échoué. Réessayez.",
+            "slotTaken": "Cet emplacement vient d’être occupé. Choisissez-en un autre."
+        },
+        "open": "Ajouter une pièce"
+    },
+    "importCoins": {
+        "open": "Importer",
+        "title": "Importer des pièces",
+        "drop": "Déposez un fichier ici ou cliquez pour le choisir",
+        "types": "Photo (JPEG, PNG, WebP, HEIC), PDF, CSV, TXT ou Excel (.xlsx). 10 Mo maximum.",
+        "privacy": "Le fichier est envoyé à un service d’IA externe pour être analysé. Ne déposez rien de confidentiel.",
+        "analyze": "Analyser",
+        "analyzing": "Analyse en cours…",
+        "found_one": "{{count}} pièce trouvée",
+        "found_other": "{{count}} pièces trouvées",
+        "none": "Aucune pièce trouvée dans ce fichier",
+        "restart": "Recommencer",
+        "review": "Vérifiez et corrigez les lignes avant d’ajouter. Les pièces hors catalogue sont décochées tant qu’elles ne correspondent pas à une pièce du catalogue.",
+        "include": "Inclure cette ligne",
+        "quantity": "Quantité",
+        "countryNone": "Pays…",
+        "faceValueNone": "Valeur…",
+        "inCatalog": "Dans le catalogue",
+        "outOfCatalog": "Hors catalogue",
+        "submit_one": "Ajouter {{count}} pièce",
+        "submit_other": "Ajouter {{count}} pièces",
+        "added_one": "{{count}} pièce ajoutée",
+        "added_other": "{{count}} pièces ajoutées",
+        "errors": {
+            "tooLarge": "Ce fichier dépasse 10 Mo.",
+            "wrongType": "Ce type de fichier n’est pas pris en charge.",
+            "unreadable": "Impossible de lire ce fichier.",
+            "unavailable": "L’import par IA n’est pas disponible pour le moment.",
+            "failed": "L’analyse a échoué. Réessayez avec un autre fichier.",
+            "busy": "L’IA est surchargée en ce moment. Réessayez dans un instant.",
+            "rateLimited": "Trop de demandes. Réessayez dans quelques minutes.",
+            "generic": "L’import a échoué. Réessayez.",
+            "save": "L’ajout a échoué. Réessayez."
+        }
+    },
+    "completeness": {
+        "title": "Complétude",
+        "country": "Pays",
+        "progress": "{{owned}} sur {{total}}",
+        "showCollectorOnly": "Afficher Monaco, Saint-Marin et le Vatican",
+        "collectorOnlyHint": "Monnaies de collection à tirages minuscules : leur grille reste presque vide, quoi qu’il arrive.",
+        "legend": {
+            "owned": "Possédée",
+            "missing": "Manquante",
+            "notMinted": "Jamais frappée"
+        },
+        "cell": {
+            "owned": "{{country}}, {{value}}, {{year}} : possédée",
+            "duplicates": "{{country}}, {{value}}, {{year}} : {{count}} exemplaires",
+            "missing": "{{country}}, {{value}}, {{year}} : manquante",
+            "notMinted": "{{country}}, {{value}}, {{year}} : jamais frappée"
+        },
+        "empty": "Aucun type au catalogue pour ce pays.",
+        "progressBar": "Progression de la collection"
+    },
+    "binders": {
+        "title": "Classeurs",
+        "binder": "Classeur",
+        "page": "Page",
+        "pageNumber": "Page {{number}}",
+        "occupancy": "{{occupied}} sur {{total}} emplacements",
+        "slot": "Ligne {{row}}, colonne {{column}}",
+        "slotFree": "Ligne {{row}}, colonne {{column}} : libre",
+        "slotFilled": "Ligne {{row}}, colonne {{column}} : {{country}} {{value}} {{year}}",
+        "newBinder": "Nouveau classeur",
+        "newBinderName": "Nom du classeur",
+        "newPage": "Ajouter une page",
+        "pageWillBe": "Ce sera la page {{number}} de ce classeur.",
+        "pageRows": "Lignes",
+        "pageColumns": "Colonnes",
+        "create": "Créer",
+        "remove": "Retirer du classeur",
+        "placeTitle": "Ranger une pièce",
+        "placeIn": "Emplacement ligne {{row}}, colonne {{column}}",
+        "unfiledCount_one": "{{count}} pièce au bocal",
+        "unfiledCount_other": "{{count}} pièces au bocal",
+        "noUnfiled": "Aucune pièce au bocal. Ajoutez-en depuis la collection.",
+        "empty": {
+            "title": "Aucun classeur",
+            "body": "Créez un classeur pour commencer à ranger vos pièces."
+        },
+        "noPages": {
+            "title": "Ce classeur n’a pas encore de page",
+            "body": "Ajoutez une page en indiquant le nombre de lignes et de colonnes de vos feuilles."
+        },
+        "outOfBounds": "{{count}} pièce(s) rangée(s) hors des dimensions de cette page. Agrandissez la page ou retirez-les.",
+        "errors": {
+            "slotTaken": "Cet emplacement vient d’être occupé. La grille a été remise à jour, choisissez-en un autre.",
+            "generic": "L’opération a échoué. Réessayez.",
+            "move": "Le déplacement a échoué. Réessayez."
+        },
+        "slotShort": "L{{row}} C{{column}}",
+        "dnd": {
+            "start": "Pièce prise : {{coin}}. Utilisez les flèches pour la déplacer, Entrée pour la poser, Échap pour annuler.",
+            "overFree": "Sur l’emplacement libre ligne {{row}}, colonne {{column}}.",
+            "overFilled": "Sur la ligne {{row}}, colonne {{column}}, occupée par {{coin}}. Poser ici échangera les deux pièces.",
+            "dropped": "Pièce posée ligne {{row}}, colonne {{column}}.",
+            "cancelled": "Déplacement annulé, la pièce reste à sa place."
+        },
+        "pageTab": "Page {{number}} · {{filled}}/{{total}}"
+    },
+    "status": {
+        "offline": "Hors ligne",
+        "offlineHint": "Votre collection reste consultable, mais rien ne peut être modifié tant que le réseau est absent."
+    },
+    "update": {
+        "available": "Une nouvelle version de Mynt est disponible.",
+        "reload": "Mettre à jour",
+        "dismiss": "Plus tard"
+    },
+    "editCoin": {
+        "saved": "Pièce modifiée",
+        "title": "Modifier la pièce",
+        "open": "Modifier {{country}} {{value}} {{year}}",
+        "acquiredOn": "Date d’acquisition",
+        "notes": "Notes",
+        "notesPlaceholder": "Trouvée en brocante, bord usé…",
+        "save": "Enregistrer",
+        "delete": "Supprimer",
+        "confirmDelete": "Confirmer la suppression",
+        "cancelDelete": "Annuler",
+        "deleteWarning": "Cette pièce sera définitivement retirée de votre collection.",
+        "actions": "Actions"
     }
-  },
-  "grade": {
-    "label": "État",
-    "unknown": "Non renseigné",
-    "VERY_FINE": "TB — Très Beau",
-    "EXTREMELY_FINE": "TTB — Très Très Beau",
-    "ABOUT_UNCIRCULATED": "SUP — Superbe",
-    "UNCIRCULATED": "FDC — Fleur de Coin",
-    "short": {
-      "VERY_FINE": "TB",
-      "EXTREMELY_FINE": "TTB",
-      "ABOUT_UNCIRCULATED": "SUP",
-      "UNCIRCULATED": "FDC"
-    }
-  },
-  "metal": {
-    "COPPER": "Cuivre",
-    "NORDIC_GOLD": "Or nordique",
-    "BIMETAL": "Bimétallique"
-  },
-  "collection": {
-    "title": "Collection",
-    "count_one": "{{count}} pièce",
-    "count_other": "{{count}} pièces",
-    "error": "Impossible de charger la collection.",
-    "empty": {
-      "title": "Votre collection est vide",
-      "body": "Ajoutez votre première pièce pour la voir apparaître ici."
-    },
-    "noResults": {
-      "title": "Aucune pièce ne correspond",
-      "body": "Modifiez ou réinitialisez les filtres."
-    },
-    "columns": {
-      "country": "Pays",
-      "faceValue": "Valeur",
-      "year": "Année",
-      "grade": "État",
-      "location": "Rangement",
-      "actions": "Actions"
-    },
-    "unfiled": "Au bocal",
-    "slot": "{{binder}} · p. {{page}} · L{{row}} C{{column}}",
-    "stats": {
-      "coins": "Pièces",
-      "countries": "Pays",
-      "unfiled": "Non classées",
-      "duplicates": "Doublons"
-    }
-  },
-  "filters": {
-    "country": "Pays",
-    "allCountries": "Tous les pays",
-    "faceValue": "Valeur",
-    "allFaceValues": "Toutes les valeurs",
-    "year": "Année",
-    "allYears": "Toutes les années",
-    "filing": "Rangement",
-    "filingANY": "Toutes",
-    "filingFILED": "Rangées",
-    "filingUNFILED": "Au bocal",
-    "search": "Rechercher",
-    "searchPlaceholder": "Pays, notes…",
-    "reset": "Réinitialiser les filtres"
-  },
-  "quickAdd": {
-    "saved": "Pièce ajoutée",
-    "title": "Ajout rapide",
-    "intro": "Le pays reste sélectionné après validation, pour enchaîner une pile de pièces sans repartir de zéro.",
-    "country": "Pays",
-    "countryPlaceholder": "Taper les premières lettres…",
-    "countryNoResult": "Aucun pays",
-    "faceValue": "Valeur faciale",
-    "year": "Année",
-    "grade": "État",
-    "gradeNone": "Non renseigné",
-    "filing": "Rangement",
-    "slot": "Emplacement",
-    "slotNone": "Au bocal",
-    "pageFull": "Cette page est pleine. Choisissez-en une autre.",
-    "noBinders": "Créez un classeur avec au moins une page pour pouvoir ranger une pièce dès l’ajout.",
-    "submit": "Ajouter",
-    "added_one": "{{count}} pièce ajoutée",
-    "added_other": "{{count}} pièces ajoutées",
-    "recent": "Ajoutées à l’instant",
-    "errors": {
-      "notInCatalog": "Cette pièce n’est pas au catalogue : {{country}} {{value}} {{year}}. Vérifiez l’année — ce pays n’avait peut-être pas encore l’euro.",
-      "countryRequired": "Choisissez un pays.",
-      "faceValueRequired": "Choisissez une valeur faciale.",
-      "yearRequired": "Indiquez une année à quatre chiffres.",
-      "save": "L’ajout a échoué. Réessayez.",
-      "slotTaken": "Cet emplacement vient d’être occupé. Choisissez-en un autre."
-    },
-    "open": "Ajouter une pièce"
-  },
-  "importCoins": {
-    "open": "Importer",
-    "title": "Importer des pièces",
-    "drop": "Déposez un fichier ici ou cliquez pour le choisir",
-    "types": "Photo (JPEG, PNG, WebP, HEIC), PDF, CSV, TXT ou Excel (.xlsx). 10 Mo maximum.",
-    "privacy": "Le fichier est envoyé à un service d’IA externe pour être analysé. Ne déposez rien de confidentiel.",
-    "analyze": "Analyser",
-    "analyzing": "Analyse en cours…",
-    "found_one": "{{count}} pièce trouvée",
-    "found_other": "{{count}} pièces trouvées",
-    "none": "Aucune pièce trouvée dans ce fichier",
-    "restart": "Recommencer",
-    "review": "Vérifiez et corrigez les lignes avant d’ajouter. Les pièces hors catalogue sont décochées tant qu’elles ne correspondent pas à une pièce du catalogue.",
-    "include": "Inclure cette ligne",
-    "quantity": "Quantité",
-    "countryNone": "Pays…",
-    "faceValueNone": "Valeur…",
-    "inCatalog": "Dans le catalogue",
-    "outOfCatalog": "Hors catalogue",
-    "submit_one": "Ajouter {{count}} pièce",
-    "submit_other": "Ajouter {{count}} pièces",
-    "added_one": "{{count}} pièce ajoutée",
-    "added_other": "{{count}} pièces ajoutées",
-    "errors": {
-      "tooLarge": "Ce fichier dépasse 10 Mo.",
-      "wrongType": "Ce type de fichier n’est pas pris en charge.",
-      "unreadable": "Impossible de lire ce fichier.",
-      "unavailable": "L’import par IA n’est pas disponible pour le moment.",
-      "failed": "L’analyse a échoué. Réessayez avec un autre fichier.",
-      "busy": "L’IA est surchargée en ce moment. Réessayez dans un instant.",
-      "rateLimited": "Trop de demandes. Réessayez dans quelques minutes.",
-      "generic": "L’import a échoué. Réessayez.",
-      "save": "L’ajout a échoué. Réessayez."
-    }
-  },
-  "completeness": {
-    "title": "Complétude",
-    "country": "Pays",
-    "progress": "{{owned}} sur {{total}}",
-    "showCollectorOnly": "Afficher Monaco, Saint-Marin et le Vatican",
-    "collectorOnlyHint": "Monnaies de collection à tirages minuscules : leur grille reste presque vide, quoi qu’il arrive.",
-    "legend": {
-      "owned": "Possédée",
-      "missing": "Manquante",
-      "notMinted": "Jamais frappée"
-    },
-    "cell": {
-      "owned": "{{country}}, {{value}}, {{year}} : possédée",
-      "duplicates": "{{country}}, {{value}}, {{year}} : {{count}} exemplaires",
-      "missing": "{{country}}, {{value}}, {{year}} : manquante",
-      "notMinted": "{{country}}, {{value}}, {{year}} : jamais frappée"
-    },
-    "empty": "Aucun type au catalogue pour ce pays.",
-    "progressBar": "Progression de la collection"
-  },
-  "binders": {
-    "title": "Classeurs",
-    "binder": "Classeur",
-    "page": "Page",
-    "pageNumber": "Page {{number}}",
-    "occupancy": "{{occupied}} sur {{total}} emplacements",
-    "slot": "Ligne {{row}}, colonne {{column}}",
-    "slotFree": "Ligne {{row}}, colonne {{column}} : libre",
-    "slotFilled": "Ligne {{row}}, colonne {{column}} : {{country}} {{value}} {{year}}",
-    "newBinder": "Nouveau classeur",
-    "newBinderName": "Nom du classeur",
-    "newPage": "Ajouter une page",
-    "pageWillBe": "Ce sera la page {{number}} de ce classeur.",
-    "pageRows": "Lignes",
-    "pageColumns": "Colonnes",
-    "create": "Créer",
-    "remove": "Retirer du classeur",
-    "placeTitle": "Ranger une pièce",
-    "placeIn": "Emplacement ligne {{row}}, colonne {{column}}",
-    "unfiledCount_one": "{{count}} pièce au bocal",
-    "unfiledCount_other": "{{count}} pièces au bocal",
-    "noUnfiled": "Aucune pièce au bocal. Ajoutez-en depuis la collection.",
-    "empty": {
-      "title": "Aucun classeur",
-      "body": "Créez un classeur pour commencer à ranger vos pièces."
-    },
-    "noPages": {
-      "title": "Ce classeur n’a pas encore de page",
-      "body": "Ajoutez une page en indiquant le nombre de lignes et de colonnes de vos feuilles."
-    },
-    "outOfBounds": "{{count}} pièce(s) rangée(s) hors des dimensions de cette page. Agrandissez la page ou retirez-les.",
-    "errors": {
-      "slotTaken": "Cet emplacement vient d’être occupé. La grille a été remise à jour, choisissez-en un autre.",
-      "generic": "L’opération a échoué. Réessayez.",
-      "move": "Le déplacement a échoué. Réessayez."
-    },
-    "slotShort": "L{{row}} C{{column}}",
-    "dnd": {
-      "start": "Pièce prise : {{coin}}. Utilisez les flèches pour la déplacer, Entrée pour la poser, Échap pour annuler.",
-      "overFree": "Sur l’emplacement libre ligne {{row}}, colonne {{column}}.",
-      "overFilled": "Sur la ligne {{row}}, colonne {{column}}, occupée par {{coin}}. Poser ici échangera les deux pièces.",
-      "dropped": "Pièce posée ligne {{row}}, colonne {{column}}.",
-      "cancelled": "Déplacement annulé, la pièce reste à sa place."
-    },
-    "pageTab": "Page {{number}} · {{filled}}/{{total}}"
-  },
-  "status": {
-    "offline": "Hors ligne",
-    "offlineHint": "Votre collection reste consultable, mais rien ne peut être modifié tant que le réseau est absent."
-  },
-  "update": {
-    "available": "Une nouvelle version de Mynt est disponible.",
-    "reload": "Mettre à jour",
-    "dismiss": "Plus tard"
-  },
-  "editCoin": {
-    "saved": "Pièce modifiée",
-    "title": "Modifier la pièce",
-    "open": "Modifier {{country}} {{value}} {{year}}",
-    "acquiredOn": "Date d’acquisition",
-    "notes": "Notes",
-    "notesPlaceholder": "Trouvée en brocante, bord usé…",
-    "save": "Enregistrer",
-    "delete": "Supprimer",
-    "confirmDelete": "Confirmer la suppression",
-    "cancelDelete": "Annuler",
-    "deleteWarning": "Cette pièce sera définitivement retirée de votre collection.",
-    "actions": "Actions"
-  }
 }

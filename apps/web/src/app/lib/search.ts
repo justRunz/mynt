@@ -5,14 +5,19 @@
  * so fold the diacritics by hand.
  */
 export function fold(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase()
+    return text
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase();
 }
 
-export function matchesSearch(haystack: readonly (string | null)[], query: string): boolean {
-  const needle = fold(query.trim())
-  if (!needle) return true
-  return haystack.some((value) => value !== null && fold(value).includes(needle))
+export function matchesSearch(
+    haystack: readonly (string | null)[],
+    query: string,
+): boolean {
+    const needle = fold(query.trim());
+    if (!needle) return true;
+    return haystack.some(
+        (value) => value !== null && fold(value).includes(needle),
+    );
 }

@@ -9,60 +9,60 @@
 # reset links out of Mailpit.
 
 services:
-  db:
-    # 18 for uuidv7(), which is a built-in function from that release. It is
-    # what the private tables default to: a v7 sorts by time, so inserts land at
-    # the right edge of the index instead of scattering across it the way the
-    # random v4 of gen_random_uuid() does.
-    image: postgres:18
-    container_name: mynt_db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      # Local development only, hence a value in plain sight. The hosted
-      # database takes its password from Dokploy's environment, never from here.
-      POSTGRES_PASSWORD: mynt
-      POSTGRES_DB: mynt
-    ports:
-      - '127.0.0.1:5433:5432'
-    volumes:
-      # /var/lib/postgresql, not /var/lib/postgresql/data. The 18 image moved
-      # PGDATA to /var/lib/postgresql/18/docker and declares the parent as its
-      # volume; mounting the old path would leave the cluster outside the volume
-      # and lose it on the next `docker compose down`.
-      - mynt-db:/var/lib/postgresql
-      - ./db/init:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      # Depending on this rather than on a sleep, so the migration runner can
-      # wait for a database that actually answers instead of one that has merely
-      # started its process.
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d mynt']
-      interval: 2s
-      timeout: 3s
-      retries: 15
+    db:
+        # 18 for uuidv7(), which is a built-in function from that release. It is
+        # what the private tables default to: a v7 sorts by time, so inserts land at
+        # the right edge of the index instead of scattering across it the way the
+        # random v4 of gen_random_uuid() does.
+        image: postgres:18
+        container_name: mynt_db
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: postgres
+            # Local development only, hence a value in plain sight. The hosted
+            # database takes its password from Dokploy's environment, never from here.
+            POSTGRES_PASSWORD: mynt
+            POSTGRES_DB: mynt
+        ports:
+            - "127.0.0.1:5433:5432"
+        volumes:
+            # /var/lib/postgresql, not /var/lib/postgresql/data. The 18 image moved
+            # PGDATA to /var/lib/postgresql/18/docker and declares the parent as its
+            # volume; mounting the old path would leave the cluster outside the volume
+            # and lose it on the next `docker compose down`.
+            - mynt-db:/var/lib/postgresql
+            - ./db/init:/docker-entrypoint-initdb.d:ro
+        healthcheck:
+            # Depending on this rather than on a sleep, so the migration runner can
+            # wait for a database that actually answers instead of one that has merely
+            # started its process.
+            test: ["CMD-SHELL", "pg_isready -U postgres -d mynt"]
+            interval: 2s
+            timeout: 3s
+            retries: 15
 
-  # Every message the app sends, caught and displayed instead of delivered.
-  #
-  # Not a convenience: without it, testing a verification link means sending real
-  # mail to a real address, which is slow, occasionally undeliverable, and
-  # impossible to do for an address that is not yours. Here the link is on screen
-  # a second after the request.
-  #
-  # It speaks SMTP with no authentication and accepts everything, so the server's
-  # mail path is exercised in full -- the same nodemailer transport, the same
-  # message -- with only the host and port differing from production.
-  mail:
-    image: axllent/mailpit:latest
-    container_name: mynt_mail
-    restart: unless-stopped
-    ports:
-      # 1025 is where the API sends; 8025 is the inbox to read in a browser.
-      - '127.0.0.1:1025:1025'
-      - '127.0.0.1:8025:8025'
-    environment:
-      MP_MAX_MESSAGES: 500
-      MP_SMTP_AUTH_ACCEPT_ANY: 1
-      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    # Every message the app sends, caught and displayed instead of delivered.
+    #
+    # Not a convenience: without it, testing a verification link means sending real
+    # mail to a real address, which is slow, occasionally undeliverable, and
+    # impossible to do for an address that is not yours. Here the link is on screen
+    # a second after the request.
+    #
+    # It speaks SMTP with no authentication and accepts everything, so the server's
+    # mail path is exercised in full -- the same nodemailer transport, the same
+    # message -- with only the host and port differing from production.
+    mail:
+        image: axllent/mailpit:latest
+        container_name: mynt_mail
+        restart: unless-stopped
+        ports:
+            # 1025 is where the API sends; 8025 is the inbox to read in a browser.
+            - "127.0.0.1:1025:1025"
+            - "127.0.0.1:8025:8025"
+        environment:
+            MP_MAX_MESSAGES: 500
+            MP_SMTP_AUTH_ACCEPT_ANY: 1
+            MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
 volumes:
-  mynt-db:
+    mynt-db:

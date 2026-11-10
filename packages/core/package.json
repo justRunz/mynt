@@ -1,22 +1,22 @@
 {
-  "name": "@mynt/core",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./catalog-types": "./src/catalog-types.ts",
-    "./grades": "./src/grades.ts"
-  },
-  "scripts": {
-    "build": "echo \"@mynt/core is consumed as source, nothing to build\"",
-    "lint": "oxlint",
-    "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json"
-  },
-  "devDependencies": {
-    "oxlint": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
-  }
+    "name": "@mynt/core",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts",
+        "./catalog-types": "./src/catalog-types.ts",
+        "./grades": "./src/grades.ts"
+    },
+    "scripts": {
+        "build": "echo \"@mynt/core is consumed as source, nothing to build\"",
+        "lint": "oxlint",
+        "test": "vitest run",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "devDependencies": {
+        "oxlint": "catalog:",
+        "typescript": "catalog:",
+        "vitest": "catalog:"
+    }
 }

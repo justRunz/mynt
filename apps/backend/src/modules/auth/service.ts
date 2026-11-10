@@ -1,22 +1,22 @@
-import { randomUUID } from 'node:crypto'
+import { randomUUID } from "node:crypto";
 
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq, isNull } from "drizzle-orm";
 
-import type { Tx } from '../../db/index.js'
-import { oneTimeTokens, refreshTokens, users } from '../../db/schema.js'
-import { DomainError, PG, postgresErrorCode } from '../../errors.js'
-import { hashPassword, verifyPassword } from './passwords.js'
+import type { Tx } from "../../db/index.js";
+import { oneTimeTokens, refreshTokens, users } from "../../db/schema.js";
+import { DomainError, PG, postgresErrorCode } from "../../errors.js";
+import { hashPassword, verifyPassword } from "./passwords.js";
 import {
-  ACCESS_TTL_SECONDS,
-  EMAIL_VERIFICATION_TTL_HOURS,
-  PASSWORD_RESET_TTL_HOURS,
-  hashOpaqueToken,
-  hoursFromNow,
-  mintOpaqueToken,
-  refreshExpiry,
-  signAccessToken,
-} from './tokens.js'
-import type { Session, SignInOutcome } from './types.js'
+    ACCESS_TTL_SECONDS,
+    EMAIL_VERIFICATION_TTL_HOURS,
+    PASSWORD_RESET_TTL_HOURS,
+    hashOpaqueToken,
+    hoursFromNow,
+    mintOpaqueToken,
+    refreshExpiry,
+    signAccessToken,
+} from "./tokens.js";
+import type { Session, SignInOutcome } from "./types.js";
 
 /**
  * Creating and renewing sessions.
@@ -28,8 +28,8 @@ import type { Session, SignInOutcome } from './types.js'
  * auth.users and nothing else.
  */
 
-const EMAIL_VERIFICATION = 'EMAIL_VERIFICATION'
-const PASSWORD_RESET = 'PASSWORD_RESET'
+const EMAIL_VERIFICATION = "EMAIL_VERIFICATION";
+const PASSWORD_RESET = "PASSWORD_RESET";
 
 /**
  * Issues a link token, and revokes the ones it replaces.
@@ -41,28 +41,31 @@ const PASSWORD_RESET = 'PASSWORD_RESET'
  * was used, not a token that never was.
  */
 async function issueLinkToken(
-  tx: Tx,
-  userId: string,
-  purpose: string,
-  ttlHours: number,
+    tx: Tx,
+    userId: string,
+    purpose: string,
+    ttlHours: number,
 ): Promise<string> {
-  const now = new Date()
-  await tx
-    .update(oneTimeTokens)
-    .set({ usedAt: now })
-    .where(
-      and(
-        eq(oneTimeTokens.userId, userId),
-        eq(oneTimeTokens.purpose, purpose),
-        isNull(oneTimeTokens.usedAt),
-      ),
-    )
+    const now = new Date();
+    await tx
+        .update(oneTimeTokens)
+        .set({ usedAt: now })
+        .where(
+            and(
+                eq(oneTimeTokens.userId, userId),
+                eq(oneTimeTokens.purpose, purpose),
+                isNull(oneTimeTokens.usedAt),
+            ),
+        );
 
-  const { token, tokenHash } = mintOpaqueToken()
-  await tx
-    .insert(oneTimeTokens)
-    .values({ userId, purpose, tokenHash, expiresAt: hoursFromNow(ttlHours, now) })
-  return token
+    const { token, tokenHash } = mintOpaqueToken();
+    await tx.insert(oneTimeTokens).values({
+        userId,
+        purpose,
+        tokenHash,
+        expiresAt: hoursFromNow(ttlHours, now),
+    });
+    return token;
 }
 
 /**
@@ -72,19 +75,25 @@ async function issueLinkToken(
  * somebody signs in, the existing one when a token is rotated, so a whole
  * device's succession can be revoked together.
  */
-async function issueSession(tx: Tx, userId: string, familyId: string): Promise<Session> {
-  const { token, tokenHash } = mintOpaqueToken()
-  const expiresAt = refreshExpiry()
+async function issueSession(
+    tx: Tx,
+    userId: string,
+    familyId: string,
+): Promise<Session> {
+    const { token, tokenHash } = mintOpaqueToken();
+    const expiresAt = refreshExpiry();
 
-  await tx.insert(refreshTokens).values({ userId, familyId, tokenHash, expiresAt })
+    await tx
+        .insert(refreshTokens)
+        .values({ userId, familyId, tokenHash, expiresAt });
 
-  return {
-    userId,
-    accessToken: await signAccessToken(userId),
-    refreshToken: token,
-    refreshExpiresAt: expiresAt,
-    expiresIn: ACCESS_TTL_SECONDS,
-  }
+    return {
+        userId,
+        accessToken: await signAccessToken(userId),
+        refreshToken: token,
+        refreshExpiresAt: expiresAt,
+        expiresIn: ACCESS_TTL_SECONDS,
+    };
 }
 
 /**
@@ -96,42 +105,42 @@ async function issueSession(tx: Tx, userId: string, familyId: string): Promise<S
  * returned early or was rewritten carelessly.
  */
 export async function signUp(
-  tx: Tx,
-  email: string,
-  password: string,
+    tx: Tx,
+    email: string,
+    password: string,
 ): Promise<{ userId: string; verificationToken: string }> {
-  const passwordHash = await hashPassword(password)
+    const passwordHash = await hashPassword(password);
 
-  let userId: string
-  try {
-    const [created] = await tx
-      .insert(users)
-      .values({ email, passwordHash })
-      .returning({ userId: users.userId })
-    userId = created!.userId
-  } catch (error) {
-    // Let the database decide, rather than checking first: between a SELECT and
-    // an INSERT another request can take the address, and the unique constraint
-    // is the only check that cannot lose that race.
-    // On users, the only unique column is the email address.
-    if (postgresErrorCode(error) === PG.UNIQUE_VIOLATION) {
-      throw new DomainError('email_taken')
+    let userId: string;
+    try {
+        const [created] = await tx
+            .insert(users)
+            .values({ email, passwordHash })
+            .returning({ userId: users.userId });
+        userId = created!.userId;
+    } catch (error) {
+        // Let the database decide, rather than checking first: between a SELECT and
+        // an INSERT another request can take the address, and the unique constraint
+        // is the only check that cannot lose that race.
+        // On users, the only unique column is the email address.
+        if (postgresErrorCode(error) === PG.UNIQUE_VIOLATION) {
+            throw new DomainError("email_taken");
+        }
+        throw error;
     }
-    throw error
-  }
 
-  // No session. The address is unproven until somebody opens the mailbox it
-  // names, and handing out a session first would make the confirmation a
-  // formality that could be skipped by simply never clicking.
-  return {
-    userId,
-    verificationToken: await issueLinkToken(
-      tx,
-      userId,
-      EMAIL_VERIFICATION,
-      EMAIL_VERIFICATION_TTL_HOURS,
-    ),
-  }
+    // No session. The address is unproven until somebody opens the mailbox it
+    // names, and handing out a session first would make the confirmation a
+    // formality that could be skipped by simply never clicking.
+    return {
+        userId,
+        verificationToken: await issueLinkToken(
+            tx,
+            userId,
+            EMAIL_VERIFICATION,
+            EMAIL_VERIFICATION_TTL_HOURS,
+        ),
+    };
 }
 
 /**
@@ -153,33 +162,40 @@ export async function signUp(
  * back into an account that exists. It is not a way to send mail to strangers:
  * the correct password is required to reach this line at all.
  */
-export async function signIn(tx: Tx, email: string, password: string): Promise<SignInOutcome> {
-  const [account] = await tx
-    .select({
-      userId: users.userId,
-      passwordHash: users.passwordHash,
-      emailVerifiedAt: users.emailVerifiedAt,
-    })
-    .from(users)
-    .where(eq(users.email, email))
+export async function signIn(
+    tx: Tx,
+    email: string,
+    password: string,
+): Promise<SignInOutcome> {
+    const [account] = await tx
+        .select({
+            userId: users.userId,
+            passwordHash: users.passwordHash,
+            emailVerifiedAt: users.emailVerifiedAt,
+        })
+        .from(users)
+        .where(eq(users.email, email));
 
-  if (!(await verifyPassword(account?.passwordHash ?? null, password))) {
-    throw new DomainError('invalid_credentials')
-  }
-
-  if (account!.emailVerifiedAt === null) {
-    return {
-      verified: false,
-      verificationToken: await issueLinkToken(
-        tx,
-        account!.userId,
-        EMAIL_VERIFICATION,
-        EMAIL_VERIFICATION_TTL_HOURS,
-      ),
+    if (!(await verifyPassword(account?.passwordHash ?? null, password))) {
+        throw new DomainError("invalid_credentials");
     }
-  }
 
-  return { verified: true, session: await issueSession(tx, account!.userId, randomUUID()) }
+    if (account!.emailVerifiedAt === null) {
+        return {
+            verified: false,
+            verificationToken: await issueLinkToken(
+                tx,
+                account!.userId,
+                EMAIL_VERIFICATION,
+                EMAIL_VERIFICATION_TTL_HOURS,
+            ),
+        };
+    }
+
+    return {
+        verified: true,
+        session: await issueSession(tx, account!.userId, randomUUID()),
+    };
 }
 
 /**
@@ -194,38 +210,49 @@ export async function signIn(tx: Tx, email: string, password: string): Promise<S
  * and each one told apart is a fact given away.
  */
 export async function verifyEmail(tx: Tx, presented: string): Promise<Session> {
-  const [token] = await tx
-    .select()
-    .from(oneTimeTokens)
-    .where(
-      and(
-        eq(oneTimeTokens.tokenHash, hashOpaqueToken(presented)),
-        eq(oneTimeTokens.purpose, EMAIL_VERIFICATION),
-      ),
-    )
+    const [token] = await tx
+        .select()
+        .from(oneTimeTokens)
+        .where(
+            and(
+                eq(oneTimeTokens.tokenHash, hashOpaqueToken(presented)),
+                eq(oneTimeTokens.purpose, EMAIL_VERIFICATION),
+            ),
+        );
 
-  if (!token || token.usedAt !== null || token.expiresAt.getTime() <= Date.now()) {
-    throw new DomainError('invalid_link')
-  }
+    if (
+        !token ||
+        token.usedAt !== null ||
+        token.expiresAt.getTime() <= Date.now()
+    ) {
+        throw new DomainError("invalid_link");
+    }
 
-  // Conditional on still being unspent, so two clicks arriving together cannot
-  // both consume it: the second updates nothing and is refused.
-  const spent = await tx
-    .update(oneTimeTokens)
-    .set({ usedAt: new Date() })
-    .where(and(eq(oneTimeTokens.tokenId, token.tokenId), isNull(oneTimeTokens.usedAt)))
-    .returning({ tokenId: oneTimeTokens.tokenId })
+    // Conditional on still being unspent, so two clicks arriving together cannot
+    // both consume it: the second updates nothing and is refused.
+    const spent = await tx
+        .update(oneTimeTokens)
+        .set({ usedAt: new Date() })
+        .where(
+            and(
+                eq(oneTimeTokens.tokenId, token.tokenId),
+                isNull(oneTimeTokens.usedAt),
+            ),
+        )
+        .returning({ tokenId: oneTimeTokens.tokenId });
 
-  if (spent.length === 0) throw new DomainError('invalid_link')
+    if (spent.length === 0) throw new DomainError("invalid_link");
 
-  // Only if it was not already: re-confirming should not move the date, which is
-  // a record of when this address was first proved.
-  await tx
-    .update(users)
-    .set({ emailVerifiedAt: new Date() })
-    .where(and(eq(users.userId, token.userId), isNull(users.emailVerifiedAt)))
+    // Only if it was not already: re-confirming should not move the date, which is
+    // a record of when this address was first proved.
+    await tx
+        .update(users)
+        .set({ emailVerifiedAt: new Date() })
+        .where(
+            and(eq(users.userId, token.userId), isNull(users.emailVerifiedAt)),
+        );
 
-  return issueSession(tx, token.userId, randomUUID())
+    return issueSession(tx, token.userId, randomUUID());
 }
 
 /**
@@ -255,46 +282,60 @@ export async function verifyEmail(tx: Tx, presented: string): Promise<Session> {
  * The cost is that a stolen copy replayed within those seconds of the genuine
  * use goes unnoticed; outside them, a replay revokes everything, as before.
  */
-const REUSE_GRACE_MS = 10_000
+const REUSE_GRACE_MS = 10_000;
 
-export async function rotateSession(tx: Tx, presented: string): Promise<Session | null> {
-  const [existing] = await tx
-    .select()
-    .from(refreshTokens)
-    .where(eq(refreshTokens.tokenHash, hashOpaqueToken(presented)))
+export async function rotateSession(
+    tx: Tx,
+    presented: string,
+): Promise<Session | null> {
+    const [existing] = await tx
+        .select()
+        .from(refreshTokens)
+        .where(eq(refreshTokens.tokenHash, hashOpaqueToken(presented)));
 
-  if (!existing) return null
+    if (!existing) return null;
 
-  if (existing.usedAt !== null) {
-    if (Date.now() - existing.usedAt.getTime() <= REUSE_GRACE_MS) {
-      return issueSession(tx, existing.userId, existing.familyId)
+    if (existing.usedAt !== null) {
+        if (Date.now() - existing.usedAt.getTime() <= REUSE_GRACE_MS) {
+            return issueSession(tx, existing.userId, existing.familyId);
+        }
+
+        // A rotating token is spendable once. A second presentation proves two
+        // copies exist, and nothing distinguishes the thief from the owner -- so
+        // neither is trusted. Only the password gets anybody back in.
+        console.warn(
+            `refresh token reuse; revoking family ${existing.familyId}`,
+        );
+        await tx
+            .delete(refreshTokens)
+            .where(eq(refreshTokens.familyId, existing.familyId));
+        return null;
     }
 
-    // A rotating token is spendable once. A second presentation proves two
-    // copies exist, and nothing distinguishes the thief from the owner -- so
-    // neither is trusted. Only the password gets anybody back in.
-    console.warn(`refresh token reuse; revoking family ${existing.familyId}`)
-    await tx.delete(refreshTokens).where(eq(refreshTokens.familyId, existing.familyId))
-    return null
-  }
+    if (existing.expiresAt.getTime() <= Date.now()) {
+        await tx
+            .delete(refreshTokens)
+            .where(eq(refreshTokens.tokenId, existing.tokenId));
+        return null;
+    }
 
-  if (existing.expiresAt.getTime() <= Date.now()) {
-    await tx.delete(refreshTokens).where(eq(refreshTokens.tokenId, existing.tokenId))
-    return null
-  }
+    // Conditional on still being unspent. A request that arrives while another is
+    // rotating the same token waits for that row lock, then updates nothing: it
+    // lost the race rather than presenting a stolen copy, so it is inside the
+    // grace window by definition and gets a session of its own.
+    //
+    // So how many rows this touches does not change the answer, and is not read.
+    await tx
+        .update(refreshTokens)
+        .set({ usedAt: new Date() })
+        .where(
+            and(
+                eq(refreshTokens.tokenId, existing.tokenId),
+                isNull(refreshTokens.usedAt),
+            ),
+        );
 
-  // Conditional on still being unspent. A request that arrives while another is
-  // rotating the same token waits for that row lock, then updates nothing: it
-  // lost the race rather than presenting a stolen copy, so it is inside the
-  // grace window by definition and gets a session of its own.
-  //
-  // So how many rows this touches does not change the answer, and is not read.
-  await tx
-    .update(refreshTokens)
-    .set({ usedAt: new Date() })
-    .where(and(eq(refreshTokens.tokenId, existing.tokenId), isNull(refreshTokens.usedAt)))
-
-  return issueSession(tx, existing.userId, existing.familyId)
+    return issueSession(tx, existing.userId, existing.familyId);
 }
 
 /**
@@ -308,14 +349,16 @@ export async function rotateSession(tx: Tx, presented: string): Promise<Session 
  * whether the thing they hold was ever real.
  */
 export async function signOut(tx: Tx, presented: string): Promise<void> {
-  const [existing] = await tx
-    .select({ familyId: refreshTokens.familyId })
-    .from(refreshTokens)
-    .where(eq(refreshTokens.tokenHash, hashOpaqueToken(presented)))
+    const [existing] = await tx
+        .select({ familyId: refreshTokens.familyId })
+        .from(refreshTokens)
+        .where(eq(refreshTokens.tokenHash, hashOpaqueToken(presented)));
 
-  if (!existing) return
+    if (!existing) return;
 
-  await tx.delete(refreshTokens).where(eq(refreshTokens.familyId, existing.familyId))
+    await tx
+        .delete(refreshTokens)
+        .where(eq(refreshTokens.familyId, existing.familyId));
 }
 
 /**
@@ -331,15 +374,23 @@ export async function signOut(tx: Tx, presented: string): Promise<void> {
  * clicking the first link -- and refusing would strand an account whose
  * confirmation went missing.
  */
-export async function requestPasswordReset(tx: Tx, email: string): Promise<string | null> {
-  const [account] = await tx
-    .select({ userId: users.userId })
-    .from(users)
-    .where(eq(users.email, email))
+export async function requestPasswordReset(
+    tx: Tx,
+    email: string,
+): Promise<string | null> {
+    const [account] = await tx
+        .select({ userId: users.userId })
+        .from(users)
+        .where(eq(users.email, email));
 
-  if (!account) return null
+    if (!account) return null;
 
-  return issueLinkToken(tx, account.userId, PASSWORD_RESET, PASSWORD_RESET_TTL_HOURS)
+    return issueLinkToken(
+        tx,
+        account.userId,
+        PASSWORD_RESET,
+        PASSWORD_RESET_TTL_HOURS,
+    );
 }
 
 /**
@@ -357,41 +408,58 @@ export async function requestPasswordReset(tx: Tx, email: string): Promise<strin
  * No session comes back. Every session just ended, including the caller's, and
  * handing one straight out would contradict the sentence above.
  */
-export async function resetPassword(tx: Tx, presented: string, password: string): Promise<void> {
-  const [token] = await tx
-    .select()
-    .from(oneTimeTokens)
-    .where(
-      and(
-        eq(oneTimeTokens.tokenHash, hashOpaqueToken(presented)),
-        eq(oneTimeTokens.purpose, PASSWORD_RESET),
-      ),
-    )
+export async function resetPassword(
+    tx: Tx,
+    presented: string,
+    password: string,
+): Promise<void> {
+    const [token] = await tx
+        .select()
+        .from(oneTimeTokens)
+        .where(
+            and(
+                eq(oneTimeTokens.tokenHash, hashOpaqueToken(presented)),
+                eq(oneTimeTokens.purpose, PASSWORD_RESET),
+            ),
+        );
 
-  if (!token || token.usedAt !== null || token.expiresAt.getTime() <= Date.now()) {
-    throw new DomainError('invalid_link')
-  }
+    if (
+        !token ||
+        token.usedAt !== null ||
+        token.expiresAt.getTime() <= Date.now()
+    ) {
+        throw new DomainError("invalid_link");
+    }
 
-  const spent = await tx
-    .update(oneTimeTokens)
-    .set({ usedAt: new Date() })
-    .where(and(eq(oneTimeTokens.tokenId, token.tokenId), isNull(oneTimeTokens.usedAt)))
-    .returning({ tokenId: oneTimeTokens.tokenId })
+    const spent = await tx
+        .update(oneTimeTokens)
+        .set({ usedAt: new Date() })
+        .where(
+            and(
+                eq(oneTimeTokens.tokenId, token.tokenId),
+                isNull(oneTimeTokens.usedAt),
+            ),
+        )
+        .returning({ tokenId: oneTimeTokens.tokenId });
 
-  if (spent.length === 0) throw new DomainError('invalid_link')
+    if (spent.length === 0) throw new DomainError("invalid_link");
 
-  await tx
-    .update(users)
-    .set({ passwordHash: await hashPassword(password) })
-    .where(eq(users.userId, token.userId))
+    await tx
+        .update(users)
+        .set({ passwordHash: await hashPassword(password) })
+        .where(eq(users.userId, token.userId));
 
-  await tx
-    .update(users)
-    .set({ emailVerifiedAt: new Date() })
-    .where(and(eq(users.userId, token.userId), isNull(users.emailVerifiedAt)))
+    await tx
+        .update(users)
+        .set({ emailVerifiedAt: new Date() })
+        .where(
+            and(eq(users.userId, token.userId), isNull(users.emailVerifiedAt)),
+        );
 
-  // Every device, deleted rather than marked spent: there is nothing to
-  // reconstruct afterwards, and a row that can never be presented again is a row
-  // worth being rid of.
-  await tx.delete(refreshTokens).where(eq(refreshTokens.userId, token.userId))
+    // Every device, deleted rather than marked spent: there is nothing to
+    // reconstruct afterwards, and a row that can never be presented again is a row
+    // worth being rid of.
+    await tx
+        .delete(refreshTokens)
+        .where(eq(refreshTokens.userId, token.userId));
 }

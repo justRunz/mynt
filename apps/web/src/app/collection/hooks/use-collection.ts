@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { Grade } from '@mynt/core'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Grade } from "@mynt/core";
 
-import { apiFetch } from '@/app/lib/api'
+import { apiFetch } from "@/app/lib/api";
 
 /**
  * A hole in a binder page, as the forms name one: where a coin is being sent.
@@ -9,19 +9,19 @@ import { apiFetch } from '@/app/lib/api'
  * CoinLocation just below.
  */
 export interface SlotDestination {
-  pageId: string
-  row: number
-  column: number
+    pageId: string;
+    row: number;
+    column: number;
 }
 
 /** Where a coin physically sits, when it has been filed. */
 export interface CoinLocation {
-  pageId: string
-  binderId: string
-  binderName: string
-  pageNumber: number
-  row: number
-  column: number
+    pageId: string;
+    binderId: string;
+    binderName: string;
+    pageNumber: number;
+    row: number;
+    column: number;
 }
 
 /**
@@ -30,15 +30,15 @@ export interface CoinLocation {
  * names out of the components.
  */
 export interface CollectionEntry {
-  id: string
-  countryCode: string
-  faceValueCents: number
-  year: number
-  variant: string
-  grade: Grade | null
-  acquiredOn: string | null
-  notes: string | null
-  location: CoinLocation | null
+    id: string;
+    countryCode: string;
+    faceValueCents: number;
+    year: number;
+    variant: string;
+    grade: Grade | null;
+    acquiredOn: string | null;
+    notes: string | null;
+    location: CoinLocation | null;
 }
 
 /**
@@ -47,15 +47,15 @@ export interface CollectionEntry {
  * meant together.
  */
 interface ApiCoin {
-  coinId: string
-  gradeCode: string | null
-  acquiredOn: string | null
-  notes: string | null
-  countryCode: string
-  faceValueCents: number
-  year: number
-  variant: string
-  location: CoinLocation | null
+    coinId: string;
+    gradeCode: string | null;
+    acquiredOn: string | null;
+    notes: string | null;
+    countryCode: string;
+    faceValueCents: number;
+    year: number;
+    variant: string;
+    location: CoinLocation | null;
 }
 
 /**
@@ -69,25 +69,25 @@ interface ApiCoin {
  * the rule to go wrong.
  */
 async function fetchCollection(): Promise<CollectionEntry[]> {
-  const rows = await apiFetch<ApiCoin[]>('/collection')
+    const rows = await apiFetch<ApiCoin[]>("/collection");
 
-  // Two renames and a cast, nothing more: `location` already arrives in the
-  // shape the screens draw. The names could be made to match and this could go,
-  // which is a tidy-up and not part of moving the app off Supabase.
-  return rows.map(({ coinId, gradeCode, ...coin }) => ({
-    ...coin,
-    id: coinId,
-    grade: gradeCode as Grade | null,
-  }))
+    // Two renames and a cast, nothing more: `location` already arrives in the
+    // shape the screens draw. The names could be made to match and this could go,
+    // which is a tidy-up and not part of moving the app off Supabase.
+    return rows.map(({ coinId, gradeCode, ...coin }) => ({
+        ...coin,
+        id: coinId,
+        grade: gradeCode as Grade | null,
+    }));
 }
 
-export const collectionQueryKey = ['collection'] as const
+export const collectionQueryKey = ["collection"] as const;
 
 export function useCollection() {
-  return useQuery({
-    queryKey: collectionQueryKey,
-    queryFn: fetchCollection,
-  })
+    return useQuery({
+        queryKey: collectionQueryKey,
+        queryFn: fetchCollection,
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -104,70 +104,72 @@ export function useCollection() {
  * of milliseconds -- not worth showing a guess for.
  */
 export function useRefetchCollection() {
-  const client = useQueryClient()
-  return () => void client.invalidateQueries({ queryKey: collectionQueryKey })
+    const client = useQueryClient();
+    return () =>
+        void client.invalidateQueries({ queryKey: collectionQueryKey });
 }
 
 export interface AddCoinVariables {
-  coinTypeId: number
-  grade: Grade | null
-  /**
-   * Set when the add form filed the coin on the spot. It rides along in the
-   * same insert rather than becoming a second mutation: one write instead of
-   * two, and no window in which the coin exists but is nowhere.
-   */
-  destination: SlotDestination | null
+    coinTypeId: number;
+    grade: Grade | null;
+    /**
+     * Set when the add form filed the coin on the spot. It rides along in the
+     * same insert rather than becoming a second mutation: one write instead of
+     * two, and no window in which the coin exists but is nowhere.
+     */
+    destination: SlotDestination | null;
 }
 
 export function useAddCoin() {
-  const refetch = useRefetchCollection()
-  return useMutation<void, Error, AddCoinVariables>({
-    // No owner in the body. The server takes it from the verified token, which
-    // is the only place it can come from that nobody can forge.
-    mutationFn: (input) =>
-      apiFetch<{ coinId: string }>('/collection', {
-        method: 'POST',
-        body: {
-          coinTypeId: input.coinTypeId,
-          gradeCode: input.grade,
-          location: input.destination,
-        },
-      }).then(() => undefined),
-    onSuccess: refetch,
-  })
+    const refetch = useRefetchCollection();
+    return useMutation<void, Error, AddCoinVariables>({
+        // No owner in the body. The server takes it from the verified token, which
+        // is the only place it can come from that nobody can forge.
+        mutationFn: (input) =>
+            apiFetch<{ coinId: string }>("/collection", {
+                method: "POST",
+                body: {
+                    coinTypeId: input.coinTypeId,
+                    gradeCode: input.grade,
+                    location: input.destination,
+                },
+            }).then(() => undefined),
+        onSuccess: refetch,
+    });
 }
 
 export interface UpdateCoinVariables {
-  coinId: string
-  coinTypeId: number
-  grade: Grade | null
-  acquiredOn: string | null
-  notes: string | null
+    coinId: string;
+    coinTypeId: number;
+    grade: Grade | null;
+    acquiredOn: string | null;
+    notes: string | null;
 }
 
 export function useUpdateCoin() {
-  const refetch = useRefetchCollection()
-  return useMutation<void, Error, UpdateCoinVariables>({
-    mutationFn: (input) =>
-      apiFetch<void>(`/collection/${input.coinId}`, {
-        method: 'PATCH',
-        body: {
-          coinTypeId: input.coinTypeId,
-          gradeCode: input.grade,
-          acquiredOn: input.acquiredOn,
-          notes: input.notes,
-        },
-      }),
-    onSuccess: refetch,
-  })
+    const refetch = useRefetchCollection();
+    return useMutation<void, Error, UpdateCoinVariables>({
+        mutationFn: (input) =>
+            apiFetch<void>(`/collection/${input.coinId}`, {
+                method: "PATCH",
+                body: {
+                    coinTypeId: input.coinTypeId,
+                    gradeCode: input.grade,
+                    acquiredOn: input.acquiredOn,
+                    notes: input.notes,
+                },
+            }),
+        onSuccess: refetch,
+    });
 }
 
 export function useDeleteCoin() {
-  const refetch = useRefetchCollection()
-  return useMutation<void, Error, string>({
-    mutationFn: (coinId) => apiFetch<void>(`/collection/${coinId}`, { method: 'DELETE' }),
-    onSuccess: refetch,
-  })
+    const refetch = useRefetchCollection();
+    return useMutation<void, Error, string>({
+        mutationFn: (coinId) =>
+            apiFetch<void>(`/collection/${coinId}`, { method: "DELETE" }),
+        onSuccess: refetch,
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -177,46 +179,51 @@ export function useDeleteCoin() {
 /** What the analysis read off a file. Everything is a guess until the user has
  *  reviewed it, hence the nulls: the service says "unknown", never invents. */
 export interface ImportedItem {
-  countryCode: string | null
-  faceValueCents: number | null
-  year: number | null
-  quantity: number
-  variant: string | null
-  grade: string | null
-  note: string | null
+    countryCode: string | null;
+    faceValueCents: number | null;
+    year: number | null;
+    quantity: number;
+    variant: string | null;
+    grade: string | null;
+    note: string | null;
 }
 
 export interface AnalyzeVariables {
-  mimeType: string
-  /** Base64 without the `data:` prefix. */
-  data: string
+    mimeType: string;
+    /** Base64 without the `data:` prefix. */
+    data: string;
 }
 
 export function useImportAnalyze() {
-  return useMutation<ImportedItem[], Error, AnalyzeVariables>({
-    mutationFn: (input) =>
-      apiFetch<{ items: ImportedItem[] }>('/import/analyze', {
-        method: 'POST',
-        body: input,
-      }).then((result) => result.items),
-  })
+    return useMutation<ImportedItem[], Error, AnalyzeVariables>({
+        mutationFn: (input) =>
+            apiFetch<{ items: ImportedItem[] }>("/import/analyze", {
+                method: "POST",
+                body: input,
+            }).then((result) => result.items),
+    });
 }
 
 export interface BulkCoin {
-  coinTypeId: number
-  grade: Grade | null
+    coinTypeId: number;
+    grade: Grade | null;
 }
 
 export function useAddCoins() {
-  const refetch = useRefetchCollection()
-  return useMutation<void, Error, BulkCoin[]>({
-    // One request and one refetch for the lot: N single adds would refetch the
-    // whole collection N times.
-    mutationFn: (coins) =>
-      apiFetch<{ count: number }>('/collection/bulk', {
-        method: 'POST',
-        body: { coins: coins.map((c) => ({ coinTypeId: c.coinTypeId, gradeCode: c.grade })) },
-      }).then(() => undefined),
-    onSuccess: refetch,
-  })
+    const refetch = useRefetchCollection();
+    return useMutation<void, Error, BulkCoin[]>({
+        // One request and one refetch for the lot: N single adds would refetch the
+        // whole collection N times.
+        mutationFn: (coins) =>
+            apiFetch<{ count: number }>("/collection/bulk", {
+                method: "POST",
+                body: {
+                    coins: coins.map((c) => ({
+                        coinTypeId: c.coinTypeId,
+                        gradeCode: c.grade,
+                    })),
+                },
+            }).then(() => undefined),
+        onSuccess: refetch,
+    });
 }

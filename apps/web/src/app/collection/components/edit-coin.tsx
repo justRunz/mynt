@@ -1,23 +1,33 @@
-import { useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
-import { GRADES, findCoinTypeId, indexCoinTypes, type FaceValueCents, type Grade } from '@mynt/core'
+import { useMemo, useState } from "react";
+import type { FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import {
+    GRADES,
+    findCoinTypeId,
+    indexCoinTypes,
+    type FaceValueCents,
+    type Grade,
+} from "@mynt/core";
 
-import { useIsOnline } from '@/app/hooks/use-is-online'
-import { catalogQueries } from '@/app/lib/catalog'
-import { countryName } from '@/app/lib/countries'
-import { formatFaceValue } from '@/app/lib/format'
-import { Button } from '@/app/ui/button'
-import { modalError, MODAL_TOASTER } from '@/app/ui/toast'
-import { Field } from '@/app/ui/field'
-import { Modal } from '@/app/ui/modal'
-import { CountryCombobox } from './country-combobox'
-import { FaceValuePicker } from './face-value-picker'
-import { useDeleteCoin, useUpdateCoin, type CollectionEntry } from '../hooks/use-collection'
+import { useIsOnline } from "@/app/hooks/use-is-online";
+import { catalogQueries } from "@/app/lib/catalog";
+import { countryName } from "@/app/lib/countries";
+import { formatFaceValue } from "@/app/lib/format";
+import { Button } from "@/app/ui/button";
+import { modalError, MODAL_TOASTER } from "@/app/ui/toast";
+import { Field } from "@/app/ui/field";
+import { Modal } from "@/app/ui/modal";
+import { CountryCombobox } from "./country-combobox";
+import { FaceValuePicker } from "./face-value-picker";
+import {
+    useDeleteCoin,
+    useUpdateCoin,
+    type CollectionEntry,
+} from "../hooks/use-collection";
 
-const CURRENT_YEAR = new Date().getFullYear()
+const CURRENT_YEAR = new Date().getFullYear();
 
 /**
  * The modal stays mounted so its closing animation runs; only the form comes and
@@ -25,204 +35,253 @@ const CURRENT_YEAR = new Date().getFullYear()
  * smaller price than a ref read during render or an effect copying props into
  * state.
  */
-export function EditCoin({ coin, onClose }: { coin: CollectionEntry | null; onClose: () => void }) {
-  const { t } = useTranslation()
+export function EditCoin({
+    coin,
+    onClose,
+}: {
+    coin: CollectionEntry | null;
+    onClose: () => void;
+}) {
+    const { t } = useTranslation();
 
-  return (
-    <Modal open={coin !== null} onClose={onClose} title={t('editCoin.title')}>
-      {/* Keyed on the coin, so switching to another row rebuilds the form from
+    return (
+        <Modal
+            open={coin !== null}
+            onClose={onClose}
+            title={t("editCoin.title")}
+        >
+            {/* Keyed on the coin, so switching to another row rebuilds the form from
           its props rather than having an effect copy them into state. */}
-      {coin && <EditCoinForm key={coin.id} coin={coin} onClose={onClose} />}
-    </Modal>
-  )
+            {coin && (
+                <EditCoinForm key={coin.id} coin={coin} onClose={onClose} />
+            )}
+        </Modal>
+    );
 }
 
-function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () => void }) {
-  const { t } = useTranslation()
-  const coinTypes = useQuery(catalogQueries.coinTypes())
-  // Every country, not only those already collected: a correction may well move
-  // the coin to a country the user does not own yet.
-  const countries = useQuery(catalogQueries.countries())
-  const countryCodes = useMemo(
-    () => (countries.data ?? []).map((c) => c.countryCode),
-    [countries.data],
-  )
-  const online = useIsOnline()
-  const updateCoin = useUpdateCoin()
-  const deleteCoin = useDeleteCoin()
+function EditCoinForm({
+    coin,
+    onClose,
+}: {
+    coin: CollectionEntry;
+    onClose: () => void;
+}) {
+    const { t } = useTranslation();
+    const coinTypes = useQuery(catalogQueries.coinTypes());
+    // Every country, not only those already collected: a correction may well move
+    // the coin to a country the user does not own yet.
+    const countries = useQuery(catalogQueries.countries());
+    const countryCodes = useMemo(
+        () => (countries.data ?? []).map((c) => c.countryCode),
+        [countries.data],
+    );
+    const online = useIsOnline();
+    const updateCoin = useUpdateCoin();
+    const deleteCoin = useDeleteCoin();
 
-  const [countryCode, setCountryCode] = useState<string | null>(coin.countryCode)
-  const [faceValue, setFaceValue] = useState<FaceValueCents | null>(
-    coin.faceValueCents as FaceValueCents,
-  )
-  const [year, setYear] = useState(String(coin.year))
-  const [grade, setGrade] = useState<Grade | ''>(coin.grade ?? '')
-  const [acquiredOn, setAcquiredOn] = useState(coin.acquiredOn ?? '')
-  const [notes, setNotes] = useState(coin.notes ?? '')
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
+    const [countryCode, setCountryCode] = useState<string | null>(
+        coin.countryCode,
+    );
+    const [faceValue, setFaceValue] = useState<FaceValueCents | null>(
+        coin.faceValueCents as FaceValueCents,
+    );
+    const [year, setYear] = useState(String(coin.year));
+    const [grade, setGrade] = useState<Grade | "">(coin.grade ?? "");
+    const [acquiredOn, setAcquiredOn] = useState(coin.acquiredOn ?? "");
+    const [notes, setNotes] = useState(coin.notes ?? "");
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  const index = useMemo(() => indexCoinTypes(coinTypes.data ?? []), [coinTypes.data])
-  // Paused counts as pending, so offline this would lock the form for good.
-  // Offline counts as busy: the controls stay in place, greyed, rather than
-  // vanishing -- a button that disappears reads as a feature that does not
-  // exist, where a disabled one reads as one that is waiting.
-  const busy = !online || updateCoin.isPending || deleteCoin.isPending
+    const index = useMemo(
+        () => indexCoinTypes(coinTypes.data ?? []),
+        [coinTypes.data],
+    );
+    // Paused counts as pending, so offline this would lock the form for good.
+    // Offline counts as busy: the controls stay in place, greyed, rather than
+    // vanishing -- a button that disappears reads as a feature that does not
+    // exist, where a disabled one reads as one that is waiting.
+    const busy = !online || updateCoin.isPending || deleteCoin.isPending;
 
-  function onSubmit(event: FormEvent) {
-    event.preventDefault()
-    if (!countryCode || faceValue === null) return
+    function onSubmit(event: FormEvent) {
+        event.preventDefault();
+        if (!countryCode || faceValue === null) return;
 
-    const parsedYear = Number(year)
-    if (!/^\d{4}$/.test(year) || parsedYear < 1999 || parsedYear > CURRENT_YEAR) {
-      return modalError(t('quickAdd.errors.yearRequired'))
+        const parsedYear = Number(year);
+        if (
+            !/^\d{4}$/.test(year) ||
+            parsedYear < 1999 ||
+            parsedYear > CURRENT_YEAR
+        ) {
+            return modalError(t("quickAdd.errors.yearRequired"));
+        }
+
+        const coinTypeId = findCoinTypeId(
+            index,
+            countryCode,
+            faceValue,
+            parsedYear,
+        );
+        if (coinTypeId === null) {
+            return modalError(
+                t("quickAdd.errors.notInCatalog", {
+                    country: countryName(countryCode),
+                    value: formatFaceValue(faceValue),
+                    year: parsedYear,
+                }),
+            );
+        }
+
+        const saving = updateCoin.mutateAsync({
+            coinId: coin.id,
+            coinTypeId,
+            grade: grade || null,
+            acquiredOn: acquiredOn || null,
+            notes: notes.trim() || null,
+        });
+        // Saving and failure are told inside the modal, which stays open on
+        // failure: this used to close first and set the message afterwards, on a
+        // dialog that was already gone -- so the user was told nothing at all.
+        toast.promise(saving, {
+            toasterId: MODAL_TOASTER,
+            loading: t("common.saving"),
+            error: t("binders.errors.generic"),
+        });
+        // Success closes the modal, taking its toaster with it, so the
+        // confirmation goes to the page's toaster instead.
+        saving.then(
+            () => {
+                onClose();
+                toast.success(t("editCoin.saved"));
+            },
+            () => {},
+        );
     }
 
-    const coinTypeId = findCoinTypeId(index, countryCode, faceValue, parsedYear)
-    if (coinTypeId === null) {
-      return modalError(
-        t('quickAdd.errors.notInCatalog', {
-          country: countryName(countryCode),
-          value: formatFaceValue(faceValue),
-          year: parsedYear,
-        }),
-      )
-    }
+    return (
+        <form onSubmit={onSubmit} className="flex flex-col gap-6">
+            <CountryCombobox
+                codes={countryCodes}
+                value={countryCode}
+                onChange={setCountryCode}
+                initialQuery={countryName(coin.countryCode)}
+            />
 
-    const saving = updateCoin.mutateAsync({
-      coinId: coin.id,
-      coinTypeId,
-      grade: grade || null,
-      acquiredOn: acquiredOn || null,
-      notes: notes.trim() || null,
-    })
-    // Saving and failure are told inside the modal, which stays open on
-    // failure: this used to close first and set the message afterwards, on a
-    // dialog that was already gone -- so the user was told nothing at all.
-    toast.promise(saving, {
-      toasterId: MODAL_TOASTER,
-      loading: t('common.saving'),
-      error: t('binders.errors.generic'),
-    })
-    // Success closes the modal, taking its toaster with it, so the
-    // confirmation goes to the page's toaster instead.
-    saving.then(
-      () => {
-        onClose()
-        toast.success(t('editCoin.saved'))
-      },
-      () => {},
-    )
-  }
+            <FaceValuePicker
+                name="edit-face-value"
+                value={faceValue}
+                onChange={setFaceValue}
+            />
 
-  return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-6">
-      <CountryCombobox
-        codes={countryCodes}
-        value={countryCode}
-        onChange={setCountryCode}
-        initialQuery={countryName(coin.countryCode)}
-      />
+            <div className="flex flex-wrap items-end gap-4">
+                <Field
+                    label={t("quickAdd.year")}
+                    inputMode="numeric"
+                    maxLength={4}
+                    className="tnum w-28"
+                    value={year}
+                    onChange={(e) => setYear(e.target.value.replace(/\D/g, ""))}
+                />
 
-      <FaceValuePicker name="edit-face-value" value={faceValue} onChange={setFaceValue} />
+                <div className="flex flex-col gap-1.5">
+                    <label
+                        htmlFor="edit-grade"
+                        className="text-sm font-[450] text-muted"
+                    >
+                        {t("quickAdd.grade")}
+                    </label>
+                    <select
+                        id="edit-grade"
+                        value={grade}
+                        onChange={(e) => setGrade(e.target.value as Grade | "")}
+                        className="h-11 rounded-md border border-field bg-raised px-3 text-base"
+                    >
+                        <option value="">{t("quickAdd.gradeNone")}</option>
+                        {GRADES.map((g) => (
+                            <option key={g} value={g}>
+                                {t(`grade.${g}`)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-      <div className="flex flex-wrap items-end gap-4">
-        <Field
-          label={t('quickAdd.year')}
-          inputMode="numeric"
-          maxLength={4}
-          className="tnum w-28"
-          value={year}
-          onChange={(e) => setYear(e.target.value.replace(/\D/g, ''))}
-        />
+                <Field
+                    label={t("editCoin.acquiredOn")}
+                    type="date"
+                    className="w-44"
+                    value={acquiredOn}
+                    onChange={(e) => setAcquiredOn(e.target.value)}
+                />
+            </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="edit-grade" className="text-sm font-[450] text-muted">
-            {t('quickAdd.grade')}
-          </label>
-          <select
-            id="edit-grade"
-            value={grade}
-            onChange={(e) => setGrade(e.target.value as Grade | '')}
-            className="h-11 rounded-md border border-field bg-raised px-3 text-base"
-          >
-            <option value="">{t('quickAdd.gradeNone')}</option>
-            {GRADES.map((g) => (
-              <option key={g} value={g}>
-                {t(`grade.${g}`)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <Field
-          label={t('editCoin.acquiredOn')}
-          type="date"
-          className="w-44"
-          value={acquiredOn}
-          onChange={(e) => setAcquiredOn(e.target.value)}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="edit-notes" className="text-sm font-[450] text-muted">
-          {t('editCoin.notes')}
-        </label>
-        <textarea
-          id="edit-notes"
-          rows={3}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder={t('editCoin.notesPlaceholder')}
-          className="rounded-md border border-field bg-raised px-4 py-3 text-base
+            <div className="flex flex-col gap-1.5">
+                <label
+                    htmlFor="edit-notes"
+                    className="text-sm font-[450] text-muted"
+                >
+                    {t("editCoin.notes")}
+                </label>
+                <textarea
+                    id="edit-notes"
+                    rows={3}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder={t("editCoin.notesPlaceholder")}
+                    className="rounded-md border border-field bg-raised px-4 py-3 text-base
                      placeholder:text-muted"
-        />
-      </div>
+                />
+            </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4">
-        {confirmingDelete ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-danger">{t('editCoin.deleteWarning')}</span>
-            <Button
-              type="button"
-              variant="ghost"
-              className="text-danger"
-              disabled={busy}
-              onClick={() =>
-                deleteCoin.mutate(coin.id, {
-                  onSuccess: onClose,
-                  onError: () => modalError(t('binders.errors.generic')),
-                })
-              }
-            >
-              {t('editCoin.confirmDelete')}
-            </Button>
-            <Button type="button" variant="ghost" onClick={() => setConfirmingDelete(false)}>
-              {t('editCoin.cancelDelete')}
-            </Button>
-          </div>
-        ) : (
-          // Two steps, because deleting a coin cannot be undone. Disabled
-          // offline like the save above: the second step could not go through,
-          // and offering the first one would only lead there.
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-danger"
-            disabled={busy}
-            onClick={() => setConfirmingDelete(true)}
-          >
-            {t('editCoin.delete')}
-          </Button>
-        )}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4">
+                {confirmingDelete ? (
+                    <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-sm text-danger">
+                            {t("editCoin.deleteWarning")}
+                        </span>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            className="text-danger"
+                            disabled={busy}
+                            onClick={() =>
+                                deleteCoin.mutate(coin.id, {
+                                    onSuccess: onClose,
+                                    onError: () =>
+                                        modalError(t("binders.errors.generic")),
+                                })
+                            }
+                        >
+                            {t("editCoin.confirmDelete")}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setConfirmingDelete(false)}
+                        >
+                            {t("editCoin.cancelDelete")}
+                        </Button>
+                    </div>
+                ) : (
+                    // Two steps, because deleting a coin cannot be undone. Disabled
+                    // offline like the save above: the second step could not go through,
+                    // and offering the first one would only lead there.
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-danger"
+                        disabled={busy}
+                        onClick={() => setConfirmingDelete(true)}
+                    >
+                        {t("editCoin.delete")}
+                    </Button>
+                )}
 
-        <Button
-          type="submit"
-          disabled={busy}
-          loading={updateCoin.isPending && !updateCoin.isPaused}
-        >
-          {t('editCoin.save')}
-        </Button>
-      </div>
-    </form>
-  )
+                <Button
+                    type="submit"
+                    disabled={busy}
+                    loading={updateCoin.isPending && !updateCoin.isPaused}
+                >
+                    {t("editCoin.save")}
+                </Button>
+            </div>
+        </form>
+    );
 }

@@ -1,4 +1,4 @@
-import { hash, hashSync, verify, type Algorithm } from '@node-rs/argon2'
+import { hash, hashSync, verify, type Algorithm } from "@node-rs/argon2";
 
 /**
  * Turning a password into something a stolen database cannot use.
@@ -24,14 +24,14 @@ import { hash, hashSync, verify, type Algorithm } from '@node-rs/argon2'
 /** Algorithm.Argon2id. Spelled as a number because the package declares that
  *  enum as an ambient const enum, which verbatimModuleSyntax forbids reading
  *  at runtime -- the type still checks the value. */
-const ARGON2ID = 2 as Algorithm
+const ARGON2ID = 2 as Algorithm;
 
 const PARAMS = {
-  algorithm: ARGON2ID,
-  memoryCost: 19_456,
-  timeCost: 2,
-  parallelism: 1,
-} as const
+    algorithm: ARGON2ID,
+    memoryCost: 19_456,
+    timeCost: 2,
+    parallelism: 1,
+} as const;
 
 /**
  * A real hash of a password nobody has.
@@ -44,10 +44,10 @@ const PARAMS = {
  * Built at load with the parameters above, so the decoy stays exactly as
  * expensive as the real thing even after they change.
  */
-const DECOY = hashSync("a password that is not anybody's", PARAMS)
+const DECOY = hashSync("a password that is not anybody's", PARAMS);
 
 export function hashPassword(password: string): Promise<string> {
-  return hash(password, PARAMS)
+    return hash(password, PARAMS);
 }
 
 /**
@@ -59,11 +59,11 @@ export function hashPassword(password: string): Promise<string> {
  * forgotten at a call site.
  */
 export async function verifyPassword(
-  storedHash: string | null,
-  password: string,
+    storedHash: string | null,
+    password: string,
 ): Promise<boolean> {
-  const matched = await verify(storedHash ?? DECOY, password, PARAMS)
-  // The decoy cannot match, so the first half is belt to the second's braces --
-  // and it says plainly that a null hash is never a success.
-  return storedHash !== null && matched
+    const matched = await verify(storedHash ?? DECOY, password, PARAMS);
+    // The decoy cannot match, so the first half is belt to the second's braces --
+    // and it says plainly that a null hash is never a success.
+    return storedHash !== null && matched;
 }
