@@ -1,8 +1,8 @@
-import { createHash, randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from "node:crypto";
 
-import { SignJWT, jwtVerify } from 'jose'
+import { SignJWT, jwtVerify } from "jose";
 
-import { env } from '../../env.js'
+import { env } from "../../env.js";
 
 /**
  * The two halves of a session.
@@ -13,11 +13,11 @@ import { env } from '../../env.js'
  * shared secret is the same guarantee with one key instead of two.
  */
 
-const secret = new TextEncoder().encode(env.authSecret)
+const secret = new TextEncoder().encode(env.authSecret);
 
 /** Pinned on the way out and required on the way back, so a JWT minted by some
  *  other service that happened onto the same secret is still not ours. */
-const ISSUER = 'mynt'
+const ISSUER = "mynt";
 
 /**
  * Fifteen minutes, because an access token cannot be withdrawn.
@@ -27,25 +27,25 @@ const ISSUER = 'mynt'
  * it. Short life is the only limit on a leaked one, so it is the compensation
  * for that speed rather than an arbitrary number.
  */
-const ACCESS_TTL_MINUTES = 15
-const ACCESS_TTL = `${ACCESS_TTL_MINUTES}m`
+const ACCESS_TTL_MINUTES = 15;
+const ACCESS_TTL = `${ACCESS_TTL_MINUTES}m`;
 
 /** Handed to the client so it can renew before a request fails rather than
  *  after. */
-export const ACCESS_TTL_SECONDS = ACCESS_TTL_MINUTES * 60
+export const ACCESS_TTL_SECONDS = ACCESS_TTL_MINUTES * 60;
 
 /** Thirty days, and rotating: the collector who opens the app once a month
  *  stays signed in, and a stolen token has a horizon. */
-export const REFRESH_TTL_DAYS = 30
+export const REFRESH_TTL_DAYS = 30;
 
 export function signAccessToken(userId: string): Promise<string> {
-  return new SignJWT()
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(userId)
-    .setIssuer(ISSUER)
-    .setIssuedAt()
-    .setExpirationTime(ACCESS_TTL)
-    .sign(secret)
+    return new SignJWT()
+        .setProtectedHeader({ alg: "HS256" })
+        .setSubject(userId)
+        .setIssuer(ISSUER)
+        .setIssuedAt()
+        .setExpirationTime(ACCESS_TTL)
+        .sign(secret);
 }
 
 /**
@@ -57,19 +57,19 @@ export function signAccessToken(userId: string): Promise<string> {
  * different to do about it anyway.
  */
 export async function readAccessToken(token: string): Promise<string | null> {
-  try {
-    // The algorithm is pinned, not inferred from the token's own header. jose
-    // already refuses `none` and anything asymmetric for a shared secret, but it
-    // would accept HS384 or HS512 signed with it -- a token this server never
-    // issues has no business being accepted by it.
-    const { payload } = await jwtVerify(token, secret, {
-      issuer: ISSUER,
-      algorithms: ['HS256'],
-    })
-    return typeof payload.sub === 'string' ? payload.sub : null
-  } catch {
-    return null
-  }
+    try {
+        // The algorithm is pinned, not inferred from the token's own header. jose
+        // already refuses `none` and anything asymmetric for a shared secret, but it
+        // would accept HS384 or HS512 signed with it -- a token this server never
+        // issues has no business being accepted by it.
+        const { payload } = await jwtVerify(token, secret, {
+            issuer: ISSUER,
+            algorithms: ["HS256"],
+        });
+        return typeof payload.sub === "string" ? payload.sub : null;
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -85,8 +85,8 @@ export async function readAccessToken(token: string): Promise<string | null> {
  * length of that randomness is decided.
  */
 export function mintOpaqueToken(): { token: string; tokenHash: string } {
-  const token = randomBytes(32).toString('base64url')
-  return { token, tokenHash: hashOpaqueToken(token) }
+    const token = randomBytes(32).toString("base64url");
+    return { token, tokenHash: hashOpaqueToken(token) };
 }
 
 /**
@@ -97,11 +97,11 @@ export function mintOpaqueToken(): { token: string; tokenHash: string } {
  * are 256 bits of randomness. There is no table to build.
  */
 export function hashOpaqueToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex')
+    return createHash("sha256").update(token).digest("hex");
 }
 
 export function refreshExpiry(from: Date = new Date()): Date {
-  return new Date(from.getTime() + REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000)
+    return new Date(from.getTime() + REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000);
 }
 
 /**
@@ -112,9 +112,9 @@ export function refreshExpiry(from: Date = new Date()): Date {
  * one is a live route into an account and the window is the only thing limiting
  * a message read over somebody's shoulder.
  */
-export const EMAIL_VERIFICATION_TTL_HOURS = 24
-export const PASSWORD_RESET_TTL_HOURS = 1
+export const EMAIL_VERIFICATION_TTL_HOURS = 24;
+export const PASSWORD_RESET_TTL_HOURS = 1;
 
 export function hoursFromNow(hours: number, from: Date = new Date()): Date {
-  return new Date(from.getTime() + hours * 60 * 60 * 1000)
+    return new Date(from.getTime() + hours * 60 * 60 * 1000);
 }

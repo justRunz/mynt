@@ -1,6 +1,6 @@
-import { ApiError } from '@/app/lib/api'
+import { ApiError } from "@/app/lib/api";
 
-import type { TranslationKey } from '@/app/i18n/types'
+import type { TranslationKey } from "@/app/i18n/types";
 
 /**
  * The server answers with a code; the screens show a sentence.
@@ -14,17 +14,18 @@ import type { TranslationKey } from '@/app/i18n/types'
  * was not put there deliberately.
  */
 const MESSAGES: Record<string, TranslationKey> = {
-  invalid_credentials: 'auth.errors.invalid_credentials',
-  email_taken: 'auth.errors.email_taken',
-  email_not_verified: 'auth.errors.email_not_verified',
-  invalid_link: 'auth.errors.invalid_link',
-  too_many_requests: 'auth.errors.too_many_requests',
-  // The only shape a sign-in or sign-up body can get wrong, in practice, is a
-  // password below the minimum -- the address is already checked by the field.
-  invalid_request: 'auth.errors.weak_password',
-}
+    invalid_credentials: "auth.errors.invalid_credentials",
+    email_taken: "auth.errors.email_taken",
+    email_not_verified: "auth.errors.email_not_verified",
+    invalid_link: "auth.errors.invalid_link",
+    too_many_requests: "auth.errors.too_many_requests",
+    // The only shape a sign-in or sign-up body can get wrong, in practice, is a
+    // password below the minimum -- the address is already checked by the field.
+    invalid_request: "auth.errors.weak_password",
+};
 
 export function authErrorKey(error: unknown): TranslationKey {
-  if (error instanceof ApiError) return MESSAGES[error.code] ?? 'auth.errors.generic'
-  return 'auth.errors.generic'
+    if (error instanceof ApiError)
+        return MESSAGES[error.code] ?? "auth.errors.generic";
+    return "auth.errors.generic";
 }

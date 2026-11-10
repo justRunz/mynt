@@ -12,16 +12,16 @@
  * refusal, and the handler answers it with nothing at all.
  */
 export class DomainError extends Error {
-  // Assigned rather than declared as a constructor parameter property: the
-  // tsconfig sets erasableSyntaxOnly, so every construct has to survive types
-  // simply being stripped, and parameter properties emit real code.
-  readonly code: string
+    // Assigned rather than declared as a constructor parameter property: the
+    // tsconfig sets erasableSyntaxOnly, so every construct has to survive types
+    // simply being stripped, and parameter properties emit real code.
+    readonly code: string;
 
-  constructor(code: string) {
-    super(code)
-    this.name = 'DomainError'
-    this.code = code
-  }
+    constructor(code: string) {
+        super(code);
+        this.name = "DomainError";
+        this.code = code;
+    }
 }
 
 /**
@@ -38,16 +38,16 @@ export class DomainError extends Error {
  * -- and it is written where each is caught, not here.
  */
 export const PG = {
-  /** A unique constraint: two rows claiming the same key. */
-  UNIQUE_VIOLATION: '23505',
-  /** A foreign key pointing at nothing -- and the code this project's triggers
-   *  raise for a row the caller's policies hide. */
-  FOREIGN_KEY_VIOLATION: '23503',
-  /** A check constraint, or a trigger raising in its name. */
-  CHECK_VIOLATION: '23514',
-  /** Not allowed: in practice, a row level security policy refusing a write. */
-  INSUFFICIENT_PRIVILEGE: '42501',
-} as const
+    /** A unique constraint: two rows claiming the same key. */
+    UNIQUE_VIOLATION: "23505",
+    /** A foreign key pointing at nothing -- and the code this project's triggers
+     *  raise for a row the caller's policies hide. */
+    FOREIGN_KEY_VIOLATION: "23503",
+    /** A check constraint, or a trigger raising in its name. */
+    CHECK_VIOLATION: "23514",
+    /** Not allowed: in practice, a row level security policy refusing a write. */
+    INSUFFICIENT_PRIVILEGE: "42501",
+} as const;
 
 /**
  * The SQLSTATE under whatever wrapper it arrived in.
@@ -58,8 +58,8 @@ export const PG = {
  * not move when a message is reworded.
  */
 export function postgresErrorCode(error: unknown): string | undefined {
-  const cause = (error as { cause?: unknown }).cause ?? error
-  return (cause as { code?: string }).code
+    const cause = (error as { cause?: unknown }).cause ?? error;
+    return (cause as { code?: string }).code;
 }
 
 /**
@@ -74,6 +74,6 @@ export function postgresErrorCode(error: unknown): string | undefined {
  * constraint. That absence is itself informative.
  */
 export function postgresErrorConstraint(error: unknown): string | undefined {
-  const cause = (error as { cause?: unknown }).cause ?? error
-  return (cause as { constraint?: string }).constraint
+    const cause = (error as { cause?: unknown }).cause ?? error;
+    return (cause as { constraint?: string }).constraint;
 }

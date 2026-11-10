@@ -1,5 +1,5 @@
-import type { Request } from 'express'
-import { ipKeyGenerator, rateLimit, type Options } from 'express-rate-limit'
+import type { Request } from "express";
+import { ipKeyGenerator, rateLimit, type Options } from "express-rate-limit";
 
 /**
  * How often the routes that can be abused may be called.
@@ -14,17 +14,17 @@ import { ipKeyGenerator, rateLimit, type Options } from 'express-rate-limit'
  * limits would throttle everybody at once, as a single client.
  */
 
-const MINUTE = 60 * 1000
+const MINUTE = 60 * 1000;
 
 const common: Partial<Options> = {
-  // RateLimit and RateLimit-Policy on every limited response, Retry-After on a
-  // refusal: a client can see how close it is, and when to try again.
-  standardHeaders: 'draft-8',
-  legacyHeaders: false,
-  handler: (_req, res, _next, options) => {
-    res.status(options.statusCode).json({ error: 'too_many_requests' })
-  },
-}
+    // RateLimit and RateLimit-Policy on every limited response, Retry-After on a
+    // refusal: a client can see how close it is, and when to try again.
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    handler: (_req, res, _next, options) => {
+        res.status(options.statusCode).json({ error: "too_many_requests" });
+    },
+};
 
 /**
  * The address a request is about, or the caller's IP when it names none.
@@ -34,11 +34,11 @@ const common: Partial<Options> = {
  * mailbox, takes every blow.
  */
 function addressOrIp(req: Request): string {
-  const email: unknown = req.body?.email
-  if (typeof email === 'string') return `email:${email.trim().toLowerCase()}`
-  // ipKeyGenerator groups an IPv6 caller by subnet. Keyed on the full address,
-  // one machine could rotate through billions of them and never be counted.
-  return `ip:${ipKeyGenerator(req.ip ?? '')}`
+    const email: unknown = req.body?.email;
+    if (typeof email === "string") return `email:${email.trim().toLowerCase()}`;
+    // ipKeyGenerator groups an IPv6 caller by subnet. Keyed on the full address,
+    // one machine could rotate through billions of them and never be counted.
+    return `ip:${ipKeyGenerator(req.ip ?? "")}`;
 }
 
 /**
@@ -47,7 +47,11 @@ function addressOrIp(req: Request): string {
  * Generous on purpose -- a person signing in, mistyping twice and asking for a
  * reset uses a handful -- so it only ever meets something scripted.
  */
-export const perIpLimit = rateLimit({ ...common, windowMs: 15 * MINUTE, limit: 30 })
+export const perIpLimit = rateLimit({
+    ...common,
+    windowMs: 15 * MINUTE,
+    limit: 30,
+});
 
 /**
  * Failed sign-ins against one address.
@@ -58,12 +62,12 @@ export const perIpLimit = rateLimit({ ...common, windowMs: 15 * MINUTE, limit: 3
  * everything against a list of common ones.
  */
 export const signInLimit = rateLimit({
-  ...common,
-  windowMs: 15 * MINUTE,
-  limit: 10,
-  skipSuccessfulRequests: true,
-  keyGenerator: addressOrIp,
-})
+    ...common,
+    windowMs: 15 * MINUTE,
+    limit: 10,
+    skipSuccessfulRequests: true,
+    keyGenerator: addressOrIp,
+});
 
 /**
  * Mail sent to one address, whoever asks for it.
@@ -75,11 +79,11 @@ export const signInLimit = rateLimit({
  * addresses have an account.
  */
 export const mailLimit = rateLimit({
-  ...common,
-  windowMs: 60 * MINUTE,
-  limit: 3,
-  keyGenerator: addressOrIp,
-})
+    ...common,
+    windowMs: 60 * MINUTE,
+    limit: 3,
+    keyGenerator: addressOrIp,
+});
 
 /**
  * Analyses requested by one account.
@@ -89,8 +93,8 @@ export const mailLimit = rateLimit({
  * sits behind authenticate, and a signed-in account is the thing that spends.
  */
 export const importLimit = rateLimit({
-  ...common,
-  windowMs: 60 * MINUTE,
-  limit: 20,
-  keyGenerator: (req) => `user:${req.userId ?? ipKeyGenerator(req.ip ?? '')}`,
-})
+    ...common,
+    windowMs: 60 * MINUTE,
+    limit: 20,
+    keyGenerator: (req) => `user:${req.userId ?? ipKeyGenerator(req.ip ?? "")}`,
+});

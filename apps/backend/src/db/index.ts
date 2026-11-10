@@ -1,12 +1,12 @@
-import { sql } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/node-postgres'
-import pg from 'pg'
+import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
 
-import * as schema from './schema.js'
+import * as schema from "./schema.js";
 
-const connectionString = process.env.APP_DATABASE_URL
+const connectionString = process.env.APP_DATABASE_URL;
 if (!connectionString) {
-  throw new Error('APP_DATABASE_URL is required. See .env.example.')
+    throw new Error("APP_DATABASE_URL is required. See .env.example.");
 }
 
 /**
@@ -18,16 +18,16 @@ if (!connectionString) {
  * with no privilege of its own means the same mistake is refused outright --
  * "permission denied for table coins" -- rather than answered.
  */
-const pool = new pg.Pool({ connectionString })
+const pool = new pg.Pool({ connectionString });
 
 // An idle connection that Postgres drops -- a restart, a failover, a proxy's
 // idle timeout -- is reported here, on the pool, because no query was waiting
 // on it. With no listener that is an unhandled 'error' event, and Node ends the
 // process for it. The pool has already discarded the connection and opens
 // another on the next query, so there is nothing to do but say it happened.
-pool.on('error', (error) => {
-  console.error('Idle database connection lost:', error.message)
-})
+pool.on("error", (error) => {
+    console.error("Idle database connection lost:", error.message);
+});
 
 /**
  * Deliberately not exported.
@@ -38,10 +38,10 @@ pool.on('error', (error) => {
  * before anyone's identity is known; that is dbQueryUnscoped below, named to be
  * noticed in review, never this handle made public.
  */
-const db = drizzle(pool, { schema })
+const db = drizzle(pool, { schema });
 
 /** The handle inside a scoped transaction. Named so routes can be typed. */
-export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
+export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
  * Runs a query as a given collector, and it is the only way to reach the
@@ -56,19 +56,24 @@ export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
  * evaporate, which is why every query costs one. Not an arbitrary constraint --
  * the only place the statement fits.
  */
-export function dbQueryAs<T>(userId: string, run: (tx: Tx) => Promise<T>): Promise<T> {
-  return db.transaction(async (tx) => {
-    // Parameterised, so an id from a request body cannot reshape the statement.
-    const claims = JSON.stringify({ sub: userId })
-    await tx.execute(sql`select set_config('request.jwt.claims', ${claims}, true)`)
+export function dbQueryAs<T>(
+    userId: string,
+    run: (tx: Tx) => Promise<T>,
+): Promise<T> {
+    return db.transaction(async (tx) => {
+        // Parameterised, so an id from a request body cannot reshape the statement.
+        const claims = JSON.stringify({ sub: userId });
+        await tx.execute(
+            sql`select set_config('request.jwt.claims', ${claims}, true)`,
+        );
 
-    // SET LOCAL rather than SET: it falls off at commit. A role name cannot be
-    // a parameter, and this one is a constant, so nothing from a request
-    // reaches this line.
-    await tx.execute(sql`set local role authenticated`)
+        // SET LOCAL rather than SET: it falls off at commit. A role name cannot be
+        // a parameter, and this one is a constant, so nothing from a request
+        // reaches this line.
+        await tx.execute(sql`set local role authenticated`);
 
-    return run(tx)
-  })
+        return run(tx);
+    });
 }
 
 /**
@@ -92,7 +97,7 @@ export function dbQueryAs<T>(userId: string, run: (tx: Tx) => Promise<T>): Promi
  * table coins". There is a test for exactly that.
  */
 export function dbQueryUnscoped<T>(run: (tx: Tx) => Promise<T>): Promise<T> {
-  return db.transaction(run)
+    return db.transaction(run);
 }
 
 /**
@@ -104,16 +109,16 @@ export function dbQueryUnscoped<T>(run: (tx: Tx) => Promise<T>): Promise<T> {
  * third way to the tables.
  */
 export async function dbIsReachable(): Promise<boolean> {
-  try {
-    await pool.query('select 1')
-    return true
-  } catch {
-    return false
-  }
+    try {
+        await pool.query("select 1");
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 /** Lets a process exit instead of waiting on an idle pool: a test run, or the
  *  server on its way down. */
 export function closeDb(): Promise<void> {
-  return pool.end()
+    return pool.end();
 }

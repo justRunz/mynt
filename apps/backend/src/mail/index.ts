@@ -1,6 +1,6 @@
-import nodemailer from 'nodemailer'
+import nodemailer from "nodemailer";
 
-import { env } from '../env.js'
+import { env } from "../env.js";
 
 /**
  * Sending mail, which is the one thing this server does that leaves the machine.
@@ -9,23 +9,25 @@ import { env } from '../env.js'
  * per message would open and close an SMTP session for every sign-up.
  */
 const transport = nodemailer.createTransport({
-  host: env.smtpHost,
-  port: env.smtpPort,
-  // Plain SMTP on 1025 locally, STARTTLS on 587 in production. Deciding by port
-  // rather than by a separate flag, because the flag and the port could disagree
-  // and only one of them would be right.
-  secure: env.smtpPort === 465,
-  // Omitted entirely rather than left empty when there are no credentials:
-  // nodemailer attempts to authenticate if the object exists at all, and Mailpit
-  // is not asking.
-  ...(env.smtpUser ? { auth: { user: env.smtpUser, pass: env.smtpPassword } } : {}),
-})
+    host: env.smtpHost,
+    port: env.smtpPort,
+    // Plain SMTP on 1025 locally, STARTTLS on 587 in production. Deciding by port
+    // rather than by a separate flag, because the flag and the port could disagree
+    // and only one of them would be right.
+    secure: env.smtpPort === 465,
+    // Omitted entirely rather than left empty when there are no credentials:
+    // nodemailer attempts to authenticate if the object exists at all, and Mailpit
+    // is not asking.
+    ...(env.smtpUser
+        ? { auth: { user: env.smtpUser, pass: env.smtpPassword } }
+        : {}),
+});
 
 export interface Message {
-  to: string
-  subject: string
-  text: string
-  html: string
+    to: string;
+    subject: string;
+    text: string;
+    html: string;
 }
 
 /**
@@ -42,9 +44,13 @@ export interface Message {
  * password form can simply be used again.
  */
 export async function sendMail(message: Message): Promise<void> {
-  try {
-    await transport.sendMail({ from: env.mailFrom, ...message })
-  } catch (error) {
-    console.error('mail could not be sent', { to: message.to, subject: message.subject }, error)
-  }
+    try {
+        await transport.sendMail({ from: env.mailFrom, ...message });
+    } catch (error) {
+        console.error(
+            "mail could not be sent",
+            { to: message.to, subject: message.subject },
+            error,
+        );
+    }
 }

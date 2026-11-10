@@ -1,108 +1,116 @@
-import { useState } from 'react'
-import type { ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router-dom'
+import { useState } from "react";
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { NavLink } from "react-router-dom";
 
-import { Button } from '@/app/ui/button'
-import { Drawer } from '@/app/ui/drawer'
-import { signOut } from '@/app/stores/auth'
+import { Button } from "@/app/ui/button";
+import { Drawer } from "@/app/ui/drawer";
+import { signOut } from "@/app/stores/auth";
 
-type IconProps = { className?: string }
+type IconProps = { className?: string };
 
 const iconBase = {
-  'aria-hidden': true,
-  viewBox: '0 0 16 16',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 1.5,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-} as const
+    "aria-hidden": true,
+    viewBox: "0 0 16 16",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.5,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+} as const;
 
 /** The list of every coin. */
 function CollectionIcon({ className }: IconProps) {
-  return (
-    <svg {...iconBase} className={className}>
-      <path d="M2.5 4h1.5M6.5 4h7M2.5 8h1.5M6.5 8h7M2.5 12h1.5M6.5 12h7" />
-    </svg>
-  )
+    return (
+        <svg {...iconBase} className={className}>
+            <path d="M2.5 4h1.5M6.5 4h7M2.5 8h1.5M6.5 8h7M2.5 12h1.5M6.5 12h7" />
+        </svg>
+    );
 }
 
 /** The grid of what is held against what was struck. */
 function CompletenessIcon({ className }: IconProps) {
-  return (
-    <svg {...iconBase} className={className}>
-      <rect x="2.25" y="2.25" width="5" height="5" rx="1.25" />
-      <rect x="8.75" y="2.25" width="5" height="5" rx="1.25" />
-      <rect x="2.25" y="8.75" width="5" height="5" rx="1.25" />
-      <rect x="8.75" y="8.75" width="5" height="5" rx="1.25" />
-    </svg>
-  )
+    return (
+        <svg {...iconBase} className={className}>
+            <rect x="2.25" y="2.25" width="5" height="5" rx="1.25" />
+            <rect x="8.75" y="2.25" width="5" height="5" rx="1.25" />
+            <rect x="2.25" y="8.75" width="5" height="5" rx="1.25" />
+            <rect x="8.75" y="8.75" width="5" height="5" rx="1.25" />
+        </svg>
+    );
 }
 
 /** An album seen closed, spine on the left. */
 function BindersIcon({ className }: IconProps) {
-  return (
-    <svg {...iconBase} className={className}>
-      <rect x="2.25" y="2.25" width="11.5" height="11.5" rx="1.5" />
-      <path d="M5.5 2.25v11.5M3.75 5.5h.25M3.75 8h.25M3.75 10.5h.25" />
-    </svg>
-  )
+    return (
+        <svg {...iconBase} className={className}>
+            <rect x="2.25" y="2.25" width="11.5" height="11.5" rx="1.5" />
+            <path d="M5.5 2.25v11.5M3.75 5.5h.25M3.75 8h.25M3.75 10.5h.25" />
+        </svg>
+    );
 }
 
 /** Leaving: a door standing open, and the arrow on its way out. */
 function SignOutIcon({ className }: IconProps) {
-  return (
-    <svg {...iconBase} className={className}>
-      <path d="M6.5 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3" />
-      <path d="M10.5 5.5 13 8l-2.5 2.5M13 8H6.5" />
-    </svg>
-  )
+    return (
+        <svg {...iconBase} className={className}>
+            <path d="M6.5 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3" />
+            <path d="M10.5 5.5 13 8l-2.5 2.5M13 8H6.5" />
+        </svg>
+    );
 }
 
-const RAIL_KEY = 'mynt.rail-collapsed'
+const RAIL_KEY = "mynt.rail-collapsed";
 
 const LINKS = [
-  { to: '/', labelKey: 'nav.collection', Icon: CollectionIcon },
-  { to: '/completeness', labelKey: 'nav.completeness', Icon: CompletenessIcon },
-  { to: '/binders', labelKey: 'nav.binders', Icon: BindersIcon },
-] as const
+    { to: "/", labelKey: "nav.collection", Icon: CollectionIcon },
+    {
+        to: "/completeness",
+        labelKey: "nav.completeness",
+        Icon: CompletenessIcon,
+    },
+    { to: "/binders", labelKey: "nav.binders", Icon: BindersIcon },
+] as const;
 
 function NavLinks({
-  onNavigate,
-  className,
-  collapsed = false,
+    onNavigate,
+    className,
+    collapsed = false,
 }: {
-  onNavigate?: () => void
-  className: string
-  collapsed?: boolean
+    onNavigate?: () => void;
+    className: string;
+    collapsed?: boolean;
 }) {
-  const { t } = useTranslation()
-  return (
-    <nav className={className}>
-      {LINKS.map((link) => (
-        <NavLink
-          key={link.to}
-          to={link.to}
-          end={link.to === '/'}
-          onClick={onNavigate}
-          // The label stays in the accessibility tree when folded away; the
-          // title gives sighted mouse users the same name on hover.
-          title={collapsed ? t(link.labelKey) : undefined}
-          className={({ isActive }) =>
-            `flex items-center gap-3 rounded-md px-3 py-2 ${collapsed ? 'justify-center' : ''} ${
-              isActive ? 'bg-accent-wash font-[480] text-accent' : 'text-muted hover:bg-hover hover:text-ink'
-            }`
-          }
-        >
-          {/* The glyph inherits the link's colour, so the active state is said
+    const { t } = useTranslation();
+    return (
+        <nav className={className}>
+            {LINKS.map((link) => (
+                <NavLink
+                    key={link.to}
+                    to={link.to}
+                    end={link.to === "/"}
+                    onClick={onNavigate}
+                    // The label stays in the accessibility tree when folded away; the
+                    // title gives sighted mouse users the same name on hover.
+                    title={collapsed ? t(link.labelKey) : undefined}
+                    className={({ isActive }) =>
+                        `flex items-center gap-3 rounded-md px-3 py-2 ${collapsed ? "justify-center" : ""} ${
+                            isActive
+                                ? "bg-accent-wash font-[480] text-accent"
+                                : "text-muted hover:bg-hover hover:text-ink"
+                        }`
+                    }
+                >
+                    {/* The glyph inherits the link's colour, so the active state is said
               once and applies to both halves. */}
-          <link.Icon className="size-4 shrink-0" />
-          <span className={collapsed ? 'sr-only' : undefined}>{t(link.labelKey)}</span>
-        </NavLink>
-      ))}
-    </nav>
-  )
+                    <link.Icon className="size-4 shrink-0" />
+                    <span className={collapsed ? "sr-only" : undefined}>
+                        {t(link.labelKey)}
+                    </span>
+                </NavLink>
+            ))}
+        </nav>
+    );
 }
 
 /**
@@ -110,158 +118,200 @@ function NavLinks({
  * it reads as the way out rather than as a fourth destination.
  */
 function SignOutAction({
-  onSignOut,
-  collapsed = false,
+    onSignOut,
+    collapsed = false,
 }: {
-  onSignOut: () => void
-  collapsed?: boolean
+    onSignOut: () => void;
+    collapsed?: boolean;
 }) {
-  const { t } = useTranslation()
-  return (
-    <div className="mt-auto w-full border-t border-rule pt-4">
-      <Button
-        variant="quiet"
-        className={collapsed ? 'w-full justify-center' : '-ml-2'}
-        title={collapsed ? t('common.signOut') : undefined}
-        onClick={onSignOut}
-      >
-        <SignOutIcon className="size-4 shrink-0" />
-        <span className={collapsed ? 'sr-only' : undefined}>{t('common.signOut')}</span>
-      </Button>
-    </div>
-  )
+    const { t } = useTranslation();
+    return (
+        <div className="mt-auto w-full border-t border-rule pt-4">
+            <Button
+                variant="quiet"
+                className={collapsed ? "w-full justify-center" : "-ml-2"}
+                title={collapsed ? t("common.signOut") : undefined}
+                onClick={onSignOut}
+            >
+                <SignOutIcon className="size-4 shrink-0" />
+                <span className={collapsed ? "sr-only" : undefined}>
+                    {t("common.signOut")}
+                </span>
+            </Button>
+        </div>
+    );
 }
 
 export function AppShell({
-  title,
-  subtitle,
-  actions,
-  children,
+    title,
+    subtitle,
+    actions,
+    children,
 }: {
-  title: string
-  subtitle?: ReactNode
-  actions?: ReactNode
-  children: ReactNode
+    title: string;
+    subtitle?: ReactNode;
+    actions?: ReactNode;
+    children: ReactNode;
 }) {
-  const { t } = useTranslation()
-  const [menuOpen, setMenuOpen] = useState(false)
-  // Remembered per browser: a preference about this screen, not about the
-  // account, and nothing breaks if storage is unavailable.
-  const [collapsed, setCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem(RAIL_KEY) === '1'
-    } catch {
-      return false
-    }
-  })
-  const toggleRail = () => {
-    const next = !collapsed
-    setCollapsed(next)
-    try {
-      localStorage.setItem(RAIL_KEY, next ? '1' : '0')
-    } catch {
-      // Private mode or blocked storage: the toggle still works for this visit.
-    }
-  }
+    const { t } = useTranslation();
+    const [menuOpen, setMenuOpen] = useState(false);
+    // Remembered per browser: a preference about this screen, not about the
+    // account, and nothing breaks if storage is unavailable.
+    const [collapsed, setCollapsed] = useState(() => {
+        try {
+            return localStorage.getItem(RAIL_KEY) === "1";
+        } catch {
+            return false;
+        }
+    });
+    const toggleRail = () => {
+        const next = !collapsed;
+        setCollapsed(next);
+        try {
+            localStorage.setItem(RAIL_KEY, next ? "1" : "0");
+        } catch {
+            // Private mode or blocked storage: the toggle still works for this visit.
+        }
+    };
 
-  return (
-    // Two tracks rather than two flex children. minmax(0, 1fr) is the point:
-    // a flex item's automatic minimum size is its content, which is why the
-    // content column needed min-w-0 bolted on or the completeness grid would
-    // push the page wider than the window. Here the track simply cannot exceed
-    // its share, and the rule lives with the columns instead of on a child.
-    <div
-      // The track width animates rather than snapping; labels are nowrap and
-      // the rail clips, so text never reflows mid-slide.
-      className={`md:grid md:min-h-dvh md:transition-[grid-template-columns] md:duration-200
+    return (
+        // Two tracks rather than two flex children. minmax(0, 1fr) is the point:
+        // a flex item's automatic minimum size is its content, which is why the
+        // content column needed min-w-0 bolted on or the completeness grid would
+        // push the page wider than the window. Here the track simply cannot exceed
+        // its share, and the rule lives with the columns instead of on a child.
+        <div
+            // The track width animates rather than snapping; labels are nowrap and
+            // the rail clips, so text never reflows mid-slide.
+            className={`md:grid md:min-h-dvh md:transition-[grid-template-columns] md:duration-200
                   md:ease-out motion-reduce:transition-none ${
-        collapsed ? 'md:grid-cols-[4.5rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'
-      }`}
-    >
-      {/* Flush against the left edge of the window rather than inset in the
+                      collapsed
+                          ? "md:grid-cols-[4.5rem_minmax(0,1fr)]"
+                          : "md:grid-cols-[14rem_minmax(0,1fr)]"
+                  }`}
+        >
+            {/* Flush against the left edge of the window rather than inset in the
           centred column: a navigation bar is part of the frame, not a card
           floating in the page. Sticky and the full height of the viewport, so
           the mist band never stops short of the fold. */}
-      <aside
-        // self-start matters: a grid item is stretched to the row by default,
-        // and an item as tall as the thing it scrolls within has nowhere to
-        // stick.
-        className={`hidden md:sticky md:top-0 md:flex md:h-dvh md:self-start
+            <aside
+                // self-start matters: a grid item is stretched to the row by default,
+                // and an item as tall as the thing it scrolls within has nowhere to
+                // stick.
+                className={`hidden md:sticky md:top-0 md:flex md:h-dvh md:self-start
                    md:flex-col md:items-start md:gap-6 md:border-r md:border-rule
-                   md:overflow-hidden md:whitespace-nowrap md:py-10 md:shadow-rail ${collapsed ? 'md:px-3' : 'md:px-6'}`}
-      >
-        <div className={`flex items-center self-stretch ${collapsed ? 'justify-center' : 'justify-between'}`}>
-          {!collapsed && <span className="font-serif text-xl">{t('app.name')}</span>}
-          <button
-            type="button"
-            onClick={toggleRail}
-            aria-expanded={!collapsed}
-            aria-label={t(collapsed ? 'nav.expand' : 'nav.collapse')}
-            title={t(collapsed ? 'nav.expand' : 'nav.collapse')}
-            className="flex size-9 items-center justify-center rounded-md text-muted
-                       hover:bg-hover hover:text-ink"
-          >
-            <svg {...iconBase} className="size-4">
-              <rect x="2.25" y="2.25" width="11.5" height="11.5" rx="1.5" />
-              <path d="M6 2.25v11.5" />
-              <path d={collapsed ? 'M8.75 6.5 10.25 8l-1.5 1.5' : 'M10.25 6.5 8.75 8l1.5 1.5'} />
-            </svg>
-          </button>
-        </div>
-        <NavLinks collapsed={collapsed} className="flex flex-col gap-1 self-stretch text-base" />
-        <SignOutAction collapsed={collapsed} onSignOut={() => void signOut()} />
-      </aside>
-
-      <div>
-        {/* Phone: a bar with the menu button, since a column would eat the
-            width the completeness grid needs. */}
-        <div className="flex items-center gap-2 px-6 py-4 md:hidden">
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            // haspopup rather than aria-expanded: this opens a modal dialog,
-            // not an inline disclosure.
-            aria-haspopup="dialog"
-            aria-label={t('nav.openMenu')}
-            className="-ml-2 flex size-11 items-center justify-center rounded-md text-ink
-                       hover:bg-hover"
-          >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 16 16"
-              className="size-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
+                   md:overflow-hidden md:whitespace-nowrap md:py-10 md:shadow-rail ${collapsed ? "md:px-3" : "md:px-6"}`}
             >
-              <path d="M2.5 4h11M2.5 8h11M2.5 12h11" />
-            </svg>
-          </button>
-          <span className="font-serif text-xl">{t('app.name')}</span>
-        </div>
+                <div
+                    className={`flex items-center self-stretch ${collapsed ? "justify-center" : "justify-between"}`}
+                >
+                    {!collapsed && (
+                        <span className="font-serif text-xl">
+                            {t("app.name")}
+                        </span>
+                    )}
+                    <button
+                        type="button"
+                        onClick={toggleRail}
+                        aria-expanded={!collapsed}
+                        aria-label={t(
+                            collapsed ? "nav.expand" : "nav.collapse",
+                        )}
+                        title={t(collapsed ? "nav.expand" : "nav.collapse")}
+                        className="flex size-9 items-center justify-center rounded-md text-muted
+                       hover:bg-hover hover:text-ink"
+                    >
+                        <svg {...iconBase} className="size-4">
+                            <rect
+                                x="2.25"
+                                y="2.25"
+                                width="11.5"
+                                height="11.5"
+                                rx="1.5"
+                            />
+                            <path d="M6 2.25v11.5" />
+                            <path
+                                d={
+                                    collapsed
+                                        ? "M8.75 6.5 10.25 8l-1.5 1.5"
+                                        : "M10.25 6.5 8.75 8l1.5 1.5"
+                                }
+                            />
+                        </svg>
+                    </button>
+                </div>
+                <NavLinks
+                    collapsed={collapsed}
+                    className="flex flex-col gap-1 self-stretch text-base"
+                />
+                <SignOutAction
+                    collapsed={collapsed}
+                    onSignOut={() => void signOut()}
+                />
+            </aside>
 
-        <main className="mx-auto max-w-[1200px] px-6 pb-20 md:pt-10">
-          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl">{title}</h1>
-              {subtitle && <p className="mt-1 text-base text-muted">{subtitle}</p>}
-            </div>
-            {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
-          </div>
-          {children}
-        </main>
-      </div>
+                {/* Phone: a bar with the menu button, since a column would eat the
+            width the completeness grid needs. */}
+                <div className="flex items-center gap-2 px-6 py-4 md:hidden">
+                    <button
+                        type="button"
+                        onClick={() => setMenuOpen(true)}
+                        // haspopup rather than aria-expanded: this opens a modal dialog,
+                        // not an inline disclosure.
+                        aria-haspopup="dialog"
+                        aria-label={t("nav.openMenu")}
+                        className="-ml-2 flex size-11 items-center justify-center rounded-md text-ink
+                       hover:bg-hover"
+                    >
+                        <svg
+                            aria-hidden="true"
+                            viewBox="0 0 16 16"
+                            className="size-5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                        >
+                            <path d="M2.5 4h11M2.5 8h11M2.5 12h11" />
+                        </svg>
+                    </button>
+                    <span className="font-serif text-xl">{t("app.name")}</span>
+                </div>
 
-      <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} title={t('app.name')}>
-        {/* Closed on navigation: leaving it open over the page just arrived at
+                <main className="mx-auto max-w-[1200px] px-6 pb-20 md:pt-10">
+                    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl">{title}</h1>
+                            {subtitle && (
+                                <p className="mt-1 text-base text-muted">
+                                    {subtitle}
+                                </p>
+                            )}
+                        </div>
+                        {actions && (
+                            <div className="flex flex-wrap gap-3">
+                                {actions}
+                            </div>
+                        )}
+                    </div>
+                    {children}
+                </main>
+            </div>
+
+            <Drawer
+                open={menuOpen}
+                onClose={() => setMenuOpen(false)}
+                title={t("app.name")}
+            >
+                {/* Closed on navigation: leaving it open over the page just arrived at
             would hide the thing the tap asked for. */}
-        <NavLinks
-          onNavigate={() => setMenuOpen(false)}
-          className="flex flex-col gap-2 text-lg"
-        />
-        <SignOutAction onSignOut={() => void signOut()} />
-      </Drawer>
-    </div>
-  )
+                <NavLinks
+                    onNavigate={() => setMenuOpen(false)}
+                    className="flex flex-col gap-2 text-lg"
+                />
+                <SignOutAction onSignOut={() => void signOut()} />
+            </Drawer>
+        </div>
+    );
 }

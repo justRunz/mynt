@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process'
+import { execFileSync } from "node:child_process";
 
 /**
  * Brings the test database up to date before any test runs.
@@ -10,11 +10,11 @@ import { execFileSync } from 'node:child_process'
  * as an assertion about missing tables rather than as a missing step.
  */
 export function setup() {
-  execFileSync('pnpm', ['exec', 'dbmate', '--wait', 'up'], {
-    cwd: new URL('../../../..', import.meta.url).pathname,
-    // dbmate migrates as the owner: creating tables, roles and policies needs
-    // privileges the application role deliberately does not have.
-    env: { ...process.env, DATABASE_URL: process.env.TEST_DATABASE_URL },
-    stdio: 'inherit',
-  })
+    execFileSync("pnpm", ["exec", "dbmate", "--wait", "up"], {
+        cwd: new URL("../../../..", import.meta.url).pathname,
+        // dbmate migrates as the owner: creating tables, roles and policies needs
+        // privileges the application role deliberately does not have.
+        env: { ...process.env, DATABASE_URL: process.env.TEST_DATABASE_URL },
+        stdio: "inherit",
+    });
 }

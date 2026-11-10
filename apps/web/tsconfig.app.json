@@ -1,14 +1,14 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
-    "jsx": "react-jsx",
-    "allowArbitraryExtensions": true,
-    // Everything under src/ is reachable as @/..., so a file can move
-    // between folders without a trail of ../../.. to repair.
-    "paths": { "@/*": ["./src/*"] }
-  },
-  "include": ["src"]
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+        "lib": ["ES2023", "DOM", "DOM.Iterable"],
+        "types": ["vite/client"],
+        "jsx": "react-jsx",
+        "allowArbitraryExtensions": true,
+        // Everything under src/ is reachable as @/..., so a file can move
+        // between folders without a trail of ../../.. to repair.
+        "paths": { "@/*": ["./src/*"] }
+    },
+    "include": ["src"]
 }

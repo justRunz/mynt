@@ -1,11 +1,11 @@
 // From the dedicated entry, not the barrel: the barrel re-exports Supabase's
 // generated Database type, and this server must not depend on what it is
 // replacing. A type-only import, so nothing of it survives compilation.
-import type { CoinType, Country } from '@mynt/core/catalog-types'
-import { asc } from 'drizzle-orm'
+import type { CoinType, Country } from "@mynt/core/catalog-types";
+import { asc } from "drizzle-orm";
 
-import type { Tx } from '../../db/index.js'
-import { coinTypes, countries } from '../../db/schema.js'
+import type { Tx } from "../../db/index.js";
+import { coinTypes, countries } from "../../db/schema.js";
 
 /**
  * The shared catalog: what exists, as opposed to what anyone holds.
@@ -28,17 +28,17 @@ import { coinTypes, countries } from '../../db/schema.js'
  * second way in gets built.
  */
 export function listCountries(tx: Tx): Promise<Country[]> {
-  // Columns listed rather than select(): the return type is a promise this
-  // module makes to the outside, and a column added to the table tomorrow must
-  // not silently widen it.
-  return tx
-    .select({
-      countryCode: countries.countryCode,
-      euroSince: countries.euroSince,
-      circulating: countries.circulating,
-    })
-    .from(countries)
-    .orderBy(asc(countries.countryCode))
+    // Columns listed rather than select(): the return type is a promise this
+    // module makes to the outside, and a column added to the table tomorrow must
+    // not silently widen it.
+    return tx
+        .select({
+            countryCode: countries.countryCode,
+            euroSince: countries.euroSince,
+            circulating: countries.circulating,
+        })
+        .from(countries)
+        .orderBy(asc(countries.countryCode));
 }
 
 /**
@@ -49,14 +49,14 @@ export function listCountries(tx: Tx): Promise<Country[]> {
  * cached for the session.
  */
 export function listCoinTypes(tx: Tx): Promise<CoinType[]> {
-  return tx
-    .select({
-      coinTypeId: coinTypes.coinTypeId,
-      countryCode: coinTypes.countryCode,
-      faceValueCents: coinTypes.faceValueCents,
-      year: coinTypes.year,
-      variant: coinTypes.variant,
-    })
-    .from(coinTypes)
-    .orderBy(asc(coinTypes.coinTypeId))
+    return tx
+        .select({
+            coinTypeId: coinTypes.coinTypeId,
+            countryCode: coinTypes.countryCode,
+            faceValueCents: coinTypes.faceValueCents,
+            year: coinTypes.year,
+            variant: coinTypes.variant,
+        })
+        .from(coinTypes)
+        .orderBy(asc(coinTypes.coinTypeId));
 }

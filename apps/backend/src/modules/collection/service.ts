@@ -1,16 +1,21 @@
-import { asc, count, eq, sql } from 'drizzle-orm'
+import { asc, count, eq, sql } from "drizzle-orm";
 
-import type { Tx } from '../../db/index.js'
-import { binders, coins, coinTypes, pages } from '../../db/schema.js'
-import { DomainError, PG, postgresErrorConstraint, postgresErrorCode } from '../../errors.js'
+import type { Tx } from "../../db/index.js";
+import { binders, coins, coinTypes, pages } from "../../db/schema.js";
+import {
+    DomainError,
+    PG,
+    postgresErrorConstraint,
+    postgresErrorCode,
+} from "../../errors.js";
 import type {
-  AddCoin,
-  CollectionCoin,
-  MovePair,
-  OwnedTypeCounts,
-  Slot,
-  UpdateCoin,
-} from './types.js'
+    AddCoin,
+    CollectionCoin,
+    MovePair,
+    OwnedTypeCounts,
+    Slot,
+    UpdateCoin,
+} from "./types.js";
 
 /**
  * Everything the signed-in collector holds.
@@ -24,50 +29,60 @@ import type {
  * rows already flat, so half of that mapping disappears.
  */
 export async function listCoins(tx: Tx): Promise<CollectionCoin[]> {
-  const rows = await tx
-    .select({
-      coinId: coins.coinId,
-      gradeCode: coins.gradeCode,
-      acquiredOn: coins.acquiredOn,
-      notes: coins.notes,
-      slotRow: coins.slotRow,
-      slotColumn: coins.slotColumn,
-      countryCode: coinTypes.countryCode,
-      faceValueCents: coinTypes.faceValueCents,
-      year: coinTypes.year,
-      variant: coinTypes.variant,
-      pageId: pages.pageId,
-      pageNumber: pages.pageNumber,
-      binderId: binders.binderId,
-      binderName: binders.name,
-    })
-    .from(coins)
-    // Inner: a coin without a catalog entry cannot exist, the foreign key says
-    // so. Left for the rest: a coin in the jar has no page, and the join has to
-    // survive that.
-    .innerJoin(coinTypes, eq(coinTypes.coinTypeId, coins.coinTypeId))
-    .leftJoin(pages, eq(pages.pageId, coins.pageId))
-    .leftJoin(binders, eq(binders.binderId, pages.binderId))
-    .orderBy(asc(coins.coinId))
+    const rows = await tx
+        .select({
+            coinId: coins.coinId,
+            gradeCode: coins.gradeCode,
+            acquiredOn: coins.acquiredOn,
+            notes: coins.notes,
+            slotRow: coins.slotRow,
+            slotColumn: coins.slotColumn,
+            countryCode: coinTypes.countryCode,
+            faceValueCents: coinTypes.faceValueCents,
+            year: coinTypes.year,
+            variant: coinTypes.variant,
+            pageId: pages.pageId,
+            pageNumber: pages.pageNumber,
+            binderId: binders.binderId,
+            binderName: binders.name,
+        })
+        .from(coins)
+        // Inner: a coin without a catalog entry cannot exist, the foreign key says
+        // so. Left for the rest: a coin in the jar has no page, and the join has to
+        // survive that.
+        .innerJoin(coinTypes, eq(coinTypes.coinTypeId, coins.coinTypeId))
+        .leftJoin(pages, eq(pages.pageId, coins.pageId))
+        .leftJoin(binders, eq(binders.binderId, pages.binderId))
+        .orderBy(asc(coins.coinId));
 
-  // Gathered here rather than left to every client to reassemble. The four
-  // columns are null together or set together, and the join cannot say so; this
-  // shape can, so nobody downstream has to check three of them to trust the
-  // fourth.
-  return rows.map(({ pageId, pageNumber, binderId, binderName, slotRow, slotColumn, ...coin }) => ({
-    ...coin,
-    location:
-      pageId === null
-        ? null
-        : {
+    // Gathered here rather than left to every client to reassemble. The four
+    // columns are null together or set together, and the join cannot say so; this
+    // shape can, so nobody downstream has to check three of them to trust the
+    // fourth.
+    return rows.map(
+        ({
             pageId,
-            pageNumber: pageNumber!,
-            binderId: binderId!,
-            binderName: binderName!,
-            row: slotRow!,
-            column: slotColumn!,
-          },
-  }))
+            pageNumber,
+            binderId,
+            binderName,
+            slotRow,
+            slotColumn,
+            ...coin
+        }) => ({
+            ...coin,
+            location:
+                pageId === null
+                    ? null
+                    : {
+                          pageId,
+                          pageNumber: pageNumber!,
+                          binderId: binderId!,
+                          binderName: binderName!,
+                          row: slotRow!,
+                          column: slotColumn!,
+                      },
+        }),
+    );
 }
 
 /**
@@ -80,12 +95,12 @@ export async function listCoins(tx: Tx): Promise<CollectionCoin[]> {
  * part of what this function promises to return, not part of answering HTTP.
  */
 export async function countOwnedByType(tx: Tx): Promise<OwnedTypeCounts> {
-  const rows = await tx
-    .select({ coinTypeId: coins.coinTypeId, owned: count() })
-    .from(coins)
-    .groupBy(coins.coinTypeId)
+    const rows = await tx
+        .select({ coinTypeId: coins.coinTypeId, owned: count() })
+        .from(coins)
+        .groupBy(coins.coinTypeId);
 
-  return Object.fromEntries(rows.map((row) => [row.coinTypeId, row.owned]))
+    return Object.fromEntries(rows.map((row) => [row.coinTypeId, row.owned]));
 }
 
 // ---------------------------------------------------------------------------
@@ -104,30 +119,35 @@ export async function countOwnedByType(tx: Tx): Promise<OwnedTypeCounts> {
  * database assigned those names; nobody has to keep a message in step.
  */
 function translate(error: unknown): never {
-  const code = postgresErrorCode(error)
+    const code = postgresErrorCode(error);
 
-  // Two coins aimed at one hole. The only conflict the collector can act on, so
-  // it has to arrive as itself rather than as a generic failure.
-  if (code === PG.UNIQUE_VIOLATION) {
-    throw new DomainError(
-      postgresErrorConstraint(error) === 'coins_slot_key' ? 'slot_taken' : 'conflict',
-    )
-  }
+    // Two coins aimed at one hole. The only conflict the collector can act on, so
+    // it has to arrive as itself rather than as a generic failure.
+    if (code === PG.UNIQUE_VIOLATION) {
+        throw new DomainError(
+            postgresErrorConstraint(error) === "coins_slot_key"
+                ? "slot_taken"
+                : "conflict",
+        );
+    }
 
-  // A row that is not there -- or is somebody else's, which the policy makes
-  // the same thing. Also what the triggers raise for a page nobody can see.
-  if (code === PG.FOREIGN_KEY_VIOLATION) {
-    const constraint = postgresErrorConstraint(error)
-    if (constraint === 'coins_grade_code_fkey') throw new DomainError('unknown_grade')
-    if (constraint === 'coins_coin_type_id_fkey') throw new DomainError('unknown_coin_type')
-    // No constraint: a trigger raised it, for a page the caller cannot see.
-    throw new DomainError('not_found')
-  }
+    // A row that is not there -- or is somebody else's, which the policy makes
+    // the same thing. Also what the triggers raise for a page nobody can see.
+    if (code === PG.FOREIGN_KEY_VIOLATION) {
+        const constraint = postgresErrorConstraint(error);
+        if (constraint === "coins_grade_code_fkey")
+            throw new DomainError("unknown_grade");
+        if (constraint === "coins_coin_type_id_fkey")
+            throw new DomainError("unknown_coin_type");
+        // No constraint: a trigger raised it, for a page the caller cannot see.
+        throw new DomainError("not_found");
+    }
 
-  // A slot outside the sheet's dimensions, from the coin_fits_page trigger.
-  if (code === PG.CHECK_VIOLATION) throw new DomainError('slot_out_of_bounds')
+    // A slot outside the sheet's dimensions, from the coin_fits_page trigger.
+    if (code === PG.CHECK_VIOLATION)
+        throw new DomainError("slot_out_of_bounds");
 
-  throw error
+    throw error;
 }
 
 /**
@@ -138,23 +158,27 @@ function translate(error: unknown): never {
  * this is untrusted, but because a second line that is never reached is the only
  * kind worth having.
  */
-export async function addCoin(tx: Tx, userId: string, input: AddCoin): Promise<string> {
-  try {
-    const [created] = await tx
-      .insert(coins)
-      .values({
-        userId,
-        coinTypeId: input.coinTypeId,
-        gradeCode: input.gradeCode,
-        pageId: input.location?.pageId ?? null,
-        slotRow: input.location?.row ?? null,
-        slotColumn: input.location?.column ?? null,
-      })
-      .returning({ coinId: coins.coinId })
-    return created!.coinId
-  } catch (error) {
-    translate(error)
-  }
+export async function addCoin(
+    tx: Tx,
+    userId: string,
+    input: AddCoin,
+): Promise<string> {
+    try {
+        const [created] = await tx
+            .insert(coins)
+            .values({
+                userId,
+                coinTypeId: input.coinTypeId,
+                gradeCode: input.gradeCode,
+                pageId: input.location?.pageId ?? null,
+                slotRow: input.location?.row ?? null,
+                slotColumn: input.location?.column ?? null,
+            })
+            .returning({ coinId: coins.coinId });
+        return created!.coinId;
+    } catch (error) {
+        translate(error);
+    }
 }
 
 /**
@@ -166,33 +190,37 @@ export async function addCoin(tx: Tx, userId: string, input: AddCoin): Promise<s
  * "no such coin" and "not yours", which is exactly as much as anyone should
  * learn.
  */
-export async function updateCoin(tx: Tx, coinId: string, input: UpdateCoin): Promise<void> {
-  let touched
-  try {
-    touched = await tx
-      .update(coins)
-      .set({
-        coinTypeId: input.coinTypeId,
-        gradeCode: input.gradeCode,
-        acquiredOn: input.acquiredOn,
-        notes: input.notes,
-      })
-      .where(eq(coins.coinId, coinId))
-      .returning({ coinId: coins.coinId })
-  } catch (error) {
-    translate(error)
-  }
+export async function updateCoin(
+    tx: Tx,
+    coinId: string,
+    input: UpdateCoin,
+): Promise<void> {
+    let touched;
+    try {
+        touched = await tx
+            .update(coins)
+            .set({
+                coinTypeId: input.coinTypeId,
+                gradeCode: input.gradeCode,
+                acquiredOn: input.acquiredOn,
+                notes: input.notes,
+            })
+            .where(eq(coins.coinId, coinId))
+            .returning({ coinId: coins.coinId });
+    } catch (error) {
+        translate(error);
+    }
 
-  if (touched.length === 0) throw new DomainError('not_found')
+    if (touched.length === 0) throw new DomainError("not_found");
 }
 
 export async function deleteCoin(tx: Tx, coinId: string): Promise<void> {
-  const removed = await tx
-    .delete(coins)
-    .where(eq(coins.coinId, coinId))
-    .returning({ coinId: coins.coinId })
+    const removed = await tx
+        .delete(coins)
+        .where(eq(coins.coinId, coinId))
+        .returning({ coinId: coins.coinId });
 
-  if (removed.length === 0) throw new DomainError('not_found')
+    if (removed.length === 0) throw new DomainError("not_found");
 }
 
 /**
@@ -203,30 +231,38 @@ export async function deleteCoin(tx: Tx, coinId: string): Promise<void> {
  * of them is checked here first -- a check before the write is a guess about a
  * state that can change between the reading and the writing.
  */
-export async function fileCoin(tx: Tx, coinId: string, slot: Slot): Promise<void> {
-  let touched
-  try {
-    touched = await tx
-      .update(coins)
-      .set({ pageId: slot.pageId, slotRow: slot.row, slotColumn: slot.column })
-      .where(eq(coins.coinId, coinId))
-      .returning({ coinId: coins.coinId })
-  } catch (error) {
-    translate(error)
-  }
+export async function fileCoin(
+    tx: Tx,
+    coinId: string,
+    slot: Slot,
+): Promise<void> {
+    let touched;
+    try {
+        touched = await tx
+            .update(coins)
+            .set({
+                pageId: slot.pageId,
+                slotRow: slot.row,
+                slotColumn: slot.column,
+            })
+            .where(eq(coins.coinId, coinId))
+            .returning({ coinId: coins.coinId });
+    } catch (error) {
+        translate(error);
+    }
 
-  if (touched.length === 0) throw new DomainError('not_found')
+    if (touched.length === 0) throw new DomainError("not_found");
 }
 
 /** Sends a coin back to the jar, which is a normal place for a coin to be. */
 export async function unfileCoin(tx: Tx, coinId: string): Promise<void> {
-  const touched = await tx
-    .update(coins)
-    .set({ pageId: null, slotRow: null, slotColumn: null })
-    .where(eq(coins.coinId, coinId))
-    .returning({ coinId: coins.coinId })
+    const touched = await tx
+        .update(coins)
+        .set({ pageId: null, slotRow: null, slotColumn: null })
+        .where(eq(coins.coinId, coinId))
+        .returning({ coinId: coins.coinId });
 
-  if (touched.length === 0) throw new DomainError('not_found')
+    if (touched.length === 0) throw new DomainError("not_found");
 }
 
 /**
@@ -243,16 +279,16 @@ export async function unfileCoin(tx: Tx, coinId: string): Promise<void> {
  * and the function raises rather than moving half a pair.
  */
 export async function movePair(tx: Tx, input: MovePair): Promise<void> {
-  try {
-    // Cast at the call site because the function is declared with smallint
-    // positions, and an untyped literal would not resolve to it.
-    await tx.execute(sql`select place_pair(
+    try {
+        // Cast at the call site because the function is declared with smallint
+        // positions, and an untyped literal would not resolve to it.
+        await tx.execute(sql`select place_pair(
       ${input.first.coinId}, ${input.first.pageId},
       ${input.first.row}::smallint, ${input.first.column}::smallint,
       ${input.second.coinId}, ${input.second.pageId},
       ${input.second.row}::smallint, ${input.second.column}::smallint
-    )`)
-  } catch (error) {
-    translate(error)
-  }
+    )`);
+    } catch (error) {
+        translate(error);
+    }
 }
