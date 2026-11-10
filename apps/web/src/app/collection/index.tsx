@@ -24,6 +24,7 @@ import { formatFaceValue } from '@/app/lib/format'
 import { matchesSearch } from '@/app/lib/search'
 import { EditCoin } from './components/edit-coin'
 import { FiltersBar } from './components/filters-bar'
+import { ImportCoins } from './components/import-coins'
 import { QuickAdd } from './components/quick-add'
 import { useCollection, type CollectionEntry } from './hooks/use-collection'
 
@@ -72,20 +73,30 @@ export function CollectionPage() {
   const { t } = useTranslation()
   const online = useIsOnline()
   const [addOpen, setAddOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   return (
     <AppShell
       title={t('collection.title')}
       actions={
         // Disabled rather than hidden, and disabled here rather than only on
         // the submit inside: opening a form that cannot be sent is a dead end.
-        <Button disabled={!online} onClick={() => setAddOpen(true)}>
-          {t('quickAdd.open')}
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="ghost" disabled={!online} onClick={() => setImportOpen(true)}>
+            {t('importCoins.open')}
+          </Button>
+          <Button disabled={!online} onClick={() => setAddOpen(true)}>
+            {t('quickAdd.open')}
+          </Button>
+        </div>
       }
     >
       <Collection />
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('quickAdd.title')}>
         <QuickAdd />
+      </Modal>
+      <Modal open={importOpen} onClose={() => setImportOpen(false)} title={t('importCoins.title')}>
+        {/* Mounted only while open, so closing resets the file and the review. */}
+        {importOpen && <ImportCoins onDone={() => setImportOpen(false)} />}
       </Modal>
     </AppShell>
   )

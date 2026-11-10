@@ -14,6 +14,7 @@ import { authRoutes } from './modules/auth/routes.js'
 import { binderRoutes } from './modules/binders/routes.js'
 import { catalogRoutes } from './modules/catalog/routes.js'
 import { collectionRoutes } from './modules/collection/routes.js'
+import { importRoutes } from './modules/import/routes.js'
 
 // Where `pnpm --filter @mynt/web build` leaves the front end, seen from here.
 const webDist = fileURLToPath(new URL('../../web/dist', import.meta.url))
@@ -57,6 +58,13 @@ export function createApp(): Express {
    * ever expects a browser to send on its own.
    */
   if (!env.isProduction) app.use(cors({ origin: env.appUrl, credentials: true }))
+
+  // Before the global parser, which would refuse a photo at 100kb, and after
+  // authenticate by hand: the large body is only read for a signed-in caller,
+  // so nobody anonymous can make this server buffer 15MB. Its own parser has
+  // the larger limit; the rest of /api keeps the small one.
+  app.use('/api/import', authenticate, express.json({ limit: '15mb' }), importRoutes)
+
   app.use(express.json())
 
   // The refresh token arrives as a cookie and nowhere else, so it has to be parsed
