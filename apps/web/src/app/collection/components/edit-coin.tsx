@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import {
   GRADES,
   findCoinTypeId,
@@ -12,10 +13,10 @@ import {
 
 import { useIsOnline } from '@/app/hooks/use-is-online'
 import { catalogQueries } from '@/app/lib/catalog'
-import type { TranslationKey } from '@/app/i18n/types'
 import { countryName } from '@/app/lib/countries'
 import { formatFaceValue } from '@/app/lib/format'
 import { Button } from '@/app/ui/button'
+import { modalError, MODAL_TOASTER } from '@/app/ui/toast'
 import { Field } from '@/app/ui/field'
 import { Modal } from '@/app/ui/modal'
 import { CountryCombobox } from './country-combobox'
@@ -74,8 +75,6 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
   const [grade, setGrade] = useState<Grade | ''>(coin.grade ?? '')
   const [acquiredOn, setAcquiredOn] = useState(coin.acquiredOn ?? '')
   const [notes, setNotes] = useState(coin.notes ?? '')
-  const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
-  const [notInCatalog, setNotInCatalog] = useState<string | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   const index = useMemo(() => indexCoinTypes(coinTypes.data ?? []), [coinTypes.data])
@@ -87,18 +86,16 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
-    setErrorKey(null)
-    setNotInCatalog(null)
     if (!countryCode || faceValue === null) return
 
     const parsedYear = Number(year)
     if (!/^\d{4}$/.test(year) || parsedYear < 1999 || parsedYear > CURRENT_YEAR) {
-      return setErrorKey('quickAdd.errors.yearRequired')
+      return modalError(t('quickAdd.errors.yearRequired'))
     }
 
     const coinTypeId = findCoinTypeId(index, countryCode, faceValue, parsedYear)
     if (coinTypeId === null) {
-      return setNotInCatalog(
+      return modalError(
         t('quickAdd.errors.notInCatalog', {
           country: countryName(countryCode),
           value: formatFaceValue(faceValue),
@@ -107,21 +104,29 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
       )
     }
 
-    updateCoin.mutate(
-      {
-        coinId: coin.id,
-        coinTypeId,
-        grade: grade || null,
-        acquiredOn: acquiredOn || null,
-        notes: notes.trim() || null,
+    const saving = updateCoin.mutateAsync({
+      coinId: coin.id,
+      coinTypeId,
+      grade: grade || null,
+      acquiredOn: acquiredOn || null,
+      notes: notes.trim() || null,
+    })
+    // Saving and failure are told inside the modal, which stays open on
+    // failure: this used to close first and set the message afterwards, on a
+    // dialog that was already gone -- so the user was told nothing at all.
+    toast.promise(saving, {
+      toasterId: MODAL_TOASTER,
+      loading: t('common.saving'),
+      error: t('binders.errors.generic'),
+    })
+    // Success closes the modal, taking its toaster with it, so the
+    // confirmation goes to the page's toaster instead.
+    saving.then(
+      () => {
+        onClose()
+        toast.success(t('editCoin.saved'))
       },
-      {
-        onSuccess: onClose,
-        // Left open on failure. This used to close first and set the message
-        // afterwards, on a dialog that was already gone -- so the user was told
-        // nothing at all.
-        onError: () => setErrorKey('binders.errors.generic'),
-      },
+      () => {},
     )
   }
 
@@ -189,17 +194,6 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
         />
       </div>
 
-      {errorKey && (
-        <p role="alert" className="text-sm text-danger">
-          {t(errorKey)}
-        </p>
-      )}
-      {notInCatalog && (
-        <p role="alert" className="max-w-prose text-sm text-danger">
-          {notInCatalog}
-        </p>
-      )}
-
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4">
         {confirmingDelete ? (
           <div className="flex flex-wrap items-center gap-3">
@@ -212,7 +206,7 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
               onClick={() =>
                 deleteCoin.mutate(coin.id, {
                   onSuccess: onClose,
-                  onError: () => setErrorKey('binders.errors.generic'),
+                  onError: () => modalError(t('binders.errors.generic')),
                 })
               }
             >
@@ -237,7 +231,11 @@ function EditCoinForm({ coin, onClose }: { coin: CollectionEntry; onClose: () =>
           </Button>
         )}
 
-        <Button type="submit" disabled={busy}>
+        <Button
+          type="submit"
+          disabled={busy}
+          loading={updateCoin.isPending && !updateCoin.isPaused}
+        >
           {t('editCoin.save')}
         </Button>
       </div>

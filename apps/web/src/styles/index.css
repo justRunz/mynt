@@ -84,7 +84,10 @@
   .modal[open] {
     opacity: 1;
     translate: none;
-    scale: 1;
+    /* none rather than 1: any other value makes the dialog the containing
+     * block for position:fixed, which would pin the modal's toaster to the
+     * dialog's box instead of the viewport. */
+    scale: none;
   }
 
   @starting-style {
@@ -184,4 +187,20 @@
  * open covers every Modal and the Drawer at once, with no JS to undo. */
 html:has(dialog:modal) {
   overflow: hidden;
+}
+
+/* Sonner pins its close button over the toast's top-left corner. It goes on
+ * the right instead, inside the toast: centred on a one-line toast, and held
+ * level with the first line once the toast grows taller -- min() caps the
+ * centring at the height a one-line toast centres it at. The toaster prefix
+ * outranks sonner's own rules, which it injects after this sheet. */
+[data-sonner-toaster] [data-sonner-toast][data-styled='true'] {
+  padding-right: 2.75rem;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button] {
+  left: auto;
+  right: 0.75rem;
+  top: min(50%, 1.6875rem);
+  transform: translateY(-50%);
 }
