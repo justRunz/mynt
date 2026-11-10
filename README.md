@@ -66,7 +66,7 @@ jeton, ce qui est exactement ce que l'écran de chargement recouvre.
 | | |
 |---|---|
 | `pnpm dev` | serveur de développement |
-| `pnpm build` | build de production |
+| `pnpm build` | build de production (le web seulement, voir plus bas) |
 | `pnpm typecheck` | TypeScript sur tout le workspace |
 | `pnpm lint` | oxlint |
 | `pnpm test` | vitest |
@@ -79,6 +79,11 @@ jeton, ce qui est exactement ce que l'écran de chargement recouvre.
 `pnpm dev` surveille `apps/backend/.env` en plus des sources : changer une variable relance
 l'API. Sans ça, un serveur lancé une heure plus tôt garde son ancienne
 configuration en silence, et on cherche la panne partout ailleurs.
+
+Le backend n'a pas d'étape de build : en production comme en développement il
+tourne depuis ses sources avec tsx (`pnpm --filter @mynt/backend start`), et
+`pnpm build` ne produit donc que le web. Ses variables viennent alors de
+l'environnement du conteneur ; `apps/backend/.env` n'est lu que s'il existe.
 
 Les migrations SQL sont la source de vérité. `apps/backend/src/db/schema.ts` en est
 une **vue typée** : drizzle-kit n'a jamais le droit d'écrire dans la base — ni
@@ -132,6 +137,71 @@ les écrans et la couche réseau ne peuvent ainsi jamais être en désaccord.
 
 ## Mise en ligne
 
-Pas encore faite. Le plan : un conteneur qui sert `/api` et l'app bâtie derrière
-un seul domaine — donc CORS n'existe qu'en développement — déployé par Dokploy sur
-un VPS, avec `dbmate up` au démarrage.
+Pas encore faite, mais tout ce qu'il faut est dans le dépôt : un conteneur qui
+sert `/api` et l'app bâtie derrière un seul domaine — donc CORS n'existe qu'en
+développement — déployé par Dokploy sur un VPS, avec `dbmate up` au démarrage.
+La base n'est pas dans l'image : c'est celle de Dokploy.
+
+### L'image
+
+Le `Dockerfile` à la racine bâtit le web, installe les seules dépendances du
+backend, et démarre par `dbmate --wait up` puis le serveur. Si une migration
+échoue, le serveur ne démarre pas : du code face à un schéma plus ancien que lui
+échoue requête par requête, ce qui est pire.
+
+En production (`NODE_ENV=production`, fixé par l'image), Express sert
+`apps/web/dist` à côté de `/api`. Toute adresse hors `/api` renvoie `index.html`,
+puisque le routage se fait dans le navigateur ; une adresse inconnue sous `/api`
+reste une réponse JSON. Les fichiers de `/assets`, dont le nom contient un hash,
+sont mis en cache pour de bon ; `index.html`, `sw.js` et le manifeste sont
+revalidés à chaque fois — un `sw.js` gardé en cache, c'est une invite de mise à
+jour qui n'apparaît jamais.
+
+`VITE_API_URL` ne doit **pas** être définie au build : l'app appelle alors `/api`
+en chemin relatif.
+
+### Les variables, dans Dokploy
+
+| | |
+|---|---|
+| `DATABASE_URL` | le rôle **propriétaire**, pour `dbmate` seulement |
+| `APP_DATABASE_URL` | le rôle `mynt_app`, pour le serveur |
+| `APP_URL` | le vrai domaine, `https://…` — les liens des mails en sortent |
+| `AUTH_SECRET` | au moins 32 caractères, voir `apps/backend/.env.example` |
+| `TRUST_PROXY` | `1`, pour Traefik |
+| `SMTP_*`, `MAIL_FROM` | le relais, voir `apps/backend/.env.example` |
+
+`NODE_ENV`, `HOST=0.0.0.0` et `PORT=3001` viennent de l'image ; 3001 est le port
+à donner à Traefik. Les deux URL de base prennent `?sslmode=disable` sur le
+réseau interne de Dokploy, où Postgres parle sans TLS — sans quoi `dbmate` refuse
+de se connecter.
+
+Intervertir les deux URL ne se verrait pas : le serveur fonctionnerait, connecté
+en propriétaire, et la sécurité au niveau des lignes ne s'appliquerait plus à
+rien.
+
+### La base, une fois
+
+Postgres **18**, pour `uuidv7()`. Le rôle de `DATABASE_URL` doit pouvoir créer
+des rôles : une migration crée `authenticated` et `mynt_app`.
+
+Cette migration ne donne pas de mot de passe à `mynt_app` — il n'a rien à faire
+dans git, et `pnpm db:password` ne vaut que pour la base locale. Avant le premier
+déploiement, dans le terminal de la base :
+
+```sql
+create role mynt_app login password '…';
+```
+
+La migration trouve alors le rôle déjà là et ne fait que régler ses droits. Sans
+ça le conteneur démarre, mais le serveur ne peut pas se connecter : `/api/health`
+répond 503 et Dokploy le dit en mauvaise santé.
+
+### En marche
+
+`GET /api/health` répond 200 si la base répond, 503 sinon, sans jeton et sans
+limite de débit. C'est ce qu'interroge le `HEALTHCHECK` de l'image.
+
+Sur `SIGTERM` — ce qu'envoie chaque redéploiement — le serveur cesse d'accepter
+des connexions, laisse finir les requêtes en cours, ferme le pool et sort. Huit
+secondes au plus, avant les dix que Docker accorde.

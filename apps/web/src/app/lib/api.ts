@@ -10,7 +10,10 @@
  * -- so the default is a bare path and there is no cross-origin request at all.
  * Development overrides it, because the app is on 5173 and the API on 3001.
  */
-const BASE = import.meta.env.VITE_API_URL ?? '/api'
+// || rather than ??: "leave it empty" in a .env file is an empty string, not an
+// absence, and ?? would keep it -- every request would then go to /binders
+// instead of /api/binders and be answered with the app's own index.html.
+const BASE = import.meta.env.VITE_API_URL || '/api'
 
 export interface Session {
   userId: string

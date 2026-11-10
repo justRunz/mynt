@@ -1,0 +1,19 @@
+# What must not reach the build context.
+#
+# node_modules and dist because they are this machine's -- macOS binaries for
+# argon2 and dbmate, a front end built with the developer's VITE_API_URL -- and
+# the image makes its own. The .env files because they hold secrets, and an
+# image is a thing that gets pushed to a registry.
+
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+
+.git
+.claude
+.vscode
+.idea
+**/.DS_Store
+**/*.log

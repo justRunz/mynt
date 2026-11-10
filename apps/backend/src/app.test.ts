@@ -62,6 +62,22 @@ describe('every response', () => {
   })
 })
 
+describe('the edges of /api', () => {
+  test('health says whether the database answers, to a caller holding no token', async () => {
+    const response = await fetch(`${base}/health`)
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ ok: true })
+  })
+
+  test('an address no route claims is answered in JSON, never with a page', async () => {
+    // 401 here, since the caller is nobody; 404 for someone signed in. What
+    // matters is that neither is the front end's index.html with a 200.
+    const response = await fetch(`${base}/nope`)
+    expect(response.status).toBe(401)
+    expect(response.headers.get('content-type')).toContain('application/json')
+  })
+})
+
 describe('the routes that can be abused', () => {
   function json(path: string, body: object) {
     return post(path, JSON.stringify(body))

@@ -164,6 +164,46 @@ describe('writing', () => {
   })
 })
 
+describe('deleting what coins are filed in', () => {
+  /** A binder of Alice's with one page and one coin in its first hole. */
+  async function filedCoin() {
+    return dbQueryAs(ALICE, async (tx) => {
+      const [binder] = await tx.insert(binders).values({ userId: ALICE, name: 'hers' }).returning()
+      const [page] = await tx
+        .insert(pages)
+        .values({ binderId: binder!.binderId, pageNumber: 1, rowCount: 4, columnCount: 5 })
+        .returning()
+      const [coin] = await tx
+        .insert(coins)
+        .values({ userId: ALICE, coinTypeId, pageId: page!.pageId, slotRow: 1, slotColumn: 1 })
+        .returning()
+      return { binderId: binder!.binderId, pageId: page!.pageId, coinId: coin!.coinId }
+    })
+  }
+
+  /** The coin afterwards: still there, and in the jar -- no page, no hole. */
+  async function expectInTheJar(coinId: string) {
+    const [coin] = await dbQueryAs(ALICE, (tx) =>
+      tx.select().from(coins).where(eq(coins.coinId, coinId)),
+    )
+    expect(coin).toMatchObject({ pageId: null, slotRow: null, slotColumn: null })
+  }
+
+  // Both used to fail on position_all_or_nothing: the foreign key nulled
+  // page_id and left the hole behind.
+  test('a deleted page sends its coins back to the jar', async () => {
+    const { pageId, coinId } = await filedCoin()
+    await dbQueryAs(ALICE, (tx) => tx.delete(pages).where(eq(pages.pageId, pageId)))
+    await expectInTheJar(coinId)
+  })
+
+  test('and so does a deleted binder, through its pages', async () => {
+    const { binderId, coinId } = await filedCoin()
+    await dbQueryAs(ALICE, (tx) => tx.delete(binders).where(eq(binders.binderId, binderId)))
+    await expectInTheJar(coinId)
+  })
+})
+
 describe('the net under the wrapper', () => {
   test('reaching the collection without an identity is refused, not answered', async () => {
     // What the server would do if a query escaped dbQueryAs. It does not come
