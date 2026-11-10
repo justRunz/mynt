@@ -189,6 +189,18 @@ html:has(dialog:modal) {
   overflow: hidden;
 }
 
+/* The native select arrow sits flush against the border and ignores padding,
+ * so it is redrawn as a background image with room on its right. Unlayered so
+ * the padding-right outranks the px-* utility on each select. */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23696d79' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.25rem center;
+  background-size: 1rem;
+  padding-right: 2.25rem;
+}
+
 /* Sonner pins its close button over the toast's top-left corner. It goes on
  * the right instead, inside the toast: centred on a one-line toast, and held
  * level with the first line once the toast grows taller -- min() caps the

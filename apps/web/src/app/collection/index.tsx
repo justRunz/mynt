@@ -330,7 +330,7 @@ function CollectionTable({
     <div className="hidden overflow-x-auto sm:block">
       <table className="w-full border-collapse text-base">
         <thead>
-          <tr className="border-b border-rule text-left text-sm font-[450] text-muted">
+          <tr className="border-b border-rule text-left text-sm font-[450] text-muted [&>th:first-child]:pl-3 [&>th:last-child]:pr-3">
             <th scope="col" className="py-3 pr-4 font-[450]">
               {t('collection.columns.country')}
             </th>
@@ -353,7 +353,13 @@ function CollectionTable({
         </thead>
         <tbody>
           {entries.map((entry) => (
-            <tr key={entry.id} className="border-b border-rule hover:bg-card">
+            <tr
+              key={entry.id}
+              // A faint translucent ink rather than the opaque card grey: the background
+              // still shows through, so the row tints instead of turning into a slab.
+              className="border-b border-rule transition-colors hover:bg-ink/[0.035]
+                         [&>td:first-child]:pl-3 [&>td:last-child]:pr-3"
+            >
               <td className="py-3 pr-4 whitespace-nowrap">
                 <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
                 {countryName(entry.countryCode)}

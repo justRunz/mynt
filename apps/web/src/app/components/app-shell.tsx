@@ -91,7 +91,9 @@ function NavLinks({
           title={collapsed ? t(link.labelKey) : undefined}
           className={({ isActive }) =>
             `flex items-center gap-3 rounded-md px-3 py-2 ${collapsed ? 'justify-center' : ''} ${
-              isActive ? 'bg-accent-wash font-[480] text-accent' : 'text-muted hover:bg-hover hover:text-ink'
+              isActive
+                ? 'bg-raised font-[480] text-ink shadow-xs ring-1 ring-rule'
+                : 'text-muted hover:bg-hover hover:text-ink'
             }`
           }
         >
@@ -118,7 +120,7 @@ function SignOutAction({
 }) {
   const { t } = useTranslation()
   return (
-    <div className="mt-auto w-full border-t border-rule pt-4">
+    <div className="mt-auto w-full border-t border-hover pt-4">
       <Button
         variant="quiet"
         className={collapsed ? 'w-full justify-center' : '-ml-2'}
@@ -181,14 +183,15 @@ export function AppShell({
       {/* Flush against the left edge of the window rather than inset in the
           centred column: a navigation bar is part of the frame, not a card
           floating in the page. Sticky and the full height of the viewport, so
-          the mist band never stops short of the fold. */}
+          the glass never stops short of the fold. */}
       <aside
         // self-start matters: a grid item is stretched to the row by default,
         // and an item as tall as the thing it scrolls within has nowhere to
         // stick.
         className={`hidden md:sticky md:top-0 md:flex md:h-dvh md:self-start
-                   md:flex-col md:items-start md:gap-6 md:border-r md:border-rule
-                   md:overflow-hidden md:whitespace-nowrap md:py-10 md:shadow-rail ${collapsed ? 'md:px-3' : 'md:px-6'}`}
+                   md:flex-col md:items-start md:gap-6 md:border-r md:border-white/60 md:bg-white/35
+                   md:backdrop-blur-md md:backdrop-saturate-150
+                   md:overflow-hidden md:whitespace-nowrap md:py-10 ${collapsed ? 'md:px-3' : 'md:px-6'}`}
       >
         <div className={`flex items-center self-stretch ${collapsed ? 'justify-center' : 'justify-between'}`}>
           {!collapsed && <span className="font-serif text-xl">{t('app.name')}</span>}
