@@ -1,6 +1,6 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { ButtonHTMLAttributes } from "react";
 
-type Variant = 'primary' | 'ghost' | 'quiet'
+type Variant = "primary" | "ghost" | "quiet";
 
 /**
  * Three levels: a filled button, a ghost that shares its geometry so the two
@@ -22,49 +22,52 @@ type Variant = 'primary' | 'ghost' | 'quiet'
 // px-* is a conflict CSS resolves by source order rather than by the order the
 // classes are written, so the quiet variant's px-2 silently lost to px-5.
 const base =
-  'inline-flex h-11 items-center justify-center gap-2 rounded-md text-base font-normal ' +
-  'whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50'
+    "inline-flex h-11 items-center justify-center gap-2 rounded-md text-base font-normal " +
+    "whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50";
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-ink px-5 text-surface hover:opacity-90',
-  // border-current, not border-ink: a call site that recolours the label (the
-  // delete action passes text-danger) gets a matching outline for free rather
-  // than red text inside an ink ring.
-  ghost: 'border border-current px-5 text-ink hover:bg-hover',
-  quiet: 'px-2 text-muted hover:bg-hover hover:text-ink',
-}
+    primary: "bg-ink px-5 text-surface hover:opacity-90",
+    // border-current, not border-ink: a call site that recolours the label (the
+    // delete action passes text-danger) gets a matching outline for free rather
+    // than red text inside an ink ring.
+    ghost: "border border-current px-5 text-ink hover:bg-hover",
+    quiet: "px-2 text-muted hover:bg-hover hover:text-ink",
+};
 
 export function Button({
-  variant = 'primary',
-  className = '',
-  loading = false,
-  disabled,
-  children,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; loading?: boolean }) {
-  return (
-    <button
-      className={`${base} ${variants[variant]} ${className}`}
-      // Disabled while loading so a second press cannot send the request twice;
-      // aria-busy tells assistive tech why it went quiet.
-      disabled={disabled || loading}
-      aria-busy={loading || undefined}
-      {...props}
-    >
-      {loading && (
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 16 16"
-          className="size-4 shrink-0 animate-spin motion-reduce:animate-none"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
+    variant = "primary",
+    className = "",
+    loading = false,
+    disabled,
+    children,
+    ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+    variant?: Variant;
+    loading?: boolean;
+}) {
+    return (
+        <button
+            className={`${base} ${variants[variant]} ${className}`}
+            // Disabled while loading so a second press cannot send the request twice;
+            // aria-busy tells assistive tech why it went quiet.
+            disabled={disabled || loading}
+            aria-busy={loading || undefined}
+            {...props}
         >
-          <path d="M8 2a6 6 0 1 1-6 6" />
-        </svg>
-      )}
-      {children}
-    </button>
-  )
+            {loading && (
+                <svg
+                    aria-hidden="true"
+                    viewBox="0 0 16 16"
+                    className="size-4 shrink-0 animate-spin motion-reduce:animate-none"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                >
+                    <path d="M8 2a6 6 0 1 1-6 6" />
+                </svg>
+            )}
+            {children}
+        </button>
+    );
 }

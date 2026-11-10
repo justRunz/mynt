@@ -1,7 +1,7 @@
 # Mynt
 
-Gestion d'une collection de pièces euro de circulation. Le nom vient de *mynet*,
-forme en vieil anglais de *mint*, l'atelier de frappe.
+Gestion d'une collection de pièces euro de circulation. Le nom vient de _mynet_,
+forme en vieil anglais de _mint_, l'atelier de frappe.
 
 Ce que les outils existants ne font pas et que Mynt fait : dire **où chaque pièce
 est physiquement rangée** — quel classeur, quelle page, quel trou.
@@ -46,7 +46,7 @@ par Mailpit en local plutôt que par un `console.log`.
 
 L'inscription n'ouvre pas de session : une adresse est une affirmation tant que
 personne n'a ouvert la boîte qu'elle désigne. Le lien reçu confirme l'adresse
-*et* connecte — savoir lire la boîte est la seule chose que l'adresse prétendait.
+_et_ connecte — savoir lire la boîte est la seule chose que l'adresse prétendait.
 
 Se connecter avec une adresse non confirmée est refusé, et renvoie un lien neuf.
 C'est ce qui évite qu'un compte devienne inaccessible parce que le premier message
@@ -63,18 +63,18 @@ jeton, ce qui est exactement ce que l'écran de chargement recouvre.
 
 ## Commandes
 
-| | |
-|---|---|
-| `pnpm dev` | serveur de développement |
-| `pnpm build` | build de production (le web seulement, voir plus bas) |
-| `pnpm typecheck` | TypeScript sur tout le workspace |
-| `pnpm lint` | oxlint |
-| `pnpm test` | vitest |
-| `pnpm db:up` | démarre la base et joue les migrations |
-| `pnpm db:new <nom>` | crée une migration |
-| `pnpm db:reset` | rejoue les migrations depuis zéro |
-| `pnpm db:catalog` | étend le catalogue jusqu'à l'année courante |
-| `pnpm db:demo` | remplit un compte de démonstration |
+|                     |                                                       |
+| ------------------- | ----------------------------------------------------- |
+| `pnpm dev`          | serveur de développement                              |
+| `pnpm build`        | build de production (le web seulement, voir plus bas) |
+| `pnpm typecheck`    | TypeScript sur tout le workspace                      |
+| `pnpm lint`         | oxlint                                                |
+| `pnpm test`         | vitest                                                |
+| `pnpm db:up`        | démarre la base et joue les migrations                |
+| `pnpm db:new <nom>` | crée une migration                                    |
+| `pnpm db:reset`     | rejoue les migrations depuis zéro                     |
+| `pnpm db:catalog`   | étend le catalogue jusqu'à l'année courante           |
+| `pnpm db:demo`      | remplit un compte de démonstration                    |
 
 `pnpm dev` surveille `apps/backend/.env` en plus des sources : changer une variable relance
 l'API. Sans ça, un serveur lancé une heure plus tôt garde son ancienne
@@ -162,14 +162,14 @@ en chemin relatif.
 
 ### Les variables, dans Dokploy
 
-| | |
-|---|---|
-| `DATABASE_URL` | le rôle **propriétaire**, pour `dbmate` seulement |
-| `APP_DATABASE_URL` | le rôle `mynt_app`, pour le serveur |
-| `APP_URL` | le vrai domaine, `https://…` — les liens des mails en sortent |
-| `AUTH_SECRET` | au moins 32 caractères, voir `apps/backend/.env.example` |
-| `TRUST_PROXY` | `1`, pour Traefik |
-| `SMTP_*`, `MAIL_FROM` | le relais, voir `apps/backend/.env.example` |
+|                       |                                                               |
+| --------------------- | ------------------------------------------------------------- |
+| `DATABASE_URL`        | le rôle **propriétaire**, pour `dbmate` seulement             |
+| `APP_DATABASE_URL`    | le rôle `mynt_app`, pour le serveur                           |
+| `APP_URL`             | le vrai domaine, `https://…` — les liens des mails en sortent |
+| `AUTH_SECRET`         | au moins 32 caractères, voir `apps/backend/.env.example`      |
+| `TRUST_PROXY`         | `1`, pour Traefik                                             |
+| `SMTP_*`, `MAIL_FROM` | le relais, voir `apps/backend/.env.example`                   |
 
 `NODE_ENV`, `HOST=0.0.0.0` et `PORT=3001` viennent de l'image ; 3001 est le port
 à donner à Traefik. Les deux URL de base prennent `?sslmode=disable` sur le

@@ -1,16 +1,16 @@
-import type { NextFunction, Request, Response } from 'express'
+import type { NextFunction, Request, Response } from "express";
 
-import { readAccessToken } from '../modules/auth/tokens.js'
+import { readAccessToken } from "../modules/auth/tokens.js";
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Express {
-    interface Request {
-      /** Set by authenticate, and the only place a route may learn who is
-       *  asking. Never read an id from a body or a query string. */
-      userId?: string
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    namespace Express {
+        interface Request {
+            /** Set by authenticate, and the only place a route may learn who is
+             *  asking. Never read an id from a body or a query string. */
+            userId?: string;
+        }
     }
-  }
 }
 
 /**
@@ -26,27 +26,31 @@ declare global {
  * front of every request, and it is also why an access token cannot be revoked
  * and is therefore short-lived. The refresh half carries that weight instead.
  */
-export async function authenticate(req: Request, res: Response, next: NextFunction) {
-  const header = req.headers.authorization
-  const token = header?.startsWith('Bearer ') ? header.slice(7) : null
+export async function authenticate(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) {
+    const header = req.headers.authorization;
+    const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
 
-  if (!token) {
-    res.status(401).json({ error: 'unauthenticated' })
-    return
-  }
+    if (!token) {
+        res.status(401).json({ error: "unauthenticated" });
+        return;
+    }
 
-  // Null for every failure alike -- bad signature, expired, wrong issuer, not a
-  // token at all. "Signature invalid" against "expired" tells someone probing
-  // which half of a forgery to fix, and no client has anything different to do
-  // about the difference.
-  const userId = await readAccessToken(token)
-  if (userId === null) {
-    res.status(401).json({ error: 'unauthenticated' })
-    return
-  }
+    // Null for every failure alike -- bad signature, expired, wrong issuer, not a
+    // token at all. "Signature invalid" against "expired" tells someone probing
+    // which half of a forgery to fix, and no client has anything different to do
+    // about the difference.
+    const userId = await readAccessToken(token);
+    if (userId === null) {
+        res.status(401).json({ error: "unauthenticated" });
+        return;
+    }
 
-  req.userId = userId
-  next()
+    req.userId = userId;
+    next();
 }
 
 /**
@@ -62,7 +66,8 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
  * not, because such a route would run with no identity at all.
  */
 export function requireUserId(req: Request): string {
-  const { userId } = req
-  if (!userId) throw new Error('route reached without authenticate; check the mount')
-  return userId
+    const { userId } = req;
+    if (!userId)
+        throw new Error("route reached without authenticate; check the mount");
+    return userId;
 }

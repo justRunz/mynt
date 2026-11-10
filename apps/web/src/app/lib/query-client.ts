@@ -1,28 +1,28 @@
-import { QueryClient } from '@tanstack/react-query'
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
-import { del, get, set } from 'idb-keyval'
+import { QueryClient } from "@tanstack/react-query";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { del, get, set } from "idb-keyval";
 
 export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      retry: 1,
-      refetchOnWindowFocus: false,
-      // Kept in the cache for a week so a flea market on Sunday still has last
-      // Monday's collection.
-      gcTime: 7 * 24 * 60 * 60 * 1000,
+    defaultOptions: {
+        queries: {
+            staleTime: 30_000,
+            retry: 1,
+            refetchOnWindowFocus: false,
+            // Kept in the cache for a week so a flea market on Sunday still has last
+            // Monday's collection.
+            gcTime: 7 * 24 * 60 * 60 * 1000,
+        },
+        mutations: {
+            // 'always' rather than the 'online' default, which would hold a write
+            // until the signal came back. Nothing is queued here: a write attempted
+            // without a connection has to fail, and say so, rather than wait in
+            // silence for a return that this app no longer arranges.
+            networkMode: "always",
+        },
     },
-    mutations: {
-      // 'always' rather than the 'online' default, which would hold a write
-      // until the signal came back. Nothing is queued here: a write attempted
-      // without a connection has to fail, and say so, rather than wait in
-      // silence for a return that this app no longer arranges.
-      networkMode: 'always',
-    },
-  },
-})
+});
 
-const PERSIST_KEY = 'mynt-query-cache'
+const PERSIST_KEY = "mynt-query-cache";
 
 /**
  * Whether the persister is allowed to write.
@@ -33,10 +33,10 @@ const PERSIST_KEY = 'mynt-query-cache'
  * back, holding an empty cache. Harmless in content, but the code then claims
  * to remove something it only blanks.
  */
-let persisting = true
+let persisting = true;
 
 /** The most recent write, so a delete can wait for it rather than race it. */
-let lastWrite: Promise<void> = Promise.resolve()
+let lastWrite: Promise<void> = Promise.resolve();
 
 /**
  * IndexedDB rather than localStorage: the catalog alone is some 4 000 rows,
@@ -44,18 +44,18 @@ let lastWrite: Promise<void> = Promise.resolve()
  * block the main thread.
  */
 export const persister = createAsyncStoragePersister({
-  key: PERSIST_KEY,
-  storage: {
-    getItem: (key) => get<string>(key).then((value) => value ?? null),
-    setItem: (key, value) => {
-      if (!persisting) return Promise.resolve()
-      lastWrite = set(key, value)
-      return lastWrite
+    key: PERSIST_KEY,
+    storage: {
+        getItem: (key) => get<string>(key).then((value) => value ?? null),
+        setItem: (key, value) => {
+            if (!persisting) return Promise.resolve();
+            lastWrite = set(key, value);
+            return lastWrite;
+        },
+        removeItem: (key) => del(key),
     },
-    removeItem: (key) => del(key),
-  },
-  throttleTime: 1_000,
-})
+    throttleTime: 1_000,
+});
 
 /**
  * A persisted cache outlives the session, so signing out has to erase it.
@@ -63,15 +63,15 @@ export const persister = createAsyncStoragePersister({
  * one's collection before the first fetch replaced it.
  */
 export async function clearPersistedCache() {
-  // Closed before the cache is emptied, so the change that emptying causes is
-  // never written.
-  persisting = false
-  queryClient.clear()
-  // A write dispatched a moment earlier is still in flight and would land after
-  // the delete. Failures are the persister's business, not this function's; all
-  // that matters here is that nothing is still writing.
-  await lastWrite.catch(() => {})
-  await del(PERSIST_KEY)
+    // Closed before the cache is emptied, so the change that emptying causes is
+    // never written.
+    persisting = false;
+    queryClient.clear();
+    // A write dispatched a moment earlier is still in flight and would land after
+    // the delete. Failures are the persister's business, not this function's; all
+    // that matters here is that nothing is still writing.
+    await lastWrite.catch(() => {});
+    await del(PERSIST_KEY);
 }
 
 /**
@@ -80,5 +80,5 @@ export async function clearPersistedCache() {
  * whole point of persisting it.
  */
 export function resumePersistence() {
-  persisting = true
+    persisting = true;
 }

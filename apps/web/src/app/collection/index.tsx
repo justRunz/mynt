@@ -1,34 +1,34 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from "react";
 import {
-  parseAsInteger,
-  parseAsNumberLiteral,
-  parseAsString,
-  parseAsStringLiteral,
-  useQueryState,
-  useQueryStates,
-} from 'nuqs'
-import { useTranslation } from 'react-i18next'
+    parseAsInteger,
+    parseAsNumberLiteral,
+    parseAsString,
+    parseAsStringLiteral,
+    useQueryState,
+    useQueryStates,
+} from "nuqs";
+import { useTranslation } from "react-i18next";
 import {
-  FACE_VALUES_CENTS,
-  matchesFilters,
-  metalFamily,
-  type FaceValueCents,
-} from '@mynt/core'
+    FACE_VALUES_CENTS,
+    matchesFilters,
+    metalFamily,
+    type FaceValueCents,
+} from "@mynt/core";
 
-import { AppShell } from '@/app/components/app-shell'
-import { Button } from '@/app/ui/button'
-import { useIsOnline } from '@/app/hooks/use-is-online'
-import { Modal } from '@/app/ui/modal'
-import { countryCollator, countryFlag, countryName } from '@/app/lib/countries'
-import { formatFaceValue } from '@/app/lib/format'
-import { matchesSearch } from '@/app/lib/search'
-import { EditCoin } from './components/edit-coin'
-import { FiltersBar } from './components/filters-bar'
-import { ImportCoins } from './components/import-coins'
-import { QuickAdd } from './components/quick-add'
-import { useCollection, type CollectionEntry } from './hooks/use-collection'
+import { AppShell } from "@/app/components/app-shell";
+import { Button } from "@/app/ui/button";
+import { useIsOnline } from "@/app/hooks/use-is-online";
+import { Modal } from "@/app/ui/modal";
+import { countryCollator, countryFlag, countryName } from "@/app/lib/countries";
+import { formatFaceValue } from "@/app/lib/format";
+import { matchesSearch } from "@/app/lib/search";
+import { EditCoin } from "./components/edit-coin";
+import { FiltersBar } from "./components/filters-bar";
+import { ImportCoins } from "./components/import-coins";
+import { QuickAdd } from "./components/quick-add";
+import { useCollection, type CollectionEntry } from "./hooks/use-collection";
 
-const FILING = ['ANY', 'FILED', 'UNFILED'] as const
+const FILING = ["ANY", "FILED", "UNFILED"] as const;
 
 /**
  * The filters live in the query string, so a view worth coming back to -- the
@@ -37,366 +37,439 @@ const FILING = ['ANY', 'FILED', 'UNFILED'] as const
  * keeps the names the rest of the app uses.
  */
 const FILTER_PARSERS = {
-  countryCode: parseAsString,
-  // Literal rather than a plain integer, so ?value=7 is rejected by the parser
-  // instead of being cast into a face value that does not exist.
-  faceValueCents: parseAsNumberLiteral(FACE_VALUES_CENTS),
-  year: parseAsInteger,
-  filing: parseAsStringLiteral(FILING).withDefault('ANY'),
-}
+    countryCode: parseAsString,
+    // Literal rather than a plain integer, so ?value=7 is rejected by the parser
+    // instead of being cast into a face value that does not exist.
+    faceValueCents: parseAsNumberLiteral(FACE_VALUES_CENTS),
+    year: parseAsInteger,
+    filing: parseAsStringLiteral(FILING).withDefault("ANY"),
+};
 
 const FILTER_URL_KEYS = {
-  countryCode: 'country',
-  faceValueCents: 'value',
-  year: 'year',
-  filing: 'filing',
-}
+    countryCode: "country",
+    faceValueCents: "value",
+    year: "year",
+    filing: "filing",
+};
 
 const METAL_DOT = {
-  COPPER: 'bg-copper',
-  NORDIC_GOLD: 'bg-nordic',
-  BIMETAL: 'bg-silver',
-} as const
+    COPPER: "bg-copper",
+    NORDIC_GOLD: "bg-nordic",
+    BIMETAL: "bg-silver",
+} as const;
 
 function EmptyState({ title, body }: { title: string; body: string }) {
-  return (
-    // A neutral card, flat: the reference reserves elevation for floating
-    // artifacts and has no dashed borders anywhere in its inventory.
-    <div className="rounded-xl bg-card px-6 py-16 text-center">
-      <h2 className="text-2xl">{title}</h2>
-      <p className="mt-2 text-base text-muted">{body}</p>
-    </div>
-  )
+    return (
+        // A neutral card, flat: the reference reserves elevation for floating
+        // artifacts and has no dashed borders anywhere in its inventory.
+        <div className="rounded-xl bg-card px-6 py-16 text-center">
+            <h2 className="text-2xl">{title}</h2>
+            <p className="mt-2 text-base text-muted">{body}</p>
+        </div>
+    );
 }
 
 export function CollectionPage() {
-  const { t } = useTranslation()
-  const online = useIsOnline()
-  const [addOpen, setAddOpen] = useState(false)
-  const [importOpen, setImportOpen] = useState(false)
-  return (
-    <AppShell
-      title={t('collection.title')}
-      actions={
-        // Disabled rather than hidden, and disabled here rather than only on
-        // the submit inside: opening a form that cannot be sent is a dead end.
-        <div className="flex gap-3">
-          <Button variant="ghost" disabled={!online} onClick={() => setImportOpen(true)}>
-            {t('importCoins.open')}
-          </Button>
-          <Button disabled={!online} onClick={() => setAddOpen(true)}>
-            {t('quickAdd.open')}
-          </Button>
-        </div>
-      }
-    >
-      <Collection />
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('quickAdd.title')}>
-        <QuickAdd />
-      </Modal>
-      <Modal open={importOpen} onClose={() => setImportOpen(false)} title={t('importCoins.title')}>
-        {/* Mounted only while open, so closing resets the file and the review. */}
-        {importOpen && <ImportCoins onDone={() => setImportOpen(false)} />}
-      </Modal>
-    </AppShell>
-  )
+    const { t } = useTranslation();
+    const online = useIsOnline();
+    const [addOpen, setAddOpen] = useState(false);
+    const [importOpen, setImportOpen] = useState(false);
+    return (
+        <AppShell
+            title={t("collection.title")}
+            actions={
+                // Disabled rather than hidden, and disabled here rather than only on
+                // the submit inside: opening a form that cannot be sent is a dead end.
+                <div className="flex gap-3">
+                    <Button
+                        variant="ghost"
+                        disabled={!online}
+                        onClick={() => setImportOpen(true)}
+                    >
+                        {t("importCoins.open")}
+                    </Button>
+                    <Button disabled={!online} onClick={() => setAddOpen(true)}>
+                        {t("quickAdd.open")}
+                    </Button>
+                </div>
+            }
+        >
+            <Collection />
+            <Modal
+                open={addOpen}
+                onClose={() => setAddOpen(false)}
+                title={t("quickAdd.title")}
+            >
+                <QuickAdd />
+            </Modal>
+            <Modal
+                open={importOpen}
+                onClose={() => setImportOpen(false)}
+                title={t("importCoins.title")}
+            >
+                {/* Mounted only while open, so closing resets the file and the review. */}
+                {importOpen && (
+                    <ImportCoins onDone={() => setImportOpen(false)} />
+                )}
+            </Modal>
+        </AppShell>
+    );
 }
 
 function Collection() {
-  const { t } = useTranslation()
-  const { data, isPending, isError } = useCollection()
-  const [filters, setFilters] = useQueryStates(FILTER_PARSERS, { urlKeys: FILTER_URL_KEYS })
-  // Throttled: a search box writing to the URL on every keystroke would fight
-  // the address bar and fill the history with half-typed words.
-  const [search, setSearch] = useQueryState(
-    'q',
-    parseAsString.withDefault('').withOptions({ throttleMs: 300 }),
-  )
-  const [editing, setEditing] = useState<CollectionEntry | null>(null)
+    const { t } = useTranslation();
+    const { data, isPending, isError } = useCollection();
+    const [filters, setFilters] = useQueryStates(FILTER_PARSERS, {
+        urlKeys: FILTER_URL_KEYS,
+    });
+    // Throttled: a search box writing to the URL on every keystroke would fight
+    // the address bar and fill the history with half-typed words.
+    const [search, setSearch] = useQueryState(
+        "q",
+        parseAsString.withDefault("").withOptions({ throttleMs: 300 }),
+    );
+    const [editing, setEditing] = useState<CollectionEntry | null>(null);
 
-  const entries = useMemo(() => data ?? [], [data])
+    const entries = useMemo(() => data ?? [], [data]);
 
-  // Filter options come from the collection itself, so the user is never
-  // offered a country or a year that would return nothing.
-  const countryCodes = useMemo(() => {
-    const codes = [...new Set(entries.map((e) => e.countryCode))]
-    const collator = countryCollator()
-    return codes.sort((a, b) => collator.compare(countryName(a), countryName(b)))
-  }, [entries])
+    // Filter options come from the collection itself, so the user is never
+    // offered a country or a year that would return nothing.
+    const countryCodes = useMemo(() => {
+        const codes = [...new Set(entries.map((e) => e.countryCode))];
+        const collator = countryCollator();
+        return codes.sort((a, b) =>
+            collator.compare(countryName(a), countryName(b)),
+        );
+    }, [entries]);
 
-  const stats = useMemo(() => {
-    const seen = new Set<string>()
-    let duplicates = 0
-    for (const e of entries) {
-      const key = `${e.countryCode}|${e.faceValueCents}|${e.year}`
-      if (seen.has(key)) duplicates++
-      else seen.add(key)
+    const stats = useMemo(() => {
+        const seen = new Set<string>();
+        let duplicates = 0;
+        for (const e of entries) {
+            const key = `${e.countryCode}|${e.faceValueCents}|${e.year}`;
+            if (seen.has(key)) duplicates++;
+            else seen.add(key);
+        }
+        return {
+            coins: entries.length,
+            countries: new Set(entries.map((e) => e.countryCode)).size,
+            unfiled: entries.filter((e) => e.location === null).length,
+            duplicates,
+        };
+    }, [entries]);
+
+    const years = useMemo(
+        () => [...new Set(entries.map((e) => e.year))].sort((a, b) => a - b),
+        [entries],
+    );
+
+    const visible = useMemo(() => {
+        const collator = countryCollator();
+        return entries
+            .filter((entry) =>
+                matchesFilters(
+                    {
+                        countryCode: entry.countryCode,
+                        faceValueCents: entry.faceValueCents,
+                        year: entry.year,
+                        isFiled: entry.location !== null,
+                    },
+                    filters,
+                ),
+            )
+            .filter((entry) =>
+                matchesSearch(
+                    [countryName(entry.countryCode), entry.notes],
+                    search,
+                ),
+            )
+            .sort(
+                (a, b) =>
+                    collator.compare(
+                        countryName(a.countryCode),
+                        countryName(b.countryCode),
+                    ) ||
+                    a.faceValueCents - b.faceValueCents ||
+                    a.year - b.year,
+            );
+    }, [entries, filters, search]);
+
+    if (isError) {
+        return <p className="text-sm text-danger">{t("collection.error")}</p>;
     }
-    return {
-      coins: entries.length,
-      countries: new Set(entries.map((e) => e.countryCode)).size,
-      unfiled: entries.filter((e) => e.location === null).length,
-      duplicates,
+
+    if (isPending) {
+        return <p className="text-sm text-muted">{t("common.loading")}</p>;
     }
-  }, [entries])
 
-  const years = useMemo(
-    () => [...new Set(entries.map((e) => e.year))].sort((a, b) => a - b),
-    [entries],
-  )
+    return (
+        <div className="flex flex-col gap-6">
+            {entries.length > 0 && (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <StatTile
+                        value={stats.coins}
+                        label={t("collection.stats.coins")}
+                    />
+                    <StatTile
+                        value={stats.countries}
+                        label={t("collection.stats.countries")}
+                    />
+                    <StatTile
+                        value={stats.unfiled}
+                        label={t("collection.stats.unfiled")}
+                        onClick={() => void setFilters({ filing: "UNFILED" })}
+                    />
+                    <StatTile
+                        value={stats.duplicates}
+                        label={t("collection.stats.duplicates")}
+                    />
+                </div>
+            )}
 
-  const visible = useMemo(() => {
-    const collator = countryCollator()
-    return entries
-      .filter((entry) =>
-        matchesFilters(
-          {
-            countryCode: entry.countryCode,
-            faceValueCents: entry.faceValueCents,
-            year: entry.year,
-            isFiled: entry.location !== null,
-          },
-          filters,
-        ),
-      )
-      .filter((entry) => matchesSearch([countryName(entry.countryCode), entry.notes], search))
-      .sort(
-        (a, b) =>
-          collator.compare(countryName(a.countryCode), countryName(b.countryCode)) ||
-          a.faceValueCents - b.faceValueCents ||
-          a.year - b.year,
-      )
-  }, [entries, filters, search])
+            <FiltersBar
+                filters={filters}
+                onChange={(next) => void setFilters(next)}
+                search={search}
+                onSearchChange={(next) => void setSearch(next)}
+                countryCodes={countryCodes}
+                years={years}
+            />
 
-  if (isError) {
-    return <p className="text-sm text-danger">{t('collection.error')}</p>
-  }
+            <EditCoin coin={editing} onClose={() => setEditing(null)} />
 
-  if (isPending) {
-    return <p className="text-sm text-muted">{t('common.loading')}</p>
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      {entries.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile value={stats.coins} label={t('collection.stats.coins')} />
-          <StatTile value={stats.countries} label={t('collection.stats.countries')} />
-          <StatTile
-            value={stats.unfiled}
-            label={t('collection.stats.unfiled')}
-            onClick={() => void setFilters({ filing: 'UNFILED' })}
-          />
-          <StatTile value={stats.duplicates} label={t('collection.stats.duplicates')} />
+            {entries.length === 0 ? (
+                <EmptyState
+                    title={t("collection.empty.title")}
+                    body={t("collection.empty.body")}
+                />
+            ) : visible.length === 0 ? (
+                <EmptyState
+                    title={t("collection.noResults.title")}
+                    body={t("collection.noResults.body")}
+                />
+            ) : (
+                <>
+                    <p className="text-sm text-muted">
+                        {t("collection.count", { count: visible.length })}
+                    </p>
+                    <CollectionTable entries={visible} onEdit={setEditing} />
+                </>
+            )}
         </div>
-      )}
-
-      <FiltersBar
-        filters={filters}
-        onChange={(next) => void setFilters(next)}
-        search={search}
-        onSearchChange={(next) => void setSearch(next)}
-        countryCodes={countryCodes}
-        years={years}
-      />
-
-      <EditCoin coin={editing} onClose={() => setEditing(null)} />
-
-      {entries.length === 0 ? (
-        <EmptyState title={t('collection.empty.title')} body={t('collection.empty.body')} />
-      ) : visible.length === 0 ? (
-        <EmptyState
-          title={t('collection.noResults.title')}
-          body={t('collection.noResults.body')}
-        />
-      ) : (
-        <>
-          <p className="text-sm text-muted">{t('collection.count', { count: visible.length })}</p>
-          <CollectionTable entries={visible} onEdit={setEditing} />
-        </>
-      )}
-    </div>
-  )
+    );
 }
 
 function StatTile({
-  value,
-  label,
-  onClick,
+    value,
+    label,
+    onClick,
 }: {
-  value: number
-  label: string
-  onClick?: () => void
+    value: number;
+    label: string;
+    onClick?: () => void;
 }) {
-  const body = (
-    <>
-      <div className="text-2xl tnum">{value}</div>
-      <div className="text-sm text-muted">{label}</div>
-    </>
-  )
-  return onClick ? (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-xl bg-card p-4 text-left hover:bg-hover"
-    >
-      {body}
-    </button>
-  ) : (
-    <div className="rounded-xl bg-card p-4">{body}</div>
-  )
+    const body = (
+        <>
+            <div className="text-2xl tnum">{value}</div>
+            <div className="text-sm text-muted">{label}</div>
+        </>
+    );
+    return onClick ? (
+        <button
+            type="button"
+            onClick={onClick}
+            className="rounded-xl bg-card p-4 text-left hover:bg-hover"
+        >
+            {body}
+        </button>
+    ) : (
+        <div className="rounded-xl bg-card p-4">{body}</div>
+    );
 }
 
 function EditButton({
-  entry,
-  onEdit,
+    entry,
+    onEdit,
 }: {
-  entry: CollectionEntry
-  onEdit: (entry: CollectionEntry) => void
+    entry: CollectionEntry;
+    onEdit: (entry: CollectionEntry) => void;
 }) {
-  const { t } = useTranslation()
-  return (
-    <button
-      type="button"
-      onClick={() => onEdit(entry)}
-      aria-label={t('editCoin.open', {
-        country: countryName(entry.countryCode),
-        value: formatFaceValue(entry.faceValueCents),
-        year: entry.year,
-      })}
-      className="ml-auto flex size-9 shrink-0 items-center justify-center rounded-md
+    const { t } = useTranslation();
+    return (
+        <button
+            type="button"
+            onClick={() => onEdit(entry)}
+            aria-label={t("editCoin.open", {
+                country: countryName(entry.countryCode),
+                value: formatFaceValue(entry.faceValueCents),
+                year: entry.year,
+            })}
+            className="ml-auto flex size-9 shrink-0 items-center justify-center rounded-md
                  text-muted hover:bg-hover hover:text-ink"
-    >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 16 16"
-        className="size-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M11.2 2.3l2.5 2.5-8 8-3.2.7.7-3.2z" />
-      </svg>
-    </button>
-  )
+        >
+            <svg
+                aria-hidden="true"
+                viewBox="0 0 16 16"
+                className="size-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M11.2 2.3l2.5 2.5-8 8-3.2.7.7-3.2z" />
+            </svg>
+        </button>
+    );
 }
 
 function CollectionTable({
-  entries,
-  onEdit,
+    entries,
+    onEdit,
 }: {
-  entries: readonly CollectionEntry[]
-  onEdit: (entry: CollectionEntry) => void
+    entries: readonly CollectionEntry[];
+    onEdit: (entry: CollectionEntry) => void;
 }) {
-  const { t } = useTranslation()
+    const { t } = useTranslation();
 
-  return (
-    <>
-    <ul className="flex flex-col gap-3 sm:hidden">
-      {entries.map((entry) => (
-        <li key={entry.id} className="flex items-start gap-3 rounded-xl bg-card p-4">
-          <div className="flex min-w-0 flex-col gap-1">
-            <div>
-              <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
-              {countryName(entry.countryCode)}
-            </div>
-            <div className="text-base">
-              <span
-                aria-hidden
-                className={`mr-2 inline-block size-2 rounded-full align-middle ${
-                  METAL_DOT[metalFamily(entry.faceValueCents as FaceValueCents)]
-                }`}
-              />
-              {formatFaceValue(entry.faceValueCents)} · {entry.year}
-              {entry.grade && ` · ${t(`grade.short.${entry.grade}`)}`}
-            </div>
-            <div className="text-sm text-muted">
-              {entry.location
-                ? t('collection.slot', {
-                    binder: entry.location.binderName,
-                    page: entry.location.pageNumber,
-                    row: entry.location.row,
-                    column: entry.location.column,
-                  })
-                : t('collection.unfiled')}
-            </div>
-          </div>
-          <EditButton entry={entry} onEdit={onEdit} />
-        </li>
-      ))}
-    </ul>
-    <div className="hidden overflow-x-auto sm:block">
-      <table className="w-full border-collapse text-base">
-        <thead>
-          <tr className="border-b border-rule text-left text-sm font-[450] text-muted [&>th:first-child]:pl-3 [&>th:last-child]:pr-3">
-            <th scope="col" className="py-3 pr-4 font-[450]">
-              {t('collection.columns.country')}
-            </th>
-            <th scope="col" className="py-3 pr-4 text-right font-[450]">
-              {t('collection.columns.faceValue')}
-            </th>
-            <th scope="col" className="py-3 pr-4 text-right font-[450]">
-              {t('collection.columns.year')}
-            </th>
-            <th scope="col" className="py-3 pr-4 font-[450]">
-              {t('collection.columns.grade')}
-            </th>
-            <th scope="col" className="py-3 pr-4 font-[450]">
-              {t('collection.columns.location')}
-            </th>
-            <th scope="col" className="py-3">
-              <span className="sr-only">{t('collection.columns.actions')}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry) => (
-            <tr
-              key={entry.id}
-              // A faint translucent ink rather than the opaque card grey: the background
-              // still shows through, so the row tints instead of turning into a slab.
-              className="border-b border-rule transition-colors hover:bg-ink/[0.035]
+    return (
+        <>
+            <ul className="flex flex-col gap-3 sm:hidden">
+                {entries.map((entry) => (
+                    <li
+                        key={entry.id}
+                        className="flex items-start gap-3 rounded-xl bg-card p-4"
+                    >
+                        <div className="flex min-w-0 flex-col gap-1">
+                            <div>
+                                <span aria-hidden>
+                                    {countryFlag(entry.countryCode)}
+                                </span>{" "}
+                                {countryName(entry.countryCode)}
+                            </div>
+                            <div className="text-base">
+                                <span
+                                    aria-hidden
+                                    className={`mr-2 inline-block size-2 rounded-full align-middle ${
+                                        METAL_DOT[
+                                            metalFamily(
+                                                entry.faceValueCents as FaceValueCents,
+                                            )
+                                        ]
+                                    }`}
+                                />
+                                {formatFaceValue(entry.faceValueCents)} ·{" "}
+                                {entry.year}
+                                {entry.grade &&
+                                    ` · ${t(`grade.short.${entry.grade}`)}`}
+                            </div>
+                            <div className="text-sm text-muted">
+                                {entry.location
+                                    ? t("collection.slot", {
+                                          binder: entry.location.binderName,
+                                          page: entry.location.pageNumber,
+                                          row: entry.location.row,
+                                          column: entry.location.column,
+                                      })
+                                    : t("collection.unfiled")}
+                            </div>
+                        </div>
+                        <EditButton entry={entry} onEdit={onEdit} />
+                    </li>
+                ))}
+            </ul>
+            <div className="hidden overflow-x-auto sm:block">
+                <table className="w-full border-collapse text-base">
+                    <thead>
+                        <tr className="border-b border-rule text-left text-sm font-[450] text-muted [&>th:first-child]:pl-3 [&>th:last-child]:pr-3">
+                            <th scope="col" className="py-3 pr-4 font-[450]">
+                                {t("collection.columns.country")}
+                            </th>
+                            <th
+                                scope="col"
+                                className="py-3 pr-4 text-right font-[450]"
+                            >
+                                {t("collection.columns.faceValue")}
+                            </th>
+                            <th
+                                scope="col"
+                                className="py-3 pr-4 text-right font-[450]"
+                            >
+                                {t("collection.columns.year")}
+                            </th>
+                            <th scope="col" className="py-3 pr-4 font-[450]">
+                                {t("collection.columns.grade")}
+                            </th>
+                            <th scope="col" className="py-3 pr-4 font-[450]">
+                                {t("collection.columns.location")}
+                            </th>
+                            <th scope="col" className="py-3">
+                                <span className="sr-only">
+                                    {t("collection.columns.actions")}
+                                </span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {entries.map((entry) => (
+                            <tr
+                                key={entry.id}
+                                // A faint translucent ink rather than the opaque card grey: the background
+                                // still shows through, so the row tints instead of turning into a slab.
+                                className="border-b border-rule transition-colors hover:bg-ink/[0.035]
                          [&>td:first-child]:pl-3 [&>td:last-child]:pr-3"
-            >
-              <td className="py-3 pr-4 whitespace-nowrap">
-                <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
-                {countryName(entry.countryCode)}
-              </td>
-              <td className="py-3 pr-4 text-right whitespace-nowrap">
-                <span
-                  aria-hidden
-                  className={`mr-2 inline-block size-2 rounded-full align-middle ${
-                    METAL_DOT[metalFamily(entry.faceValueCents as FaceValueCents)]
-                  }`}
-                />
-                {formatFaceValue(entry.faceValueCents)}
-              </td>
-              <td className="py-3 pr-4 text-right">{entry.year}</td>
-              <td className="py-3 pr-4 whitespace-nowrap">
-                {entry.grade ? t(`grade.short.${entry.grade}`) : <span className="text-muted">—</span>}
-              </td>
-              <td className="py-3 pr-4 whitespace-nowrap">
-                {entry.location ? (
-                  t('collection.slot', {
-                    binder: entry.location.binderName,
-                    page: entry.location.pageNumber,
-                    row: entry.location.row,
-                    column: entry.location.column,
-                  })
-                ) : (
-                  <span className="text-muted">{t('collection.unfiled')}</span>
-                )}
-              </td>
-              <td className="py-3 text-right">
-                <EditButton entry={entry} onEdit={onEdit} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-    </>
-  )
+                            >
+                                <td className="py-3 pr-4 whitespace-nowrap">
+                                    <span aria-hidden>
+                                        {countryFlag(entry.countryCode)}
+                                    </span>{" "}
+                                    {countryName(entry.countryCode)}
+                                </td>
+                                <td className="py-3 pr-4 text-right whitespace-nowrap">
+                                    <span
+                                        aria-hidden
+                                        className={`mr-2 inline-block size-2 rounded-full align-middle ${
+                                            METAL_DOT[
+                                                metalFamily(
+                                                    entry.faceValueCents as FaceValueCents,
+                                                )
+                                            ]
+                                        }`}
+                                    />
+                                    {formatFaceValue(entry.faceValueCents)}
+                                </td>
+                                <td className="py-3 pr-4 text-right">
+                                    {entry.year}
+                                </td>
+                                <td className="py-3 pr-4 whitespace-nowrap">
+                                    {entry.grade ? (
+                                        t(`grade.short.${entry.grade}`)
+                                    ) : (
+                                        <span className="text-muted">—</span>
+                                    )}
+                                </td>
+                                <td className="py-3 pr-4 whitespace-nowrap">
+                                    {entry.location ? (
+                                        t("collection.slot", {
+                                            binder: entry.location.binderName,
+                                            page: entry.location.pageNumber,
+                                            row: entry.location.row,
+                                            column: entry.location.column,
+                                        })
+                                    ) : (
+                                        <span className="text-muted">
+                                            {t("collection.unfiled")}
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="py-3 text-right">
+                                    <EditButton entry={entry} onEdit={onEdit} />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </>
+    );
 }

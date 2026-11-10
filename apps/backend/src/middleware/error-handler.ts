@@ -1,7 +1,7 @@
-import type { NextFunction, Request, Response } from 'express'
-import { ZodError } from 'zod'
+import type { NextFunction, Request, Response } from "express";
+import { ZodError } from "zod";
 
-import { DomainError } from '../errors.js'
+import { DomainError } from "../errors.js";
 
 /**
  * What HTTP makes of a failure.
@@ -11,40 +11,40 @@ import { DomainError } from '../errors.js'
  * pretending to be a web request.
  */
 const STATUS: Record<string, number> = {
-  // The address is taken. Told plainly, unlike a failed sign-in: somebody who
-  // has forgotten they already have an account has to be able to find out.
-  email_taken: 409,
-  // Deliberately one answer for a wrong password and an unknown address alike.
-  invalid_credentials: 401,
+    // The address is taken. Told plainly, unlike a failed sign-in: somebody who
+    // has forgotten they already have an account has to be able to find out.
+    email_taken: 409,
+    // Deliberately one answer for a wrong password and an unknown address alike.
+    invalid_credentials: 401,
 
-  // The link is unknown, spent, expired, or for something else. One answer for
-  // all four: none of the distinctions helps somebody holding a link that does
-  // not work, and each one told apart is a fact given away.
-  invalid_link: 410,
+    // The link is unknown, spent, expired, or for something else. One answer for
+    // all four: none of the distinctions helps somebody holding a link that does
+    // not work, and each one told apart is a fact given away.
+    invalid_link: 410,
 
-  // A coin that is not there, or is somebody else's -- the policy makes those
-  // the same thing, and so does this. 404 rather than 403: a refusal that
-  // distinguishes them tells a stranger which ids are real.
-  not_found: 404,
+    // A coin that is not there, or is somebody else's -- the policy makes those
+    // the same thing, and so does this. 404 rather than 403: a refusal that
+    // distinguishes them tells a stranger which ids are real.
+    not_found: 404,
 
-  // The hole is taken. The one conflict a collector can act on, which is why it
-  // arrives as itself instead of as a generic failure: the binder view and the
-  // add form both ask whether this is what happened, and offer another hole.
-  slot_taken: 409,
-  // Two sheets cannot both be page seven of one binder.
-  page_number_taken: 409,
+    // The hole is taken. The one conflict a collector can act on, which is why it
+    // arrives as itself instead of as a generic failure: the binder view and the
+    // add form both ask whether this is what happened, and offer another hole.
+    slot_taken: 409,
+    // Two sheets cannot both be page seven of one binder.
+    page_number_taken: 409,
 
-  // Well-formed, permitted, and still impossible: row 5 of a four-row sheet, or
-  // a grade that is not in the grades table. 422 rather than 400, because the
-  // request was understood -- it just asks for something that cannot be.
-  slot_out_of_bounds: 422,
-  unknown_grade: 422,
-  unknown_coin_type: 422,
+    // Well-formed, permitted, and still impossible: row 5 of a four-row sheet, or
+    // a grade that is not in the grades table. 422 rather than 400, because the
+    // request was understood -- it just asks for something that cannot be.
+    slot_out_of_bounds: 422,
+    unknown_grade: 422,
+    unknown_coin_type: 422,
 
-  // A uniqueness rule broke that no route names specifically. Left mapped rather
-  // than falling through to 500, since a conflict is still the truth.
-  conflict: 409,
-}
+    // A uniqueness rule broke that no route names specifically. Left mapped rather
+    // than falling through to 500, since a conflict is still the truth.
+    conflict: 409,
+};
 
 /**
  * The last word on failure.
@@ -62,48 +62,51 @@ const STATUS: Record<string, number> = {
  * no wrapper to be caught.
  */
 export function errorHandler(
-  error: unknown,
-  req: Request,
-  res: Response,
-  _next: NextFunction,
+    error: unknown,
+    req: Request,
+    res: Response,
+    _next: NextFunction,
 ): void {
-  if (error instanceof DomainError) {
-    // A code with no entry is a code somebody forgot to place. 500 rather than a
-    // default of 400, because guessing would hide the omission.
-    const status = STATUS[error.code]
-    if (status !== undefined) {
-      res.status(status).json({ error: error.code })
-      return
+    if (error instanceof DomainError) {
+        // A code with no entry is a code somebody forgot to place. 500 rather than a
+        // default of 400, because guessing would hide the omission.
+        const status = STATUS[error.code];
+        if (status !== undefined) {
+            res.status(status).json({ error: error.code });
+            return;
+        }
     }
-  }
 
-  // body-parser's own refusals: JSON that does not parse, a body over the size
-  // limit. They arrive as http-errors carrying a 4xx status and `expose: true`,
-  // which is the library saying the fault is the client's and the fact is safe
-  // to tell them. Answered as that, and not logged -- a malformed request is not
-  // a bug in this server, and treating it as one fills the log with false alarms.
-  const http = error as { status?: number; expose?: boolean }
-  if (http.expose && http.status !== undefined && http.status >= 400 && http.status < 500) {
-    res
-      .status(http.status)
-      .json({
-        // An upload is the one body a person sends on purpose and can fix by
-        // choosing a smaller file, so it gets a name the interface can say.
-        error:
-          http.status !== 413
-            ? 'invalid_request'
-            : req.originalUrl.startsWith('/api/import')
-              ? 'file_too_large'
-              : 'payload_too_large',
-      })
-    return
-  }
+    // body-parser's own refusals: JSON that does not parse, a body over the size
+    // limit. They arrive as http-errors carrying a 4xx status and `expose: true`,
+    // which is the library saying the fault is the client's and the fact is safe
+    // to tell them. Answered as that, and not logged -- a malformed request is not
+    // a bug in this server, and treating it as one fills the log with false alarms.
+    const http = error as { status?: number; expose?: boolean };
+    if (
+        http.expose &&
+        http.status !== undefined &&
+        http.status >= 400 &&
+        http.status < 500
+    ) {
+        res.status(http.status).json({
+            // An upload is the one body a person sends on purpose and can fix by
+            // choosing a smaller file, so it gets a name the interface can say.
+            error:
+                http.status !== 413
+                    ? "invalid_request"
+                    : req.originalUrl.startsWith("/api/import")
+                      ? "file_too_large"
+                      : "payload_too_large",
+        });
+        return;
+    }
 
-  if (error instanceof ZodError) {
-    res.status(400).json({ error: 'invalid_request' })
-    return
-  }
+    if (error instanceof ZodError) {
+        res.status(400).json({ error: "invalid_request" });
+        return;
+    }
 
-  console.error(error)
-  res.status(500).json({ error: 'internal' })
+    console.error(error);
+    res.status(500).json({ error: "internal" });
 }

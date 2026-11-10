@@ -1,431 +1,485 @@
-import { useMemo, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
-import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
-import { useTranslation } from 'react-i18next'
-import { AppShell } from '@/app/components/app-shell'
-import { useIsOnline } from '@/app/hooks/use-is-online'
-import { useCollection } from '@/app/collection/hooks/use-collection'
-import type { TranslationKey } from '@/app/i18n/types'
-import { Button } from '@/app/ui/button'
-import { Field } from '@/app/ui/field'
-import { Modal } from '@/app/ui/modal'
-import { Select } from '@/app/ui/select'
-import { SlotGrid, type SlotCoin, type SlotTarget } from './components/slot-grid'
-import { SlotDialog, type SelectedSlot } from './components/slot-dialog'
+import { useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+import { useTranslation } from "react-i18next";
+import { AppShell } from "@/app/components/app-shell";
+import { useIsOnline } from "@/app/hooks/use-is-online";
+import { useCollection } from "@/app/collection/hooks/use-collection";
+import type { TranslationKey } from "@/app/i18n/types";
+import { Button } from "@/app/ui/button";
+import { Field } from "@/app/ui/field";
+import { Modal } from "@/app/ui/modal";
+import { Select } from "@/app/ui/select";
 import {
-  isSlotTaken,
-  useBinders,
-  useCreateBinder,
-  useCreatePage,
-  useFileCoin,
-  useMovePair,
-  useUnfileCoin,
-} from './hooks/use-binders'
+    SlotGrid,
+    type SlotCoin,
+    type SlotTarget,
+} from "./components/slot-grid";
+import { SlotDialog, type SelectedSlot } from "./components/slot-dialog";
+import {
+    isSlotTaken,
+    useBinders,
+    useCreateBinder,
+    useCreatePage,
+    useFileCoin,
+    useMovePair,
+    useUnfileCoin,
+} from "./hooks/use-binders";
 
 export function BindersPage() {
-  const { t } = useTranslation()
-  const online = useIsOnline()
-  const binders = useBinders()
-  const [newBinderOpen, setNewBinderOpen] = useState(false)
-  const [newPageOpen, setNewPageOpen] = useState(false)
-  return (
-    <AppShell
-      title={t('binders.title')}
-      actions={
-        <>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={!online || !binders.data?.length}
-            onClick={() => setNewPageOpen(true)}
-          >
-            {t('binders.newPage')}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={!online}
-            onClick={() => setNewBinderOpen(true)}
-          >
-            {t('binders.newBinder')}
-          </Button>
-        </>
-      }
-    >
-      <Binders
-        newBinderOpen={newBinderOpen}
-        setNewBinderOpen={setNewBinderOpen}
-        newPageOpen={newPageOpen}
-        setNewPageOpen={setNewPageOpen}
-      />
-    </AppShell>
-  )
+    const { t } = useTranslation();
+    const online = useIsOnline();
+    const binders = useBinders();
+    const [newBinderOpen, setNewBinderOpen] = useState(false);
+    const [newPageOpen, setNewPageOpen] = useState(false);
+    return (
+        <AppShell
+            title={t("binders.title")}
+            actions={
+                <>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={!online || !binders.data?.length}
+                        onClick={() => setNewPageOpen(true)}
+                    >
+                        {t("binders.newPage")}
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={!online}
+                        onClick={() => setNewBinderOpen(true)}
+                    >
+                        {t("binders.newBinder")}
+                    </Button>
+                </>
+            }
+        >
+            <Binders
+                newBinderOpen={newBinderOpen}
+                setNewBinderOpen={setNewBinderOpen}
+                newPageOpen={newPageOpen}
+                setNewPageOpen={setNewPageOpen}
+            />
+        </AppShell>
+    );
 }
 
 function Binders({
-  newBinderOpen,
-  setNewBinderOpen,
-  newPageOpen,
-  setNewPageOpen,
+    newBinderOpen,
+    setNewBinderOpen,
+    newPageOpen,
+    setNewPageOpen,
 }: {
-  newBinderOpen: boolean
-  setNewBinderOpen: (open: boolean) => void
-  newPageOpen: boolean
-  setNewPageOpen: (open: boolean) => void
+    newBinderOpen: boolean;
+    setNewBinderOpen: (open: boolean) => void;
+    newPageOpen: boolean;
+    setNewPageOpen: (open: boolean) => void;
 }) {
-  const { t } = useTranslation()
-  const online = useIsOnline()
-  const binders = useBinders()
-  const collection = useCollection()
-  const createBinder = useCreateBinder()
-  const createPage = useCreatePage()
-  const fileCoin = useFileCoin()
-  const movePair = useMovePair()
-  const unfileCoin = useUnfileCoin()
+    const { t } = useTranslation();
+    const online = useIsOnline();
+    const binders = useBinders();
+    const collection = useCollection();
+    const createBinder = useCreateBinder();
+    const createPage = useCreatePage();
+    const fileCoin = useFileCoin();
+    const movePair = useMovePair();
+    const unfileCoin = useUnfileCoin();
 
-  // In the query string rather than in state, so reloading or sharing the link
-  // lands on the same page of the same binder. The page travels as its number
-  // rather than its id: it is what the tabs are labelled with, and it survives
-  // a link pasted to someone looking at their own copy of the same album.
-  const [binderId, setBinderId] = useQueryState('binder', parseAsString)
-  const [pageNumber, setPageNumber] = useQueryState('page', parseAsInteger)
-  const [slot, setSlot] = useState<SelectedSlot | null>(null)
-  const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
-  const tabs = useRef<(HTMLButtonElement | null)[]>([])
+    // In the query string rather than in state, so reloading or sharing the link
+    // lands on the same page of the same binder. The page travels as its number
+    // rather than its id: it is what the tabs are labelled with, and it survives
+    // a link pasted to someone looking at their own copy of the same album.
+    const [binderId, setBinderId] = useQueryState("binder", parseAsString);
+    const [pageNumber, setPageNumber] = useQueryState("page", parseAsInteger);
+    const [slot, setSlot] = useState<SelectedSlot | null>(null);
+    const [errorKey, setErrorKey] = useState<TranslationKey | null>(null);
+    const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  const list = useMemo(() => binders.data ?? [], [binders.data])
-  // Derived during render rather than synchronised in an effect: a selection
-  // that no longer exists simply falls back to the first entry, so there is no
-  // state to repair after the fact.
-  const binder = list.find((b) => b.id === binderId) ?? list[0] ?? null
-  const page = binder?.pages.find((p) => p.number === pageNumber) ?? binder?.pages[0] ?? null
+    const list = useMemo(() => binders.data ?? [], [binders.data]);
+    // Derived during render rather than synchronised in an effect: a selection
+    // that no longer exists simply falls back to the first entry, so there is no
+    // state to repair after the fact.
+    const binder = list.find((b) => b.id === binderId) ?? list[0] ?? null;
+    const page =
+        binder?.pages.find((p) => p.number === pageNumber) ??
+        binder?.pages[0] ??
+        null;
 
-  const entries = useMemo(() => collection.data ?? [], [collection.data])
-  const pageCoins = useMemo<SlotCoin[]>(
-    () =>
-      entries
-        .filter((entry) => entry.location?.pageId === page?.id)
-        .map((entry) => ({
-          ...entry,
-          slotRow: entry.location?.row ?? 0,
-          slotColumn: entry.location?.column ?? 0,
-        })),
-    [entries, page?.id],
-  )
-  const filledByPage = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const entry of entries) {
-      const id = entry.location?.pageId
-      if (id) counts.set(id, (counts.get(id) ?? 0) + 1)
-    }
-    return counts
-  }, [entries])
-  const unfiled = useMemo(() => entries.filter((entry) => entry.location === null), [entries])
+    const entries = useMemo(() => collection.data ?? [], [collection.data]);
+    const pageCoins = useMemo<SlotCoin[]>(
+        () =>
+            entries
+                .filter((entry) => entry.location?.pageId === page?.id)
+                .map((entry) => ({
+                    ...entry,
+                    slotRow: entry.location?.row ?? 0,
+                    slotColumn: entry.location?.column ?? 0,
+                })),
+        [entries, page?.id],
+    );
+    const filledByPage = useMemo(() => {
+        const counts = new Map<string, number>();
+        for (const entry of entries) {
+            const id = entry.location?.pageId;
+            if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+        }
+        return counts;
+    }, [entries]);
+    const unfiled = useMemo(
+        () => entries.filter((entry) => entry.location === null),
+        [entries],
+    );
 
-  const nextPageNumber = (binder?.pages.at(-1)?.number ?? 0) + 1
+    const nextPageNumber = (binder?.pages.at(-1)?.number ?? 0) + 1;
 
-  // Creating a binder or a page is a handful of clicks in the life of a
-  // collection, so both live behind a button rather than as forms standing open
-  // under the grid. The grid is what this page is for.
-  const createBinderModal = (
-    <Modal
-      open={newBinderOpen}
-      onClose={() => setNewBinderOpen(false)}
-      title={t('binders.newBinder')}
-    >
-      <NewBinderForm
-        busy={!online || createBinder.isPending}
-        onCreate={(name) => {
-          createBinder.mutate({ name })
-          setNewBinderOpen(false)
-        }}
-      />
-    </Modal>
-  )
-
-  if (binders.isPending || collection.isPending) {
-    return <p className="text-sm text-muted">{t('common.loading')}</p>
-  }
-
-  if (list.length === 0) {
-    return (
-      <>
-        <EmptyState
-          title={t('binders.empty.title')}
-          body={t('binders.empty.body')}
-          action={t('binders.newBinder')}
-          disabled={!online}
-          onAction={() => setNewBinderOpen(true)}
-        />
-        {createBinderModal}
-      </>
-    )
-  }
-
-  const busy = !online || fileCoin.isPending || unfileCoin.isPending
-
-  const close = () => {
-    setSlot(null)
-    setErrorKey(null)
-  }
-
-  const onError = (error: unknown) => {
-    setErrorKey(isSlotTaken(error) ? 'binders.errors.slotTaken' : 'binders.errors.generic')
-  }
-
-  const onMoveError = (error: unknown) => {
-    setErrorKey(isSlotTaken(error) ? 'binders.errors.slotTaken' : 'binders.errors.move')
-  }
-
-  // Dropping onto a free hole is an ordinary filing; onto an occupied one it
-  // has to be the paired move, or the first update would land on a hole the
-  // other coin has not left yet.
-  const moveCoin = (dragged: SlotCoin, target: SlotTarget) => {
-    if (!page) return
-    setErrorKey(null)
-    const destination = { pageId: page.id, row: target.row, column: target.column }
-    if (target.coin === null) {
-      fileCoin.mutate({ coinId: dragged.id, ...destination }, { onError: onMoveError })
-      return
-    }
-    movePair.mutate(
-      {
-        first: { coinId: dragged.id, destination },
-        second: {
-          coinId: target.coin.id,
-          destination: { pageId: page.id, row: dragged.slotRow, column: dragged.slotColumn },
-        },
-      },
-      { onError: onMoveError },
-    )
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end gap-4">
-        <Select
-          label={t('binders.binder')}
-          value={binder?.id ?? ''}
-          onChange={(e) => {
-            void setBinderId(e.target.value)
-            // Page numbers do not carry across binders.
-            void setPageNumber(null)
-          }}
+    // Creating a binder or a page is a handful of clicks in the life of a
+    // collection, so both live behind a button rather than as forms standing open
+    // under the grid. The grid is what this page is for.
+    const createBinderModal = (
+        <Modal
+            open={newBinderOpen}
+            onClose={() => setNewBinderOpen(false)}
+            title={t("binders.newBinder")}
         >
-          {list.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </Select>
-      </div>
+            <NewBinderForm
+                busy={!online || createBinder.isPending}
+                onCreate={(name) => {
+                    createBinder.mutate({ name });
+                    setNewBinderOpen(false);
+                }}
+            />
+        </Modal>
+    );
 
-      {binder && binder.pages.length > 0 && (
-        <div role="tablist" aria-label={t('binders.page')} className="flex flex-wrap gap-2">
-          {binder.pages.map((p, i) => {
-            const selected = p.id === page?.id
-            const go = (to: number) => {
-              const n = binder.pages.length
-              const j = (to + n) % n
-              const target = binder.pages[j]
-              if (target) void setPageNumber(target.number)
-              tabs.current[j]?.focus()
-            }
-            return (
-              <button
-                key={p.id}
-                ref={(el) => {
-                  tabs.current[i] = el
+    if (binders.isPending || collection.isPending) {
+        return <p className="text-sm text-muted">{t("common.loading")}</p>;
+    }
+
+    if (list.length === 0) {
+        return (
+            <>
+                <EmptyState
+                    title={t("binders.empty.title")}
+                    body={t("binders.empty.body")}
+                    action={t("binders.newBinder")}
+                    disabled={!online}
+                    onAction={() => setNewBinderOpen(true)}
+                />
+                {createBinderModal}
+            </>
+        );
+    }
+
+    const busy = !online || fileCoin.isPending || unfileCoin.isPending;
+
+    const close = () => {
+        setSlot(null);
+        setErrorKey(null);
+    };
+
+    const onError = (error: unknown) => {
+        setErrorKey(
+            isSlotTaken(error)
+                ? "binders.errors.slotTaken"
+                : "binders.errors.generic",
+        );
+    };
+
+    const onMoveError = (error: unknown) => {
+        setErrorKey(
+            isSlotTaken(error)
+                ? "binders.errors.slotTaken"
+                : "binders.errors.move",
+        );
+    };
+
+    // Dropping onto a free hole is an ordinary filing; onto an occupied one it
+    // has to be the paired move, or the first update would land on a hole the
+    // other coin has not left yet.
+    const moveCoin = (dragged: SlotCoin, target: SlotTarget) => {
+        if (!page) return;
+        setErrorKey(null);
+        const destination = {
+            pageId: page.id,
+            row: target.row,
+            column: target.column,
+        };
+        if (target.coin === null) {
+            fileCoin.mutate(
+                { coinId: dragged.id, ...destination },
+                { onError: onMoveError },
+            );
+            return;
+        }
+        movePair.mutate(
+            {
+                first: { coinId: dragged.id, destination },
+                second: {
+                    coinId: target.coin.id,
+                    destination: {
+                        pageId: page.id,
+                        row: dragged.slotRow,
+                        column: dragged.slotColumn,
+                    },
+                },
+            },
+            { onError: onMoveError },
+        );
+    };
+
+    return (
+        <div className="flex flex-col gap-6">
+            <div className="flex flex-wrap items-end gap-4">
+                <Select
+                    label={t("binders.binder")}
+                    value={binder?.id ?? ""}
+                    onChange={(e) => {
+                        void setBinderId(e.target.value);
+                        // Page numbers do not carry across binders.
+                        void setPageNumber(null);
+                    }}
+                >
+                    {list.map((b) => (
+                        <option key={b.id} value={b.id}>
+                            {b.name}
+                        </option>
+                    ))}
+                </Select>
+            </div>
+
+            {binder && binder.pages.length > 0 && (
+                <div
+                    role="tablist"
+                    aria-label={t("binders.page")}
+                    className="flex flex-wrap gap-2"
+                >
+                    {binder.pages.map((p, i) => {
+                        const selected = p.id === page?.id;
+                        const go = (to: number) => {
+                            const n = binder.pages.length;
+                            const j = (to + n) % n;
+                            const target = binder.pages[j];
+                            if (target) void setPageNumber(target.number);
+                            tabs.current[j]?.focus();
+                        };
+                        return (
+                            <button
+                                key={p.id}
+                                ref={(el) => {
+                                    tabs.current[i] = el;
+                                }}
+                                type="button"
+                                role="tab"
+                                aria-selected={selected}
+                                tabIndex={selected ? 0 : -1}
+                                onClick={() => void setPageNumber(p.number)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "ArrowRight") go(i + 1);
+                                    else if (e.key === "ArrowLeft") go(i - 1);
+                                    else return;
+                                    e.preventDefault();
+                                }}
+                                className={`h-9 rounded-md px-3 text-sm tnum ${
+                                    selected
+                                        ? "bg-accent-wash text-accent"
+                                        : "text-muted hover:bg-hover hover:text-ink"
+                                }`}
+                            >
+                                {t("binders.pageTab", {
+                                    number: p.number,
+                                    filled: filledByPage.get(p.id) ?? 0,
+                                    total: p.rowCount * p.columnCount,
+                                })}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+
+            {page ? (
+                <SlotGrid
+                    rowCount={page.rowCount}
+                    columnCount={page.columnCount}
+                    coins={pageCoins}
+                    onSelect={setSlot}
+                    onMove={moveCoin}
+                    frozen={!online}
+                />
+            ) : (
+                <EmptyState
+                    title={t("binders.noPages.title")}
+                    body={t("binders.noPages.body")}
+                    action={t("binders.newPage")}
+                    disabled={!online}
+                    onAction={() => setNewPageOpen(true)}
+                />
+            )}
+
+            {errorKey && !slot && (
+                <p role="alert" className="text-sm text-danger">
+                    {t(errorKey)}
+                </p>
+            )}
+
+            {createBinderModal}
+
+            <Modal
+                open={newPageOpen}
+                onClose={() => setNewPageOpen(false)}
+                title={t("binders.newPage")}
+            >
+                <NewPageForm
+                    nextNumber={nextPageNumber}
+                    busy={!online || createPage.isPending}
+                    onCreate={(rowCount, columnCount) => {
+                        if (!binder) return;
+                        createPage.mutate({
+                            binderId: binder.id,
+                            number: nextPageNumber,
+                            rowCount,
+                            columnCount,
+                        });
+                        setNewPageOpen(false);
+                    }}
+                />
+            </Modal>
+
+            <SlotDialog
+                slot={slot}
+                unfiled={unfiled}
+                busy={busy}
+                errorKey={errorKey}
+                onClose={close}
+                onPlace={(coinId) => {
+                    if (!page || !slot) return;
+                    setErrorKey(null);
+                    fileCoin.mutate(
+                        {
+                            coinId,
+                            pageId: page.id,
+                            row: slot.row,
+                            column: slot.column,
+                        },
+                        { onSuccess: close, onError },
+                    );
                 }}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                tabIndex={selected ? 0 : -1}
-                onClick={() => void setPageNumber(p.number)}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowRight') go(i + 1)
-                  else if (e.key === 'ArrowLeft') go(i - 1)
-                  else return
-                  e.preventDefault()
+                onRemove={(coinId) => {
+                    setErrorKey(null);
+                    unfileCoin.mutate(coinId, { onSuccess: close, onError });
                 }}
-                className={`h-9 rounded-md px-3 text-sm tnum ${
-                  selected ? 'bg-accent-wash text-accent' : 'text-muted hover:bg-hover hover:text-ink'
-                }`}
-              >
-                {t('binders.pageTab', {
-                  number: p.number,
-                  filled: filledByPage.get(p.id) ?? 0,
-                  total: p.rowCount * p.columnCount,
-                })}
-              </button>
-            )
-          })}
+            />
         </div>
-      )}
-
-      {page ? (
-        <SlotGrid
-          rowCount={page.rowCount}
-          columnCount={page.columnCount}
-          coins={pageCoins}
-          onSelect={setSlot}
-          onMove={moveCoin}
-          frozen={!online}
-        />
-      ) : (
-        <EmptyState
-          title={t('binders.noPages.title')}
-          body={t('binders.noPages.body')}
-          action={t('binders.newPage')}
-          disabled={!online}
-          onAction={() => setNewPageOpen(true)}
-        />
-      )}
-
-      {errorKey && !slot && (
-        <p role="alert" className="text-sm text-danger">
-          {t(errorKey)}
-        </p>
-      )}
-
-      {createBinderModal}
-
-      <Modal open={newPageOpen} onClose={() => setNewPageOpen(false)} title={t('binders.newPage')}>
-        <NewPageForm
-          nextNumber={nextPageNumber}
-          busy={!online || createPage.isPending}
-          onCreate={(rowCount, columnCount) => {
-            if (!binder) return
-            createPage.mutate({
-              binderId: binder.id,
-              number: nextPageNumber,
-              rowCount,
-              columnCount,
-            })
-            setNewPageOpen(false)
-          }}
-        />
-      </Modal>
-
-      <SlotDialog
-        slot={slot}
-        unfiled={unfiled}
-        busy={busy}
-        errorKey={errorKey}
-        onClose={close}
-        onPlace={(coinId) => {
-          if (!page || !slot) return
-          setErrorKey(null)
-          fileCoin.mutate(
-            { coinId, pageId: page.id, row: slot.row, column: slot.column },
-            { onSuccess: close, onError },
-          )
-        }}
-        onRemove={(coinId) => {
-          setErrorKey(null)
-          unfileCoin.mutate(coinId, { onSuccess: close, onError })
-        }}
-      />
-    </div>
-  )
+    );
 }
 
 function EmptyState({
-  title,
-  body,
-  action,
-  disabled,
-  onAction,
+    title,
+    body,
+    action,
+    disabled,
+    onAction,
 }: {
-  title: string
-  body: string
-  action: string
-  disabled?: boolean
-  onAction: () => void
+    title: string;
+    body: string;
+    action: string;
+    disabled?: boolean;
+    onAction: () => void;
 }) {
-  return (
-    <div className="rounded-xl bg-card px-6 py-14 text-center">
-      <h2 className="text-2xl">{title}</h2>
-      <p className="mt-2 mb-6 text-base text-muted">{body}</p>
-      <Button type="button" disabled={disabled} onClick={onAction}>
-        {action}
-      </Button>
-    </div>
-  )
+    return (
+        <div className="rounded-xl bg-card px-6 py-14 text-center">
+            <h2 className="text-2xl">{title}</h2>
+            <p className="mt-2 mb-6 text-base text-muted">{body}</p>
+            <Button type="button" disabled={disabled} onClick={onAction}>
+                {action}
+            </Button>
+        </div>
+    );
 }
 
-function NewBinderForm({ onCreate, busy }: { onCreate: (name: string) => void; busy: boolean }) {
-  const { t } = useTranslation()
-  const [name, setName] = useState('')
+function NewBinderForm({
+    onCreate,
+    busy,
+}: {
+    onCreate: (name: string) => void;
+    busy: boolean;
+}) {
+    const { t } = useTranslation();
+    const [name, setName] = useState("");
 
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    if (!name.trim()) return
-    onCreate(name.trim())
-    setName('')
-  }
+    function submit(event: FormEvent) {
+        event.preventDefault();
+        if (!name.trim()) return;
+        onCreate(name.trim());
+        setName("");
+    }
 
-  return (
-    <form onSubmit={submit} className="flex flex-wrap items-end gap-4">
-      <Field
-        wrapperClassName="min-w-56 flex-1"
-        className="w-full"
-        label={t('binders.newBinderName')}
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder={t('binders.newBinder')}
-      />
-      <Button type="submit" disabled={busy || !name.trim()}>
-        {t('binders.create')}
-      </Button>
-    </form>
-  )
+    return (
+        <form onSubmit={submit} className="flex flex-wrap items-end gap-4">
+            <Field
+                wrapperClassName="min-w-56 flex-1"
+                className="w-full"
+                label={t("binders.newBinderName")}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t("binders.newBinder")}
+            />
+            <Button type="submit" disabled={busy || !name.trim()}>
+                {t("binders.create")}
+            </Button>
+        </form>
+    );
 }
 
 function NewPageForm({
-  nextNumber,
-  busy,
-  onCreate,
+    nextNumber,
+    busy,
+    onCreate,
 }: {
-  nextNumber: number
-  busy: boolean
-  onCreate: (rowCount: number, columnCount: number) => void
+    nextNumber: number;
+    busy: boolean;
+    onCreate: (rowCount: number, columnCount: number) => void;
 }) {
-  const { t } = useTranslation()
-  // Album sheets come in many formats depending on coin diameter, hence the
-  // dimensions being asked for rather than fixed.
-  const [rows, setRows] = useState('4')
-  const [columns, setColumns] = useState('5')
+    const { t } = useTranslation();
+    // Album sheets come in many formats depending on coin diameter, hence the
+    // dimensions being asked for rather than fixed.
+    const [rows, setRows] = useState("4");
+    const [columns, setColumns] = useState("5");
 
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    const r = Number(rows)
-    const c = Number(columns)
-    if (r > 0 && c > 0) onCreate(r, c)
-  }
+    function submit(event: FormEvent) {
+        event.preventDefault();
+        const r = Number(rows);
+        const c = Number(columns);
+        if (r > 0 && c > 0) onCreate(r, c);
+    }
 
-  return (
-    <form onSubmit={submit} className="flex flex-col gap-5">
-      <p className="text-base text-muted">{t('binders.pageWillBe', { number: nextNumber })}</p>
-      <div className="flex flex-wrap items-end gap-4">
-        <Field
-          label={t('binders.pageRows')}
-          inputMode="numeric"
-          className="w-20"
-          value={rows}
-          onChange={(e) => setRows(e.target.value.replace(/\D/g, ''))}
-        />
-        <Field
-          label={t('binders.pageColumns')}
-          inputMode="numeric"
-          className="w-20"
-          value={columns}
-          onChange={(e) => setColumns(e.target.value.replace(/\D/g, ''))}
-        />
-        <Button type="submit" disabled={busy}>
-          {t('binders.create')}
-        </Button>
-      </div>
-    </form>
-  )
+    return (
+        <form onSubmit={submit} className="flex flex-col gap-5">
+            <p className="text-base text-muted">
+                {t("binders.pageWillBe", { number: nextNumber })}
+            </p>
+            <div className="flex flex-wrap items-end gap-4">
+                <Field
+                    label={t("binders.pageRows")}
+                    inputMode="numeric"
+                    className="w-20"
+                    value={rows}
+                    onChange={(e) => setRows(e.target.value.replace(/\D/g, ""))}
+                />
+                <Field
+                    label={t("binders.pageColumns")}
+                    inputMode="numeric"
+                    className="w-20"
+                    value={columns}
+                    onChange={(e) =>
+                        setColumns(e.target.value.replace(/\D/g, ""))
+                    }
+                />
+                <Button type="submit" disabled={busy}>
+                    {t("binders.create")}
+                </Button>
+            </div>
+        </form>
+    );
 }

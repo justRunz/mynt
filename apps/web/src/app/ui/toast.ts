@@ -1,4 +1,4 @@
-import { toast } from 'sonner'
+import { toast } from "sonner";
 
 /**
  * A modal <dialog> sits in the top layer and makes the rest of the page inert,
@@ -6,9 +6,9 @@ import { toast } from 'sonner'
  * go unannounced. Each Modal therefore mounts its own toaster under this id,
  * and a form's toasts are addressed to it.
  */
-export const MODAL_TOASTER = 'modal'
+export const MODAL_TOASTER = "modal";
 
 /** An error raised by a form inside a modal. */
 export function modalError(message: string) {
-  toast.error(message, { toasterId: MODAL_TOASTER })
+    toast.error(message, { toasterId: MODAL_TOASTER });
 }

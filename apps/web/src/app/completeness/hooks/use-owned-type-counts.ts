@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from "@tanstack/react-query";
 
-import { apiFetch } from '@/app/lib/api'
+import { apiFetch } from "@/app/lib/api";
 
 /**
  * How many copies are held of each catalog entry.
@@ -14,8 +14,9 @@ import { apiFetch } from '@/app/lib/api'
  * Map rehydrates as {} and every read of it would throw.
  */
 export function useOwnedTypeCounts() {
-  return useQuery({
-    queryKey: ['collection', 'type-counts'],
-    queryFn: () => apiFetch<Record<number, number>>('/collection/type-counts'),
-  })
+    return useQuery({
+        queryKey: ["collection", "type-counts"],
+        queryFn: () =>
+            apiFetch<Record<number, number>>("/collection/type-counts"),
+    });
 }

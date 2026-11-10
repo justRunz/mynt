@@ -1,10 +1,10 @@
-import { createApp } from './app.js'
-import { closeDb } from './db/index.js'
-import { env } from './env.js'
+import { createApp } from "./app.js";
+import { closeDb } from "./db/index.js";
+import { env } from "./env.js";
 
 const server = createApp().listen(env.port, env.host, () => {
-  console.log(`API sur http://${env.host}:${env.port}`)
-})
+    console.log(`API sur http://${env.host}:${env.port}`);
+});
 
 /**
  * Leaving without dropping anyone mid-request.
@@ -19,13 +19,13 @@ const server = createApp().listen(env.port, env.host, () => {
  * and unref'd so that it is not itself the thing keeping the process alive.
  */
 function shutdown(): void {
-  server.close(() => {
-    void closeDb().then(() => process.exit(0))
-  })
-  setTimeout(() => process.exit(1), 8_000).unref()
+    server.close(() => {
+        void closeDb().then(() => process.exit(0));
+    });
+    setTimeout(() => process.exit(1), 8_000).unref();
 }
 
 // SIGTERM is Docker's; SIGINT is Ctrl-C in a terminal. Once each: a second
 // Ctrl-C from somebody who has stopped waiting ends the process on the spot.
-process.once('SIGTERM', shutdown)
-process.once('SIGINT', shutdown)
+process.once("SIGTERM", shutdown);
+process.once("SIGINT", shutdown);

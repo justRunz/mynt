@@ -24,51 +24,51 @@
  */
 
 @theme {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  /* Signifier is a Klim licence, so it cannot ship. Source Serif 4 is the
+    --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+    /* Signifier is a Klim licence, so it cannot ship. Source Serif 4 is the
      reference's own named substitute and is open. */
-  --font-serif: 'Source Serif 4 Variable', ui-serif, Georgia, serif;
+    --font-serif: "Source Serif 4 Variable", ui-serif, Georgia, serif;
 
-  /* Surfaces, from the reference's own elevation ladder. */
-  --color-surface: #ffffff; /* Canvas -- the paper everything sits on */
-  --color-raised: #ffffff; /* Elevated: floating artifacts, inputs (shadow separates them) */
-  --color-card: #f2f2f3; /* Card Mist -- quiet nested blocks */
-  --color-band: #fafafb; /* Section Fog -- alternating bands, hover */
+    /* Surfaces, from the reference's own elevation ladder. */
+    --color-surface: #ffffff; /* Canvas -- the paper everything sits on */
+    --color-raised: #ffffff; /* Elevated: floating artifacts, inputs (shadow separates them) */
+    --color-card: #f2f2f3; /* Card Mist -- quiet nested blocks */
+    --color-band: #fafafb; /* Section Fog -- alternating bands, hover */
 
-  --color-ink: #17191c; /* 17.61:1 on white; the only dark surface too */
-  --color-muted: #696d79; /* 5.17:1 on white, 4.62:1 on mist */
-  --color-subtle: #979799; /* 2.92:1 -- decorative labels only, never essential text */
+    --color-ink: #17191c; /* 17.61:1 on white; the only dark surface too */
+    --color-muted: #696d79; /* 5.17:1 on white, 4.62:1 on mist */
+    --color-subtle: #979799; /* 2.92:1 -- decorative labels only, never essential text */
 
-  --color-rule: #ececec; /* hairline between rows and around inputs */
-  /* --color-band measures 1.04:1 against the canvas, which is to say it is
+    --color-rule: #ececec; /* hairline between rows and around inputs */
+    /* --color-band measures 1.04:1 against the canvas, which is to say it is
      invisible; every hover built on it did nothing. This is 1.27:1 -- still
      quiet, but a patch the eye actually registers. */
-  --color-hover: #e4e4e8;
-  /* Kept separate from --color-rule. A hairline is fine between table rows, but
+    --color-hover: #e4e4e8;
+    /* Kept separate from --color-rule. A hairline is fine between table rows, but
      the border of a control is what identifies it as one, and WCAG 1.4.11 asks
      3:1 there. Measured: 1.18:1 for rule, 3.24:1 for this. */
-  --color-field: #8b8f99;
+    --color-field: #8b8f99;
 
-  --color-accent: #5d2a1a; /* Sienna -- 11.59:1 on white */
-  --color-accent-wash: #fbe1d1; /* Blush Peach -- the one chromatic surface */
-  --color-danger: #a3301c; /* 7.01:1; warmed to sit in the register */
+    --color-accent: #5d2a1a; /* Sienna -- 11.59:1 on white */
+    --color-accent-wash: #fbe1d1; /* Blush Peach -- the one chromatic surface */
+    --color-danger: #a3301c; /* 7.01:1; warmed to sit in the register */
 
-  /* The metals, warmed. Fills stay true to the alloy; ink reads 6.17 / 7.83 /
+    /* The metals, warmed. Fills stay true to the alloy; ink reads 6.17 / 7.83 /
      10.96:1 on them, so the face value is legible in a filled slot. */
-  --color-copper: #c98b63;
-  --color-nordic: #d9a441;
-  --color-silver: #c9ccd4;
+    --color-copper: #c98b63;
+    --color-nordic: #d9a441;
+    --color-silver: #c9ccd4;
 
-  /* The fills themselves measure 2.85 / 2.25 / 1.61:1 against the canvas -- too
+    /* The fills themselves measure 2.85 / 2.25 / 1.61:1 against the canvas -- too
      faint to carry "owned" on their own in the completeness grid. These darker
      edges draw the boundary, which is what WCAG 1.4.11 asks 3:1 of. */
-  --color-copper-edge: #b87333; /* 3.79:1 */
-  --color-nordic-edge: #9a7420; /* 4.29:1 */
-  --color-silver-edge: #8b8f99; /* 3.24:1 */
+    --color-copper-edge: #b87333; /* 3.79:1 */
+    --color-nordic-edge: #9a7420; /* 4.29:1 */
+    --color-silver-edge: #8b8f99; /* 3.24:1 */
 
-  --color-on-metal: #17191c;
+    --color-on-metal: #17191c;
 
-  /* Type scale: minor third (1.2) off a 15px base, mapped onto Tailwind's own
+    /* Type scale: minor third (1.2) off a 15px base, mapped onto Tailwind's own
      size names so existing text-sm / text-lg keep working and simply land on
      the reference's steps. Tracking tightens as size grows -- that negative
      tracking at display sizes is the typographic signature.
@@ -77,43 +77,45 @@
      scale moves together from one number instead of nine hand-computed ones.
      The tracking below is in em and the line heights are unitless, so both
      follow on their own. */
-  --text-xs: calc(14px * var(--font-scale, 1));
-  --text-xs--line-height: 1.4;
-  --text-sm: calc(15px * var(--font-scale, 1));
-  --text-sm--line-height: 1.5;
-  --text-base: calc(17px * var(--font-scale, 1));
-  --text-base--line-height: 1.35;
-  --text-lg: calc(20px * var(--font-scale, 1));
-  --text-lg--line-height: 1.35;
-  --text-xl: calc(22px * var(--font-scale, 1));
-  --text-xl--line-height: 1.5;
-  --text-2xl: calc(26px * var(--font-scale, 1));
-  --text-2xl--line-height: 1.18;
-  --text-2xl--letter-spacing: -0.009em;
-  --text-3xl: calc(44px * var(--font-scale, 1));
-  --text-3xl--line-height: 1.3;
-  --text-3xl--letter-spacing: -0.015em;
-  --text-4xl: calc(64px * var(--font-scale, 1));
-  --text-4xl--line-height: 1.3;
-  --text-4xl--letter-spacing: -0.015em;
-  --text-5xl: calc(90px * var(--font-scale, 1));
-  --text-5xl--line-height: 1.3;
-  --text-5xl--letter-spacing: -0.025em;
+    --text-xs: calc(14px * var(--font-scale, 1));
+    --text-xs--line-height: 1.4;
+    --text-sm: calc(15px * var(--font-scale, 1));
+    --text-sm--line-height: 1.5;
+    --text-base: calc(17px * var(--font-scale, 1));
+    --text-base--line-height: 1.35;
+    --text-lg: calc(20px * var(--font-scale, 1));
+    --text-lg--line-height: 1.35;
+    --text-xl: calc(22px * var(--font-scale, 1));
+    --text-xl--line-height: 1.5;
+    --text-2xl: calc(26px * var(--font-scale, 1));
+    --text-2xl--line-height: 1.18;
+    --text-2xl--letter-spacing: -0.009em;
+    --text-3xl: calc(44px * var(--font-scale, 1));
+    --text-3xl--line-height: 1.3;
+    --text-3xl--letter-spacing: -0.015em;
+    --text-4xl: calc(64px * var(--font-scale, 1));
+    --text-4xl--line-height: 1.3;
+    --text-4xl--letter-spacing: -0.015em;
+    --text-5xl: calc(90px * var(--font-scale, 1));
+    --text-5xl--line-height: 1.3;
+    --text-5xl--letter-spacing: -0.025em;
 
-  /* Radii. Every control -- button, input, select -- shares --radius-md, which
+    /* Radii. Every control -- button, input, select -- shares --radius-md, which
      is where this departs from the reference: it draws buttons as full pills
      against 16px fields, and two shapes on one form row read as noise rather
      than as hierarchy. The only round things left in the app are coins and the
      metal dots that stand for them. */
-  --radius-sm: 12px; /* images */
-  --radius-md: 16px; /* inputs, small cards */
-  --radius-lg: 20px; /* elevated cards */
-  --radius-xl: 24px; /* content cards -- the structural radius */
+    --radius-sm: 12px; /* images */
+    --radius-md: 16px; /* inputs, small cards */
+    --radius-lg: 20px; /* elevated cards */
+    --radius-xl: 24px; /* content cards -- the structural radius */
 
-  /* Only floating artifacts earn elevation; content cards stay flat. */
-  --shadow-float:
-    0 0 0 1px rgb(4 23 43 / 0.05), 0 20px 25px -5px rgb(0 0 0 / 0.1),
-    0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-overlay: 0 0 0 1px rgb(0 0 0 / 0.05), 0 8px 40px 0 rgb(0 0 0 / 0.1);
-  --shadow-popover: 0 0 0 1px rgb(0 0 0 / 0.05), 0 4px 24px 0 rgb(0 0 0 / 0.08);
+    /* Only floating artifacts earn elevation; content cards stay flat. */
+    --shadow-float:
+        0 0 0 1px rgb(4 23 43 / 0.05), 0 20px 25px -5px rgb(0 0 0 / 0.1),
+        0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-overlay:
+        0 0 0 1px rgb(0 0 0 / 0.05), 0 8px 40px 0 rgb(0 0 0 / 0.1);
+    --shadow-popover:
+        0 0 0 1px rgb(0 0 0 / 0.05), 0 4px 24px 0 rgb(0 0 0 / 0.08);
 }
