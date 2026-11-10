@@ -38,6 +38,14 @@ export const addCoinSchema = z.object({
 })
 
 /**
+ * What the import hands over once the collector has confirmed the proposals.
+ * No location: a batch of coins is not placed hole by hole, they land in the jar.
+ */
+export const bulkAddSchema = z.object({
+  coins: z.array(z.object({ coinTypeId: z.int().positive(), gradeCode })).min(1).max(500),
+})
+
+/**
  * All four fields, every time, rather than a partial patch.
  *
  * The edit form holds all of them and sends all of them, so "absent" would only

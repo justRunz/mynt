@@ -85,4 +85,15 @@ export const env = {
   smtpUser: process.env.SMTP_USER,
   smtpPassword: process.env.SMTP_PASSWORD,
   mailFrom: process.env.MAIL_FROM ?? 'Mynt <no-reply@mynt.local>',
+
+  /**
+   * The AI that reads uploaded files for the coin import.
+   *
+   * Optional as a whole: without a key the import answers 503 and the rest of
+   * the app is unaffected. The provider is a name, not a URL, so swapping it is
+   * one line here and one entry in modules/import/providers.
+   */
+  aiProvider: process.env.AI_PROVIDER ?? 'gemini',
+  aiApiKey: process.env.AI_API_KEY,
+  aiModel: process.env.AI_MODEL,
 } as const

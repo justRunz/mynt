@@ -63,7 +63,7 @@ const STATUS: Record<string, number> = {
  */
 export function errorHandler(
   error: unknown,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction,
 ): void {
@@ -86,7 +86,16 @@ export function errorHandler(
   if (http.expose && http.status !== undefined && http.status >= 400 && http.status < 500) {
     res
       .status(http.status)
-      .json({ error: http.status === 413 ? 'payload_too_large' : 'invalid_request' })
+      .json({
+        // An upload is the one body a person sends on purpose and can fix by
+        // choosing a smaller file, so it gets a name the interface can say.
+        error:
+          http.status !== 413
+            ? 'invalid_request'
+            : req.originalUrl.startsWith('/api/import')
+              ? 'file_too_large'
+              : 'payload_too_large',
+      })
     return
   }
 
