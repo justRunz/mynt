@@ -3,6 +3,7 @@ import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import { BrowserRouter } from "react-router-dom";
 
 import { AppRoutes } from "./routes";
+import { LiquidChrome } from "@/app/components/liquid-chrome";
 import { StatusBar } from "@/app/components/status-bar";
 import { UpdatePrompt } from "@/app/components/update-prompt";
 import { persister, queryClient } from "@/app/lib/query-client";
@@ -41,6 +42,23 @@ export default function App() {
           registers the service worker, and the shell only exists once signed
           in -- so a first visit sitting on the sign-in screen would never
           cache anything. Being offline matters there too. */}
+            {/* The background, here so it covers every screen, signed in or not,
+          and is mounted once: inside a page it would be torn down and
+          restarted, intro fade and all, on each navigation. Fixed behind
+          everything, no pointer effects: a backdrop for a tool. */}
+            <div
+                aria-hidden="true"
+                className="pointer-events-none fixed inset-0 -z-10"
+            >
+                <LiquidChrome
+                    lightMode
+                    interactive={false}
+                    className="scale-110 opacity-30 blur-xl"
+                />
+                {/* A white veil, lighter than the sidebar's glass (35%) so the
+            background still reads through behind the content. */}
+                <div className="absolute inset-0 bg-white/20" />
+            </div>
             <UpdatePrompt />
             <StatusBar />
             <AppToaster />
