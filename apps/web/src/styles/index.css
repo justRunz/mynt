@@ -178,3 +178,10 @@
     }
   }
 }
+
+/* A modal <dialog> makes the page inert but not still: the wheel and touch
+ * scrolling still reach it underneath. Freezing the root while any modal is
+ * open covers every Modal and the Drawer at once, with no JS to undo. */
+html:has(dialog:modal) {
+  overflow: hidden;
+}
