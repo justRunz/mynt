@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      # Same image as docker-compose.yml: the backend suite tests row level
+      # security against a real database.
+      db:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: mynt
+          POSTGRES_DB: mynt
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mynt"
+          --health-interval 2s --health-timeout 3s --health-retries 15
+      mail:
+        image: axllent/mailpit:latest
+        ports: ['1025:1025']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # vitest.config.ts loads both files; the examples hold the local values.
+      # AUTH_SECRET is blank there on purpose, so a throwaway one per run.
+      - run: |
+          cp .env.example .env
+          sed "s/^AUTH_SECRET=.*/AUTH_SECRET=$(openssl rand -hex 32)/" apps/backend/.env.example > apps/backend/.env
+
+      # What `pnpm db:up` does locally: the init script, migrations, then the
+      # app role's password (the role only exists once migrations ran).
+      - name: Prepare test database
+        env:
+          PGPASSWORD: mynt
+        run: |
+          psql -h 127.0.0.1 -p 5433 -U postgres -d mynt -f db/init/01-test-database.sql
+          set -a; . ./.env; set +a
+          DATABASE_URL=$TEST_DATABASE_URL pnpm exec dbmate --wait up
+          psql -h 127.0.0.1 -p 5433 -U postgres -qc "alter role mynt_app password 'mynt'"
+
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
