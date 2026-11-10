@@ -1,9 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import {
-  useRefetchCollection,
-  type SlotDestination,
-} from '@/app/collection/hooks/use-collection'
+import { useRefetchCollection, type SlotDestination } from '@/app/collection/hooks/use-collection'
 import { ApiError, apiFetch } from '@/app/lib/api'
 
 export interface BinderPage {
@@ -138,8 +135,7 @@ export function useFileCoin() {
 export function useUnfileCoin() {
   const refetch = useRefetchCollection()
   return useMutation<void, Error, string>({
-    mutationFn: (coinId) =>
-      apiFetch<void>(`/collection/${coinId}/location`, { method: 'DELETE' }),
+    mutationFn: (coinId) => apiFetch<void>(`/collection/${coinId}/location`, { method: 'DELETE' }),
     onSuccess: refetch,
   })
 }

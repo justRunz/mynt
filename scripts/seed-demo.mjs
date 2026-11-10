@@ -35,7 +35,7 @@ const NICKNAME = 'Démo'
 
 /** Deterministic, so two runs produce the same collection. */
 let seed = 20260829
-const random = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff)
+const random = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff
 const pick = (list) => list[Math.floor(random() * list.length)]
 
 const psql = (args, input) =>
@@ -52,14 +52,28 @@ const COUNTRIES = {
   // Country to its first minting year, so a generated coin always exists in
   // the catalog. Picking a year a country never struck would insert nothing
   // and leave the collection quietly short.
-  FR: 1999, BE: 1999, ES: 1999, NL: 1999, FI: 1999,
-  DE: 2002, IT: 2002, PT: 2002, GR: 2002, AT: 2002, IE: 2002, LU: 2002,
-  SI: 2007, HR: 2023,
+  FR: 1999,
+  BE: 1999,
+  ES: 1999,
+  NL: 1999,
+  FI: 1999,
+  DE: 2002,
+  IT: 2002,
+  PT: 2002,
+  GR: 2002,
+  AT: 2002,
+  IE: 2002,
+  LU: 2002,
+  SI: 2007,
+  HR: 2023,
 }
 const VALUES = [1, 2, 5, 10, 20, 50, 100, 200]
 const GRADES = [null, 'VERY_FINE', 'EXTREMELY_FINE', 'ABOUT_UNCIRCULATED', 'UNCIRCULATED']
 const NOTES = [
-  null, null, null, null,
+  null,
+  null,
+  null,
+  null,
   'Trouvée en brocante',
   'Rendue en monnaie à la boulangerie',
   'Reçue dans un lot',
@@ -139,11 +153,9 @@ async function main() {
   }
 
   // One statement, so a failure halfway leaves nothing behind.
-  psql(['-U', 'postgres', '-d', 'mynt', '-q', '-v', 'ON_ERROR_STOP=1', '-1'],
-       lines.join('\n'))
+  psql(['-U', 'postgres', '-d', 'mynt', '-q', '-v', 'ON_ERROR_STOP=1', '-1'], lines.join('\n'))
 
-  const count = (what) =>
-    psql(['-U', 'postgres', '-d', 'mynt', '-tAc', what]).trim()
+  const count = (what) => psql(['-U', 'postgres', '-d', 'mynt', '-tAc', what]).trim()
 
   console.log(`Compte       ${EMAIL}`)
   console.log(`Mot de passe ${PASSWORD}`)

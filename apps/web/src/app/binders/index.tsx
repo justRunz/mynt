@@ -249,7 +249,9 @@ function Binders({
                   e.preventDefault()
                 }}
                 className={`h-9 rounded-md px-3 text-sm tnum ${
-                  selected ? 'bg-accent-wash text-accent' : 'text-muted hover:bg-hover hover:text-ink'
+                  selected
+                    ? 'bg-accent-wash text-accent'
+                    : 'text-muted hover:bg-hover hover:text-ink'
                 }`}
               >
                 {t('binders.pageTab', {

@@ -3,13 +3,7 @@ import type { FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import {
-  GRADES,
-  findCoinTypeId,
-  indexCoinTypes,
-  type FaceValueCents,
-  type Grade,
-} from '@mynt/core'
+import { GRADES, findCoinTypeId, indexCoinTypes, type FaceValueCents, type Grade } from '@mynt/core'
 
 import { useIsOnline } from '@/app/hooks/use-is-online'
 import { catalogQueries } from '@/app/lib/catalog'
@@ -21,11 +15,7 @@ import { Field } from '@/app/ui/field'
 import { Modal } from '@/app/ui/modal'
 import { CountryCombobox } from './country-combobox'
 import { FaceValuePicker } from './face-value-picker'
-import {
-  useDeleteCoin,
-  useUpdateCoin,
-  type CollectionEntry,
-} from '../hooks/use-collection'
+import { useDeleteCoin, useUpdateCoin, type CollectionEntry } from '../hooks/use-collection'
 
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -35,13 +25,7 @@ const CURRENT_YEAR = new Date().getFullYear()
  * smaller price than a ref read during render or an effect copying props into
  * state.
  */
-export function EditCoin({
-  coin,
-  onClose,
-}: {
-  coin: CollectionEntry | null
-  onClose: () => void
-}) {
+export function EditCoin({ coin, onClose }: { coin: CollectionEntry | null; onClose: () => void }) {
   const { t } = useTranslation()
 
   return (

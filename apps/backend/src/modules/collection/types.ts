@@ -1,11 +1,6 @@
 import type { z } from 'zod'
 
-import type {
-  addCoinSchema,
-  fileCoinSchema,
-  movePairSchema,
-  updateCoinSchema,
-} from './schemas.js'
+import type { addCoinSchema, fileCoinSchema, movePairSchema, updateCoinSchema } from './schemas.js'
 
 /**
  * What the collection endpoints promise, independent of both the column layout

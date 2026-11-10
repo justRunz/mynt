@@ -24,7 +24,10 @@ const SHEET = { pageNumber: 1, rowCount: 4, columnCount: 5 }
 
 beforeEach(async () => {
   await owner.query('delete from auth.users where user_id = any($1)', [[ALICE, BOB]])
-  for (const [id, email] of [[ALICE, 'alice-b@mynt.test'], [BOB, 'bob-b@mynt.test']]) {
+  for (const [id, email] of [
+    [ALICE, 'alice-b@mynt.test'],
+    [BOB, 'bob-b@mynt.test'],
+  ]) {
     await owner.query(
       `insert into auth.users (user_id, email, password_hash) values ($1, $2, 'x')`,
       [id, email],
@@ -45,9 +48,7 @@ describe('binders', () => {
   })
 
   test('a sheet lands in it', async () => {
-    const binderId = await dbQueryAs(ALICE, (tx) =>
-      createBinder(tx, ALICE, { name: 'Europe' }),
-    )
+    const binderId = await dbQueryAs(ALICE, (tx) => createBinder(tx, ALICE, { name: 'Europe' }))
     await dbQueryAs(ALICE, (tx) => createPage(tx, binderId, SHEET))
 
     const [binder] = await dbQueryAs(ALICE, (tx) => listBinders(tx))
@@ -56,14 +57,12 @@ describe('binders', () => {
   })
 
   test('two sheets cannot both be page one', async () => {
-    const binderId = await dbQueryAs(ALICE, (tx) =>
-      createBinder(tx, ALICE, { name: 'Europe' }),
-    )
+    const binderId = await dbQueryAs(ALICE, (tx) => createBinder(tx, ALICE, { name: 'Europe' }))
     await dbQueryAs(ALICE, (tx) => createPage(tx, binderId, SHEET))
 
-    expect(
-      await refused(() => dbQueryAs(ALICE, (tx) => createPage(tx, binderId, SHEET))),
-    ).toBe('page_number_taken')
+    expect(await refused(() => dbQueryAs(ALICE, (tx) => createPage(tx, binderId, SHEET)))).toBe(
+      'page_number_taken',
+    )
   })
 
   test("a sheet cannot be slipped into somebody else's binder", async () => {
@@ -81,9 +80,7 @@ describe('binders', () => {
     // this route whether it is real -- which is the one thing the id protects.
     expect(
       await refused(() =>
-        dbQueryAs(ALICE, (tx) =>
-          createPage(tx, '00000000-0000-4000-8000-000000000000', SHEET),
-        ),
+        dbQueryAs(ALICE, (tx) => createPage(tx, '00000000-0000-4000-8000-000000000000', SHEET)),
       ),
     ).toBe('not_found')
   })

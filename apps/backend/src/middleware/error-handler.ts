@@ -84,18 +84,16 @@ export function errorHandler(
   // a bug in this server, and treating it as one fills the log with false alarms.
   const http = error as { status?: number; expose?: boolean }
   if (http.expose && http.status !== undefined && http.status >= 400 && http.status < 500) {
-    res
-      .status(http.status)
-      .json({
-        // An upload is the one body a person sends on purpose and can fix by
-        // choosing a smaller file, so it gets a name the interface can say.
-        error:
-          http.status !== 413
-            ? 'invalid_request'
-            : req.originalUrl.startsWith('/api/import')
-              ? 'file_too_large'
-              : 'payload_too_large',
-      })
+    res.status(http.status).json({
+      // An upload is the one body a person sends on purpose and can fix by
+      // choosing a smaller file, so it gets a name the interface can say.
+      error:
+        http.status !== 413
+          ? 'invalid_request'
+          : req.originalUrl.startsWith('/api/import')
+            ? 'file_too_large'
+            : 'payload_too_large',
+    })
     return
   }
 

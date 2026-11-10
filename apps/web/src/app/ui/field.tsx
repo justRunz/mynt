@@ -31,8 +31,8 @@ export function Field({
         id={id}
         className={`rounded-md border border-field bg-raised text-ink transition-colors
                     placeholder:text-subtle hover:border-ink ${
-          dense ? 'h-10 px-3 text-sm' : 'h-11 px-4 text-base'
-        } ${className}`}
+                      dense ? 'h-10 px-3 text-sm' : 'h-11 px-4 text-base'
+                    } ${className}`}
         {...props}
       />
     </div>

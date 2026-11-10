@@ -99,9 +99,7 @@ describe('signing up', () => {
     // for one person, depending on how they typed it -- is silent.
     await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
     expect(
-      await refused(() =>
-        dbQueryUnscoped((tx) => signUp(tx, EMAIL.toUpperCase(), PASSWORD)),
-      ),
+      await refused(() => dbQueryUnscoped((tx) => signUp(tx, EMAIL.toUpperCase(), PASSWORD))),
     ).toBe('email_taken')
   })
 })
@@ -210,9 +208,7 @@ describe('signing out', () => {
     await dbQueryUnscoped((tx) => signOut(tx, phone.refreshToken))
 
     expect(await dbQueryUnscoped((tx) => rotateSession(tx, phone.refreshToken))).toBeNull()
-    expect(
-      await dbQueryUnscoped((tx) => rotateSession(tx, laptop.refreshToken)),
-    ).not.toBeNull()
+    expect(await dbQueryUnscoped((tx) => rotateSession(tx, laptop.refreshToken))).not.toBeNull()
   })
 
   test('signing out with a token nobody issued does nothing at all', async () => {
@@ -247,24 +243,18 @@ describe('confirming an address', () => {
   })
 
   test('the second link works and the first one no longer does', async () => {
-    const { verificationToken: first } = await dbQueryUnscoped((tx) =>
-      signUp(tx, EMAIL, PASSWORD),
-    )
+    const { verificationToken: first } = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
     const outcome = await dbQueryUnscoped((tx) => signIn(tx, EMAIL, PASSWORD))
     if (outcome.verified) throw new Error('expected an unverified account')
 
     // Asking for a new link has to retire the old one, or a message left in an
     // old mailbox keeps working for as long as it has left to live.
-    await expect(dbQueryUnscoped((tx) => verifyEmail(tx, first))).rejects.toThrow(
-      'invalid_link',
-    )
+    await expect(dbQueryUnscoped((tx) => verifyEmail(tx, first))).rejects.toThrow('invalid_link')
     expect(await dbQueryUnscoped((tx) => verifyEmail(tx, outcome.verificationToken))).toBeTruthy()
   })
 
   test('following the link confirms the address and opens a session', async () => {
-    const { userId, verificationToken } = await dbQueryUnscoped((tx) =>
-      signUp(tx, EMAIL, PASSWORD),
-    )
+    const { userId, verificationToken } = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
     const session = await dbQueryUnscoped((tx) => verifyEmail(tx, verificationToken))
 
     expect(session.userId).toBe(userId)
@@ -284,9 +274,7 @@ describe('confirming an address', () => {
   })
 
   test('an expired link is refused like any other bad one', async () => {
-    const { userId, verificationToken } = await dbQueryUnscoped((tx) =>
-      signUp(tx, EMAIL, PASSWORD),
-    )
+    const { userId, verificationToken } = await dbQueryUnscoped((tx) => signUp(tx, EMAIL, PASSWORD))
     await dbQueryUnscoped((tx) =>
       tx
         .update(oneTimeTokens)
@@ -294,9 +282,9 @@ describe('confirming an address', () => {
         .where(and(eq(oneTimeTokens.userId, userId))),
     )
 
-    await expect(
-      dbQueryUnscoped((tx) => verifyEmail(tx, verificationToken)),
-    ).rejects.toThrow('invalid_link')
+    await expect(dbQueryUnscoped((tx) => verifyEmail(tx, verificationToken))).rejects.toThrow(
+      'invalid_link',
+    )
   })
 
   test('and so is a link nobody ever sent', async () => {
@@ -312,9 +300,7 @@ describe('resetting a forgotten password', () => {
   test('an address nobody has gives nothing away', async () => {
     // Null, and the route answers 204 either way. Distinguishing them would turn
     // the form into a way of asking whether somebody has an account here.
-    expect(
-      await dbQueryUnscoped((tx) => requestPasswordReset(tx, 'personne@mynt.test')),
-    ).toBeNull()
+    expect(await dbQueryUnscoped((tx) => requestPasswordReset(tx, 'personne@mynt.test'))).toBeNull()
   })
 
   test('the link sets a new password and retires the old one', async () => {

@@ -61,7 +61,10 @@ async function makeSheet(userId: string): Promise<string> {
 
 beforeEach(async () => {
   await owner.query('delete from auth.users where user_id = any($1)', [[ALICE, BOB]])
-  for (const [id, email] of [[ALICE, 'alice-w@mynt.test'], [BOB, 'bob-w@mynt.test']]) {
+  for (const [id, email] of [
+    [ALICE, 'alice-w@mynt.test'],
+    [BOB, 'bob-w@mynt.test'],
+  ]) {
     await owner.query(
       `insert into auth.users (user_id, email, password_hash) values ($1, $2, 'x')`,
       [id, email],

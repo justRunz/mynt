@@ -153,11 +153,7 @@ export async function signUp(
  * back into an account that exists. It is not a way to send mail to strangers:
  * the correct password is required to reach this line at all.
  */
-export async function signIn(
-  tx: Tx,
-  email: string,
-  password: string,
-): Promise<SignInOutcome> {
+export async function signIn(tx: Tx, email: string, password: string): Promise<SignInOutcome> {
   const [account] = await tx
     .select({
       userId: users.userId,
@@ -361,11 +357,7 @@ export async function requestPasswordReset(tx: Tx, email: string): Promise<strin
  * No session comes back. Every session just ended, including the caller's, and
  * handing one straight out would contradict the sentence above.
  */
-export async function resetPassword(
-  tx: Tx,
-  presented: string,
-  password: string,
-): Promise<void> {
+export async function resetPassword(tx: Tx, presented: string, password: string): Promise<void> {
   const [token] = await tx
     .select()
     .from(oneTimeTokens)

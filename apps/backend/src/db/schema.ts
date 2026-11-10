@@ -35,7 +35,9 @@ import { sql } from 'drizzle-orm'
 const auth = pgSchema('auth')
 
 export const users = auth.table('users', {
-  userId: uuid('user_id').primaryKey().default(sql`uuidv7()`),
+  userId: uuid('user_id')
+    .primaryKey()
+    .default(sql`uuidv7()`),
   // citext in the database, so comparisons ignore case. Drizzle has no citext
   // type; text is the right shape on this side, and the rule is the database's
   // to enforce either way.
@@ -55,7 +57,9 @@ export const users = auth.table('users', {
 export const refreshTokens = auth.table(
   'refresh_tokens',
   {
-    tokenId: uuid('token_id').primaryKey().default(sql`uuidv7()`),
+    tokenId: uuid('token_id')
+      .primaryKey()
+      .default(sql`uuidv7()`),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.userId, { onDelete: 'cascade' }),
@@ -84,7 +88,9 @@ export const refreshTokens = auth.table(
 export const oneTimeTokens = auth.table(
   'one_time_tokens',
   {
-    tokenId: uuid('token_id').primaryKey().default(sql`uuidv7()`),
+    tokenId: uuid('token_id')
+      .primaryKey()
+      .default(sql`uuidv7()`),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.userId, { onDelete: 'cascade' }),
@@ -141,10 +147,7 @@ export const coinTypes = pgTable(
   },
   (table) => [
     unique().on(table.countryCode, table.faceValueCents, table.year, table.variant),
-    check(
-      'known_face_value',
-      sql`${table.faceValueCents} in (1, 2, 5, 10, 20, 50, 100, 200)`,
-    ),
+    check('known_face_value', sql`${table.faceValueCents} in (1, 2, 5, 10, 20, 50, 100, 200)`),
   ],
 )
 
@@ -165,7 +168,9 @@ export const grades = pgTable('grades', {
 })
 
 export const binders = pgTable('binders', {
-  binderId: uuid('binder_id').primaryKey().default(sql`uuidv7()`),
+  binderId: uuid('binder_id')
+    .primaryKey()
+    .default(sql`uuidv7()`),
   userId: uuid('user_id')
     .notNull()
     .references(() => userInfo.userId, { onDelete: 'cascade' }),
@@ -177,7 +182,9 @@ export const binders = pgTable('binders', {
 export const pages = pgTable(
   'pages',
   {
-    pageId: uuid('page_id').primaryKey().default(sql`uuidv7()`),
+    pageId: uuid('page_id')
+      .primaryKey()
+      .default(sql`uuidv7()`),
     binderId: uuid('binder_id')
       .notNull()
       .references(() => binders.binderId, { onDelete: 'cascade' }),
@@ -191,7 +198,9 @@ export const pages = pgTable(
 export const coins = pgTable(
   'coins',
   {
-    coinId: uuid('coin_id').primaryKey().default(sql`uuidv7()`),
+    coinId: uuid('coin_id')
+      .primaryKey()
+      .default(sql`uuidv7()`),
     userId: uuid('user_id')
       .notNull()
       .references(() => userInfo.userId, { onDelete: 'cascade' }),

@@ -3,13 +3,7 @@ import type { DragEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import {
-  FACE_VALUES_CENTS,
-  GRADES,
-  findCoinTypeId,
-  indexCoinTypes,
-  type Grade,
-} from '@mynt/core'
+import { FACE_VALUES_CENTS, GRADES, findCoinTypeId, indexCoinTypes, type Grade } from '@mynt/core'
 
 import { ApiError } from '@/app/lib/api'
 import { catalogQueries } from '@/app/lib/catalog'
@@ -17,11 +11,7 @@ import { countryCollator, countryFlag, countryName } from '@/app/lib/countries'
 import { formatFaceValue } from '@/app/lib/format'
 import { Button } from '@/app/ui/button'
 import { modalError, MODAL_TOASTER } from '@/app/ui/toast'
-import {
-  useAddCoins,
-  useImportAnalyze,
-  type ImportedItem,
-} from '../hooks/use-collection'
+import { useAddCoins, useImportAnalyze, type ImportedItem } from '../hooks/use-collection'
 
 const MAX_BYTES = 10 * 1024 * 1024
 const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -305,65 +295,65 @@ export function ImportCoins({ onDone }: { onDone: () => void }) {
                     for its flag and name. On a phone the
                     country takes a full line and the rest go two by two. */}
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
-                <select
-                  aria-label={t('quickAdd.country')}
-                  className={`${field} col-span-2 w-full min-w-0 sm:col-span-1`}
-                  value={row.countryCode}
-                  onChange={(e) => update(row.key, { countryCode: e.target.value })}
-                >
-                  <option value="">{t('importCoins.countryNone')}</option>
-                  {codes.map((code) => (
-                    <option key={code} value={code}>
-                      {countryFlag(code)} {countryName(code)}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  aria-label={t('quickAdd.faceValue')}
-                  className={`${field} w-full min-w-0`}
-                  value={row.faceValue}
-                  onChange={(e) => update(row.key, { faceValue: e.target.value })}
-                >
-                  <option value="">{t('importCoins.faceValueNone')}</option>
-                  {FACE_VALUES_CENTS.map((cents) => (
-                    <option key={cents} value={cents}>
-                      {formatFaceValue(cents)}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  aria-label={t('quickAdd.year')}
-                  inputMode="numeric"
-                  maxLength={4}
-                  placeholder="2003"
-                  className={`${field} tnum w-full min-w-0`}
-                  value={row.year}
-                  onChange={(e) => update(row.key, { year: e.target.value.replace(/\D/g, '') })}
-                />
-                <input
-                  aria-label={t('importCoins.quantity')}
-                  type="number"
-                  min={1}
-                  max={500}
-                  className={`${field} tnum w-full min-w-0`}
-                  value={row.quantity}
-                  onChange={(e) => update(row.key, { quantity: e.target.value })}
-                />
-                <select
-                  aria-label={t('quickAdd.grade')}
-                  className={`${field} w-full min-w-0`}
-                  value={row.grade}
-                  onChange={(e) => update(row.key, { grade: e.target.value as Grade | '' })}
-                >
-                  {/* The field's own name as the empty choice: "Non renseigné" does
+                  <select
+                    aria-label={t('quickAdd.country')}
+                    className={`${field} col-span-2 w-full min-w-0 sm:col-span-1`}
+                    value={row.countryCode}
+                    onChange={(e) => update(row.key, { countryCode: e.target.value })}
+                  >
+                    <option value="">{t('importCoins.countryNone')}</option>
+                    {codes.map((code) => (
+                      <option key={code} value={code}>
+                        {countryFlag(code)} {countryName(code)}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label={t('quickAdd.faceValue')}
+                    className={`${field} w-full min-w-0`}
+                    value={row.faceValue}
+                    onChange={(e) => update(row.key, { faceValue: e.target.value })}
+                  >
+                    <option value="">{t('importCoins.faceValueNone')}</option>
+                    {FACE_VALUES_CENTS.map((cents) => (
+                      <option key={cents} value={cents}>
+                        {formatFaceValue(cents)}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    aria-label={t('quickAdd.year')}
+                    inputMode="numeric"
+                    maxLength={4}
+                    placeholder="2003"
+                    className={`${field} tnum w-full min-w-0`}
+                    value={row.year}
+                    onChange={(e) => update(row.key, { year: e.target.value.replace(/\D/g, '') })}
+                  />
+                  <input
+                    aria-label={t('importCoins.quantity')}
+                    type="number"
+                    min={1}
+                    max={500}
+                    className={`${field} tnum w-full min-w-0`}
+                    value={row.quantity}
+                    onChange={(e) => update(row.key, { quantity: e.target.value })}
+                  />
+                  <select
+                    aria-label={t('quickAdd.grade')}
+                    className={`${field} w-full min-w-0`}
+                    value={row.grade}
+                    onChange={(e) => update(row.key, { grade: e.target.value as Grade | '' })}
+                  >
+                    {/* The field's own name as the empty choice: "Non renseigné" does
                       not fit the narrow column. */}
-                  <option value="">{t('quickAdd.grade')}</option>
-                  {GRADES.map((g) => (
-                    <option key={g} value={g}>
-                      {t(`grade.short.${g}`)}
-                    </option>
-                  ))}
-                </select>
+                    <option value="">{t('quickAdd.grade')}</option>
+                    {GRADES.map((g) => (
+                      <option key={g} value={g}>
+                        {t(`grade.short.${g}`)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <p className="text-xs">
                   <span className={found ? 'text-muted' : 'text-danger'}>
@@ -384,11 +374,7 @@ export function ImportCoins({ onDone }: { onDone: () => void }) {
         <Button variant="ghost" onClick={restart}>
           {t('importCoins.restart')}
         </Button>
-        <Button
-          disabled={total === 0}
-          loading={addCoins.isPending}
-          onClick={onSubmit}
-        >
+        <Button disabled={total === 0} loading={addCoins.isPending} onClick={onSubmit}>
           {t('importCoins.submit', { count: total })}
         </Button>
       </div>

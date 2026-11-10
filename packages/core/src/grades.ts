@@ -10,12 +10,7 @@
  * real table instead. Losing the compile-time check for a check that reads the
  * database is not obviously a loss.
  */
-export const GRADES = [
-  'VERY_FINE',
-  'EXTREMELY_FINE',
-  'ABOUT_UNCIRCULATED',
-  'UNCIRCULATED',
-] as const
+export const GRADES = ['VERY_FINE', 'EXTREMELY_FINE', 'ABOUT_UNCIRCULATED', 'UNCIRCULATED'] as const
 
 export type Grade = (typeof GRADES)[number]
 

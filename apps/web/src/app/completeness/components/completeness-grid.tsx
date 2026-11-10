@@ -90,11 +90,7 @@ export function CompletenessGrid({ grid }: { grid: Completeness }) {
               <span className="sr-only">{t('collection.columns.faceValue')}</span>
             </th>
             {grid.years.map((year) => (
-              <th
-                key={year}
-                scope="col"
-                className="tnum px-0.5 pb-1 text-xs font-[450] text-muted"
-              >
+              <th key={year} scope="col" className="tnum px-0.5 pb-1 text-xs font-[450] text-muted">
                 {/* Vertical, because 25 four-digit years will not fit flat. */}
                 <span className="block [writing-mode:vertical-rl]">{year}</span>
               </th>

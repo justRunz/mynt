@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  NO_FILTERS,
-  hasActiveFilters,
-  matchesFilters,
-  type FilterableCoin,
-} from './collection'
+import { NO_FILTERS, hasActiveFilters, matchesFilters, type FilterableCoin } from './collection'
 
 const coin: FilterableCoin = {
   countryCode: 'FR',

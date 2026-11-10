@@ -26,9 +26,7 @@ export function FaceValuePicker({ name, value, onChange, firstRef }: Props) {
 
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-2 text-sm font-[450] text-muted">
-        {t('quickAdd.faceValue')}
-      </legend>
+      <legend className="mb-2 text-sm font-[450] text-muted">{t('quickAdd.faceValue')}</legend>
       <div className="flex flex-wrap gap-2">
         {FACE_VALUES_CENTS.map((cents, index) => (
           <label
@@ -52,7 +50,10 @@ export function FaceValuePicker({ name, value, onChange, firstRef }: Props) {
               checked={value === cents}
               onChange={() => onChange(cents)}
             />
-            <span aria-hidden className={`size-2.5 rounded-full ${METAL_DOT[metalFamily(cents)]}`} />
+            <span
+              aria-hidden
+              className={`size-2.5 rounded-full ${METAL_DOT[metalFamily(cents)]}`}
+            />
             {formatFaceValue(cents)}
           </label>
         ))}

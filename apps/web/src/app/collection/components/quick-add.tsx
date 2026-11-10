@@ -3,13 +3,7 @@ import type { FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import {
-  GRADES,
-  findCoinTypeId,
-  indexCoinTypes,
-  type FaceValueCents,
-  type Grade,
-} from '@mynt/core'
+import { GRADES, findCoinTypeId, indexCoinTypes, type FaceValueCents, type Grade } from '@mynt/core'
 
 import { useIsOnline } from '@/app/hooks/use-is-online'
 import { catalogQueries } from '@/app/lib/catalog'
@@ -60,10 +54,7 @@ export function QuickAdd() {
   const firstValueRef = useRef<HTMLInputElement>(null)
   const nextKey = useRef(0)
   const index = useMemo(() => indexCoinTypes(coinTypes.data ?? []), [coinTypes.data])
-  const codes = useMemo(
-    () => (countries.data ?? []).map((c) => c.countryCode),
-    [countries.data],
-  )
+  const codes = useMemo(() => (countries.data ?? []).map((c) => c.countryCode), [countries.data])
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -185,11 +176,7 @@ export function QuickAdd() {
             </select>
           </div>
 
-          <Button
-            type="submit"
-            disabled={!online}
-            loading={addCoin.isPending && !addCoin.isPaused}
-          >
+          <Button type="submit" disabled={!online} loading={addCoin.isPending && !addCoin.isPaused}>
             {t('quickAdd.submit')}
           </Button>
         </div>
@@ -204,8 +191,7 @@ export function QuickAdd() {
             {recent.map((add) => (
               <li key={add.key}>
                 <span aria-hidden>{countryFlag(add.countryCode)}</span>{' '}
-                {countryName(add.countryCode)} · {formatFaceValue(add.faceValueCents)} ·{' '}
-                {add.year}
+                {countryName(add.countryCode)} · {formatFaceValue(add.faceValueCents)} · {add.year}
                 {add.grade ? ` · ${t(`grade.short.${add.grade}`)}` : ''}
                 {add.slot ? ` · ${t('binders.slotShort', add.slot)}` : ''}
               </li>

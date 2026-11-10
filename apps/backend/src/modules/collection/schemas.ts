@@ -42,7 +42,10 @@ export const addCoinSchema = z.object({
  * No location: a batch of coins is not placed hole by hole, they land in the jar.
  */
 export const bulkAddSchema = z.object({
-  coins: z.array(z.object({ coinTypeId: z.int().positive(), gradeCode })).min(1).max(500),
+  coins: z
+    .array(z.object({ coinTypeId: z.int().positive(), gradeCode }))
+    .min(1)
+    .max(500),
 })
 
 /**

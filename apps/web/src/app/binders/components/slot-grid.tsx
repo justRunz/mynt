@@ -122,7 +122,12 @@ function Hole({
   })
 
   const label = coin
-    ? t('binders.slotFilled', { ...position, country: countryName(coin.countryCode), value: formatFaceValue(coin.faceValueCents), year: coin.year })
+    ? t('binders.slotFilled', {
+        ...position,
+        country: countryName(coin.countryCode),
+        value: formatFaceValue(coin.faceValueCents),
+        year: coin.year,
+      })
     : t('binders.slotFree', position)
 
   return (
@@ -182,7 +187,11 @@ export function SlotGrid({
       const data = over?.data.current as SlotTarget | undefined
       if (!data) return undefined
       return data.coin
-        ? t('binders.dnd.overFilled', { row: data.row, column: data.column, coin: coinLabel(data.coin) })
+        ? t('binders.dnd.overFilled', {
+            row: data.row,
+            column: data.column,
+            coin: coinLabel(data.coin),
+          })
         : t('binders.dnd.overFree', { row: data.row, column: data.column })
     },
     onDragEnd: ({ over }) => {

@@ -4,12 +4,7 @@ import { dbQueryUnscoped } from '../../db/index.js'
 import { env } from '../../env.js'
 import { sendMail } from '../../mail/index.js'
 import { passwordResetMessage, verificationMessage } from '../../mail/messages.js'
-import {
-  credentialsSchema,
-  emailSchema,
-  linkTokenSchema,
-  resetPasswordSchema,
-} from './schemas.js'
+import { credentialsSchema, emailSchema, linkTokenSchema, resetPasswordSchema } from './schemas.js'
 import * as service from './service.js'
 import { REFRESH_TTL_DAYS } from './tokens.js'
 import type { Session } from './types.js'

@@ -37,7 +37,7 @@ function post(path: string, body: string) {
 }
 
 describe('a body the parser refuses', () => {
-  test('JSON that does not parse is the client\'s mistake, not a crash', async () => {
+  test("JSON that does not parse is the client's mistake, not a crash", async () => {
     const response = await post('/binders', '{"name": "oups"')
     expect(response.status).toBe(400)
     expect(await response.json()).toEqual({ error: 'invalid_request' })

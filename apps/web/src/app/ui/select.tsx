@@ -25,8 +25,8 @@ export function Select({ label, dense = false, children, ...props }: SelectProps
         id={id}
         className={`cursor-pointer rounded-md border border-field bg-raised text-ink
                     transition-colors hover:border-ink ${
-          dense ? 'h-10 px-2 text-sm' : 'h-11 px-3 text-base'
-        }`}
+                      dense ? 'h-10 px-2 text-sm' : 'h-11 px-3 text-base'
+                    }`}
         {...props}
       >
         {children}

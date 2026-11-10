@@ -31,15 +31,7 @@ interface Props {
   onRemove: (coinId: string) => void
 }
 
-export function SlotDialog({
-  slot,
-  unfiled,
-  busy,
-  errorKey,
-  onClose,
-  onPlace,
-  onRemove,
-}: Props) {
+export function SlotDialog({ slot, unfiled, busy, errorKey, onClose, onPlace, onRemove }: Props) {
   const { t } = useTranslation()
   const position = { row: slot?.row ?? 0, column: slot?.column ?? 0 }
 
@@ -60,8 +52,8 @@ export function SlotDialog({
           <div className="flex flex-wrap items-center justify-between gap-4">
             <span className="tnum text-sm">
               <span aria-hidden>{countryFlag(slot.coin.countryCode)}</span>{' '}
-              {countryName(slot.coin.countryCode)} · {formatFaceValue(slot.coin.faceValueCents)}{' '}
-              · {slot.coin.year}
+              {countryName(slot.coin.countryCode)} · {formatFaceValue(slot.coin.faceValueCents)} ·{' '}
+              {slot.coin.year}
             </span>
             <Button
               variant="ghost"

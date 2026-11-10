@@ -50,7 +50,10 @@ beforeAll(async () => {
   // One insert, not two: the trigger on auth.users attaches the user_info row.
   // This fixture used to write it by hand, and now cannot -- which is the
   // invariant working.
-  for (const [id, email] of [[ALICE, 'alice@test'], [BOB, 'bob@test']]) {
+  for (const [id, email] of [
+    [ALICE, 'alice@test'],
+    [BOB, 'bob@test'],
+  ]) {
     await owner.query(
       `insert into auth.users (user_id, email, password_hash) values ($1, $2, 'x')`,
       [id, email],
@@ -74,9 +77,7 @@ afterAll(async () => {
 
 describe('reading', () => {
   test("a collector does not see another's coins", async () => {
-    await dbQueryAs(ALICE, (tx) =>
-      tx.insert(coins).values({ userId: ALICE, coinTypeId }),
-    )
+    await dbQueryAs(ALICE, (tx) => tx.insert(coins).values({ userId: ALICE, coinTypeId }))
 
     // No filter on either side. The policy adds one, and it adds a different
     // one for each of them.
@@ -98,9 +99,9 @@ describe('reading', () => {
   test('an identity with no account sees nothing but the catalog', async () => {
     const stranger = '99999999-9999-9999-9999-999999999999'
     expect(await dbQueryAs(stranger, (tx) => tx.select().from(coins))).toHaveLength(0)
-    expect(
-      (await dbQueryAs(stranger, (tx) => tx.select().from(coinTypes))).length,
-    ).toBeGreaterThan(0)
+    expect((await dbQueryAs(stranger, (tx) => tx.select().from(coinTypes))).length).toBeGreaterThan(
+      0,
+    )
   })
 })
 

@@ -56,11 +56,7 @@ export async function listBinders(tx: Tx): Promise<Binder[]> {
 // Writes
 // ---------------------------------------------------------------------------
 
-export async function createBinder(
-  tx: Tx,
-  userId: string,
-  input: CreateBinder,
-): Promise<string> {
+export async function createBinder(tx: Tx, userId: string, input: CreateBinder): Promise<string> {
   const [created] = await tx
     .insert(binders)
     .values({ userId, name: input.name })
@@ -79,11 +75,7 @@ export async function createBinder(
  * Telling them apart would let anyone with a binder id learn whether it exists,
  * which is the one fact the id itself was supposed to protect.
  */
-export async function createPage(
-  tx: Tx,
-  binderId: string,
-  input: CreatePage,
-): Promise<string> {
+export async function createPage(tx: Tx, binderId: string, input: CreatePage): Promise<string> {
   try {
     const [created] = await tx
       .insert(pages)

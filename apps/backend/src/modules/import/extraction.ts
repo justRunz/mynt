@@ -45,17 +45,22 @@ export const RESPONSE_JSON_SCHEMA = {
 } as const
 
 const itemSchema = z.object({
-  countryCode: z.string().regex(/^[A-Z]{2}$/).nullable(),
-  faceValueCents: z.union([
-    z.literal(1),
-    z.literal(2),
-    z.literal(5),
-    z.literal(10),
-    z.literal(20),
-    z.literal(50),
-    z.literal(100),
-    z.literal(200),
-  ]).nullable(),
+  countryCode: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .nullable(),
+  faceValueCents: z
+    .union([
+      z.literal(1),
+      z.literal(2),
+      z.literal(5),
+      z.literal(10),
+      z.literal(20),
+      z.literal(50),
+      z.literal(100),
+      z.literal(200),
+    ])
+    .nullable(),
   year: z.int().min(1999).max(2100).nullable(),
   quantity: z.int().min(1).max(10000),
   variant: z.string().max(300).nullable(),

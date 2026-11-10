@@ -8,12 +8,7 @@ import {
   useQueryStates,
 } from 'nuqs'
 import { useTranslation } from 'react-i18next'
-import {
-  FACE_VALUES_CENTS,
-  matchesFilters,
-  metalFamily,
-  type FaceValueCents,
-} from '@mynt/core'
+import { FACE_VALUES_CENTS, matchesFilters, metalFamily, type FaceValueCents } from '@mynt/core'
 
 import { AppShell } from '@/app/components/app-shell'
 import { Button } from '@/app/ui/button'
@@ -205,10 +200,7 @@ function Collection() {
       {entries.length === 0 ? (
         <EmptyState title={t('collection.empty.title')} body={t('collection.empty.body')} />
       ) : visible.length === 0 ? (
-        <EmptyState
-          title={t('collection.noResults.title')}
-          body={t('collection.noResults.body')}
-        />
+        <EmptyState title={t('collection.noResults.title')} body={t('collection.noResults.body')} />
       ) : (
         <>
           <p className="text-sm text-muted">{t('collection.count', { count: visible.length })}</p>
@@ -294,103 +286,107 @@ function CollectionTable({
 
   return (
     <>
-    <ul className="flex flex-col gap-3 sm:hidden">
-      {entries.map((entry) => (
-        <li key={entry.id} className="flex items-start gap-3 rounded-xl bg-card p-4">
-          <div className="flex min-w-0 flex-col gap-1">
-            <div>
-              <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
-              {countryName(entry.countryCode)}
-            </div>
-            <div className="text-base">
-              <span
-                aria-hidden
-                className={`mr-2 inline-block size-2 rounded-full align-middle ${
-                  METAL_DOT[metalFamily(entry.faceValueCents as FaceValueCents)]
-                }`}
-              />
-              {formatFaceValue(entry.faceValueCents)} · {entry.year}
-              {entry.grade && ` · ${t(`grade.short.${entry.grade}`)}`}
-            </div>
-            <div className="text-sm text-muted">
-              {entry.location
-                ? t('collection.slot', {
-                    binder: entry.location.binderName,
-                    page: entry.location.pageNumber,
-                    row: entry.location.row,
-                    column: entry.location.column,
-                  })
-                : t('collection.unfiled')}
-            </div>
-          </div>
-          <EditButton entry={entry} onEdit={onEdit} />
-        </li>
-      ))}
-    </ul>
-    <div className="hidden overflow-x-auto sm:block">
-      <table className="w-full border-collapse text-base">
-        <thead>
-          <tr className="border-b border-rule text-left text-sm font-[450] text-muted">
-            <th scope="col" className="py-3 pr-4 font-[450]">
-              {t('collection.columns.country')}
-            </th>
-            <th scope="col" className="py-3 pr-4 text-right font-[450]">
-              {t('collection.columns.faceValue')}
-            </th>
-            <th scope="col" className="py-3 pr-4 text-right font-[450]">
-              {t('collection.columns.year')}
-            </th>
-            <th scope="col" className="py-3 pr-4 font-[450]">
-              {t('collection.columns.grade')}
-            </th>
-            <th scope="col" className="py-3 pr-4 font-[450]">
-              {t('collection.columns.location')}
-            </th>
-            <th scope="col" className="py-3">
-              <span className="sr-only">{t('collection.columns.actions')}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry) => (
-            <tr key={entry.id} className="border-b border-rule hover:bg-card">
-              <td className="py-3 pr-4 whitespace-nowrap">
+      <ul className="flex flex-col gap-3 sm:hidden">
+        {entries.map((entry) => (
+          <li key={entry.id} className="flex items-start gap-3 rounded-xl bg-card p-4">
+            <div className="flex min-w-0 flex-col gap-1">
+              <div>
                 <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
                 {countryName(entry.countryCode)}
-              </td>
-              <td className="py-3 pr-4 text-right whitespace-nowrap">
+              </div>
+              <div className="text-base">
                 <span
                   aria-hidden
                   className={`mr-2 inline-block size-2 rounded-full align-middle ${
                     METAL_DOT[metalFamily(entry.faceValueCents as FaceValueCents)]
                   }`}
                 />
-                {formatFaceValue(entry.faceValueCents)}
-              </td>
-              <td className="py-3 pr-4 text-right">{entry.year}</td>
-              <td className="py-3 pr-4 whitespace-nowrap">
-                {entry.grade ? t(`grade.short.${entry.grade}`) : <span className="text-muted">—</span>}
-              </td>
-              <td className="py-3 pr-4 whitespace-nowrap">
-                {entry.location ? (
-                  t('collection.slot', {
-                    binder: entry.location.binderName,
-                    page: entry.location.pageNumber,
-                    row: entry.location.row,
-                    column: entry.location.column,
-                  })
-                ) : (
-                  <span className="text-muted">{t('collection.unfiled')}</span>
-                )}
-              </td>
-              <td className="py-3 text-right">
-                <EditButton entry={entry} onEdit={onEdit} />
-              </td>
+                {formatFaceValue(entry.faceValueCents)} · {entry.year}
+                {entry.grade && ` · ${t(`grade.short.${entry.grade}`)}`}
+              </div>
+              <div className="text-sm text-muted">
+                {entry.location
+                  ? t('collection.slot', {
+                      binder: entry.location.binderName,
+                      page: entry.location.pageNumber,
+                      row: entry.location.row,
+                      column: entry.location.column,
+                    })
+                  : t('collection.unfiled')}
+              </div>
+            </div>
+            <EditButton entry={entry} onEdit={onEdit} />
+          </li>
+        ))}
+      </ul>
+      <div className="hidden overflow-x-auto sm:block">
+        <table className="w-full border-collapse text-base">
+          <thead>
+            <tr className="border-b border-rule text-left text-sm font-[450] text-muted">
+              <th scope="col" className="py-3 pr-4 font-[450]">
+                {t('collection.columns.country')}
+              </th>
+              <th scope="col" className="py-3 pr-4 text-right font-[450]">
+                {t('collection.columns.faceValue')}
+              </th>
+              <th scope="col" className="py-3 pr-4 text-right font-[450]">
+                {t('collection.columns.year')}
+              </th>
+              <th scope="col" className="py-3 pr-4 font-[450]">
+                {t('collection.columns.grade')}
+              </th>
+              <th scope="col" className="py-3 pr-4 font-[450]">
+                {t('collection.columns.location')}
+              </th>
+              <th scope="col" className="py-3">
+                <span className="sr-only">{t('collection.columns.actions')}</span>
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {entries.map((entry) => (
+              <tr key={entry.id} className="border-b border-rule hover:bg-card">
+                <td className="py-3 pr-4 whitespace-nowrap">
+                  <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
+                  {countryName(entry.countryCode)}
+                </td>
+                <td className="py-3 pr-4 text-right whitespace-nowrap">
+                  <span
+                    aria-hidden
+                    className={`mr-2 inline-block size-2 rounded-full align-middle ${
+                      METAL_DOT[metalFamily(entry.faceValueCents as FaceValueCents)]
+                    }`}
+                  />
+                  {formatFaceValue(entry.faceValueCents)}
+                </td>
+                <td className="py-3 pr-4 text-right">{entry.year}</td>
+                <td className="py-3 pr-4 whitespace-nowrap">
+                  {entry.grade ? (
+                    t(`grade.short.${entry.grade}`)
+                  ) : (
+                    <span className="text-muted">—</span>
+                  )}
+                </td>
+                <td className="py-3 pr-4 whitespace-nowrap">
+                  {entry.location ? (
+                    t('collection.slot', {
+                      binder: entry.location.binderName,
+                      page: entry.location.pageNumber,
+                      row: entry.location.row,
+                      column: entry.location.column,
+                    })
+                  ) : (
+                    <span className="text-muted">{t('collection.unfiled')}</span>
+                  )}
+                </td>
+                <td className="py-3 text-right">
+                  <EditButton entry={entry} onEdit={onEdit} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   )
 }

@@ -91,7 +91,9 @@ function NavLinks({
           title={collapsed ? t(link.labelKey) : undefined}
           className={({ isActive }) =>
             `flex items-center gap-3 rounded-md px-3 py-2 ${collapsed ? 'justify-center' : ''} ${
-              isActive ? 'bg-accent-wash font-[480] text-accent' : 'text-muted hover:bg-hover hover:text-ink'
+              isActive
+                ? 'bg-accent-wash font-[480] text-accent'
+                : 'text-muted hover:bg-hover hover:text-ink'
             }`
           }
         >
@@ -175,8 +177,10 @@ export function AppShell({
       // the rail clips, so text never reflows mid-slide.
       className={`md:grid md:min-h-dvh md:transition-[grid-template-columns] md:duration-200
                   md:ease-out motion-reduce:transition-none ${
-        collapsed ? 'md:grid-cols-[4.5rem_minmax(0,1fr)]' : 'md:grid-cols-[14rem_minmax(0,1fr)]'
-      }`}
+                    collapsed
+                      ? 'md:grid-cols-[4.5rem_minmax(0,1fr)]'
+                      : 'md:grid-cols-[14rem_minmax(0,1fr)]'
+                  }`}
     >
       {/* Flush against the left edge of the window rather than inset in the
           centred column: a navigation bar is part of the frame, not a card
@@ -190,7 +194,9 @@ export function AppShell({
                    md:flex-col md:items-start md:gap-6 md:border-r md:border-rule
                    md:overflow-hidden md:whitespace-nowrap md:py-10 md:shadow-rail ${collapsed ? 'md:px-3' : 'md:px-6'}`}
       >
-        <div className={`flex items-center self-stretch ${collapsed ? 'justify-center' : 'justify-between'}`}>
+        <div
+          className={`flex items-center self-stretch ${collapsed ? 'justify-center' : 'justify-between'}`}
+        >
           {!collapsed && <span className="font-serif text-xl">{t('app.name')}</span>}
           <button
             type="button"
@@ -256,10 +262,7 @@ export function AppShell({
       <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} title={t('app.name')}>
         {/* Closed on navigation: leaving it open over the page just arrived at
             would hide the thing the tap asked for. */}
-        <NavLinks
-          onNavigate={() => setMenuOpen(false)}
-          className="flex flex-col gap-2 text-lg"
-        />
+        <NavLinks onNavigate={() => setMenuOpen(false)} className="flex flex-col gap-2 text-lg" />
         <SignOutAction onSignOut={() => void signOut()} />
       </Drawer>
     </div>

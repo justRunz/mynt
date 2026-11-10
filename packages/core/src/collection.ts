@@ -29,17 +29,11 @@ export interface FilterableCoin {
   isFiled: boolean
 }
 
-export function matchesFilters(
-  coin: FilterableCoin,
-  filters: CollectionFilters,
-): boolean {
+export function matchesFilters(coin: FilterableCoin, filters: CollectionFilters): boolean {
   if (filters.countryCode !== null && coin.countryCode !== filters.countryCode) {
     return false
   }
-  if (
-    filters.faceValueCents !== null &&
-    coin.faceValueCents !== filters.faceValueCents
-  ) {
+  if (filters.faceValueCents !== null && coin.faceValueCents !== filters.faceValueCents) {
     return false
   }
   if (filters.year !== null && coin.year !== filters.year) return false

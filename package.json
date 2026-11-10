@@ -20,11 +20,14 @@
     "db:demo": "node scripts/seed-demo.mjs",
     "db:password": "docker exec mynt_db psql -U postgres -qc \"alter role mynt_app password 'mynt'\"",
     "db:status": "dbmate status",
-    "db:reset": "dbmate --wait drop && dbmate up"
+    "db:reset": "dbmate --wait drop && dbmate up",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@node-rs/argon2": "^2.2.2",
     "dbmate": "^2.38.1",
+    "prettier": "3.6.2",
     "typescript": "catalog:"
   }
 }

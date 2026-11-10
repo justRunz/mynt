@@ -25,13 +25,7 @@ interface Props {
  * than Radix: Radix has no combobox primitive, and Base UI's is still a release
  * candidate. Downshift brings behaviour and ARIA only, no styles.
  */
-export function CountryCombobox({
-  codes,
-  value,
-  onChange,
-  inputRef,
-  initialQuery = '',
-}: Props) {
+export function CountryCombobox({ codes, value, onChange, inputRef, initialQuery = '' }: Props) {
   const { t } = useTranslation()
   const [query, setQuery] = useState(initialQuery)
 

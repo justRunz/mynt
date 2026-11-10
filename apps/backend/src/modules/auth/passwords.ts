@@ -44,7 +44,7 @@ const PARAMS = {
  * Built at load with the parameters above, so the decoy stays exactly as
  * expensive as the real thing even after they change.
  */
-const DECOY = hashSync('a password that is not anybody\'s', PARAMS)
+const DECOY = hashSync("a password that is not anybody's", PARAMS)
 
 export function hashPassword(password: string): Promise<string> {
   return hash(password, PARAMS)

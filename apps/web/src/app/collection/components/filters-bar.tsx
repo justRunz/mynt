@@ -30,81 +30,83 @@ export function FiltersBar({
   return (
     <div className="grid items-end gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
       <div className="flex flex-wrap items-end gap-2">
-      <Field
-        // Elastic rather than a fixed width: the search box absorbs the leftover
-        // space so the action stays on the filter row, and shrinks instead of
-        // pushing it onto its own line when a translation runs long.
-        wrapperClassName="min-w-48 flex-1"
-        className="w-full"
-        dense
-        label={t('filters.search')}
-        type="search"
-        placeholder={t('filters.searchPlaceholder')}
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-      />
+        <Field
+          // Elastic rather than a fixed width: the search box absorbs the leftover
+          // space so the action stays on the filter row, and shrinks instead of
+          // pushing it onto its own line when a translation runs long.
+          wrapperClassName="min-w-48 flex-1"
+          className="w-full"
+          dense
+          label={t('filters.search')}
+          type="search"
+          placeholder={t('filters.searchPlaceholder')}
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
 
-      <Select
-        dense
-        label={t('filters.country')}
-        value={filters.countryCode ?? ''}
-        onChange={(e) => onChange({ ...filters, countryCode: e.target.value || null })}
-      >
-        <option value="">{t('filters.allCountries')}</option>
-        {countryCodes.map((code) => (
-          <option key={code} value={code}>
-            {countryFlag(code)} {countryName(code)}
-          </option>
-        ))}
-      </Select>
+        <Select
+          dense
+          label={t('filters.country')}
+          value={filters.countryCode ?? ''}
+          onChange={(e) => onChange({ ...filters, countryCode: e.target.value || null })}
+        >
+          <option value="">{t('filters.allCountries')}</option>
+          {countryCodes.map((code) => (
+            <option key={code} value={code}>
+              {countryFlag(code)} {countryName(code)}
+            </option>
+          ))}
+        </Select>
 
-      <Select
-        dense
-        label={t('filters.faceValue')}
-        value={filters.faceValueCents ?? ''}
-        onChange={(e) =>
-          onChange({
-            ...filters,
-            faceValueCents: e.target.value
-              ? (Number(e.target.value) as CollectionFilters['faceValueCents'])
-              : null,
-          })
-        }
-      >
-        <option value="">{t('filters.allFaceValues')}</option>
-        {FACE_VALUES_CENTS.map((cents) => (
-          <option key={cents} value={cents}>
-            {formatFaceValue(cents)}
-          </option>
-        ))}
-      </Select>
+        <Select
+          dense
+          label={t('filters.faceValue')}
+          value={filters.faceValueCents ?? ''}
+          onChange={(e) =>
+            onChange({
+              ...filters,
+              faceValueCents: e.target.value
+                ? (Number(e.target.value) as CollectionFilters['faceValueCents'])
+                : null,
+            })
+          }
+        >
+          <option value="">{t('filters.allFaceValues')}</option>
+          {FACE_VALUES_CENTS.map((cents) => (
+            <option key={cents} value={cents}>
+              {formatFaceValue(cents)}
+            </option>
+          ))}
+        </Select>
 
-      <Select
-        dense
-        label={t('filters.year')}
-        value={filters.year ?? ''}
-        onChange={(e) => onChange({ ...filters, year: e.target.value ? Number(e.target.value) : null })}
-      >
-        <option value="">{t('filters.allYears')}</option>
-        {years.map((year) => (
-          <option key={year} value={year}>
-            {year}
-          </option>
-        ))}
-      </Select>
+        <Select
+          dense
+          label={t('filters.year')}
+          value={filters.year ?? ''}
+          onChange={(e) =>
+            onChange({ ...filters, year: e.target.value ? Number(e.target.value) : null })
+          }
+        >
+          <option value="">{t('filters.allYears')}</option>
+          {years.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </Select>
 
-      <Select
-        dense
-        label={t('filters.filing')}
-        value={filters.filing}
-        onChange={(e) =>
-          onChange({ ...filters, filing: e.target.value as CollectionFilters['filing'] })
-        }
-      >
-        <option value="ANY">{t('filters.filingANY')}</option>
-        <option value="FILED">{t('filters.filingFILED')}</option>
-        <option value="UNFILED">{t('filters.filingUNFILED')}</option>
-      </Select>
+        <Select
+          dense
+          label={t('filters.filing')}
+          value={filters.filing}
+          onChange={(e) =>
+            onChange({ ...filters, filing: e.target.value as CollectionFilters['filing'] })
+          }
+        >
+          <option value="ANY">{t('filters.filingANY')}</option>
+          <option value="FILED">{t('filters.filingFILED')}</option>
+          <option value="UNFILED">{t('filters.filingUNFILED')}</option>
+        </Select>
 
         <button
           type="button"
