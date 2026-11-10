@@ -119,7 +119,7 @@ let renewing: Promise<RenewalOutcome> | null = null
 
 export function renewSession(): Promise<RenewalOutcome> {
   renewing ??= (
-    typeof navigator !== 'undefined' && navigator.locks
+    navigator.locks
       ? navigator.locks.request('mynt-session-renewal', requestRenewal)
       : requestRenewal()
   ).finally(() => {
