@@ -5,7 +5,7 @@ import { afterAll, beforeEach, describe, expect, test } from 'vitest'
 import { closeDb, dbQueryAs, dbQueryUnscoped } from '../../db/index.js'
 import { oneTimeTokens, refreshTokens, userInfo, users } from '../../db/schema.js'
 import { DomainError } from '../../errors.js'
-import { readAccessToken } from './tokens.js'
+import { hashOpaqueToken, readAccessToken } from './tokens.js'
 import {
   requestPasswordReset,
   resetPassword,
@@ -140,8 +140,15 @@ describe('rotating', () => {
     const first = await openSession()
     const second = await dbQueryUnscoped((tx) => rotateSession(tx, first.refreshToken))
 
-    // The theft, as it actually looks: somebody presents a token that has
-    // already been spent. Which of the two holders is legitimate is unknowable.
+    // The theft, as it actually looks: somebody presents a token spent a minute
+    // ago -- well past the seconds allowed for two tabs racing. Which of the two
+    // holders is legitimate is unknowable.
+    await dbQueryUnscoped((tx) =>
+      tx
+        .update(refreshTokens)
+        .set({ usedAt: new Date(Date.now() - 60_000) })
+        .where(eq(refreshTokens.tokenHash, hashOpaqueToken(first.refreshToken))),
+    )
     expect(await dbQueryUnscoped((tx) => rotateSession(tx, first.refreshToken))).toBeNull()
 
     // So the successor dies too -- including the one the honest client is
@@ -152,6 +159,22 @@ describe('rotating', () => {
       tx.select().from(refreshTokens).where(eq(refreshTokens.userId, first.userId)),
     )
     expect(left).toHaveLength(0)
+  })
+
+  test('two tabs renewing at the same instant both stay signed in', async () => {
+    // What a browser restoring two tabs does: the same cookie, sent twice, in
+    // parallel. Before the grace window the loser revoked the whole family.
+    const session = await openSession()
+    const [one, two] = await Promise.all([
+      dbQueryUnscoped((tx) => rotateSession(tx, session.refreshToken)),
+      dbQueryUnscoped((tx) => rotateSession(tx, session.refreshToken)),
+    ])
+    expect(one).not.toBeNull()
+    expect(two).not.toBeNull()
+
+    // And both successors still work: nothing was revoked.
+    expect(await dbQueryUnscoped((tx) => rotateSession(tx, one!.refreshToken))).not.toBeNull()
+    expect(await dbQueryUnscoped((tx) => rotateSession(tx, two!.refreshToken))).not.toBeNull()
   })
 
   test('an expired token is refused and cleared away', async () => {

@@ -245,6 +245,22 @@ export async function verifyEmail(tx: Tx, presented: string): Promise<Session> {
  * detected theft all end in one 401, because the client has the same thing to do
  * about each and a prober learns nothing from the difference.
  */
+/**
+ * How long a refresh token that has just been spent may be presented again
+ * without being taken for a copy.
+ *
+ * Two tabs restored together at browser start both renew at once, each with
+ * the same cookie. One wins the rotation and the other presents a token spent a
+ * few milliseconds earlier -- which, without this, reads exactly like theft and
+ * revokes the whole family: the collector is signed out everywhere for having
+ * two tabs open.
+ *
+ * Inside the window the late request gets a session too, in the same family.
+ * The cost is that a stolen copy replayed within those seconds of the genuine
+ * use goes unnoticed; outside them, a replay revokes everything, as before.
+ */
+const REUSE_GRACE_MS = 10_000
+
 export async function rotateSession(tx: Tx, presented: string): Promise<Session | null> {
   const [existing] = await tx
     .select()
@@ -254,6 +270,10 @@ export async function rotateSession(tx: Tx, presented: string): Promise<Session 
   if (!existing) return null
 
   if (existing.usedAt !== null) {
+    if (Date.now() - existing.usedAt.getTime() <= REUSE_GRACE_MS) {
+      return issueSession(tx, existing.userId, existing.familyId)
+    }
+
     // A rotating token is spendable once. A second presentation proves two
     // copies exist, and nothing distinguishes the thief from the owner -- so
     // neither is trusted. Only the password gets anybody back in.
@@ -267,15 +287,16 @@ export async function rotateSession(tx: Tx, presented: string): Promise<Session 
     return null
   }
 
-  // Conditional on still being unspent, so two requests arriving together cannot
-  // both rotate the same token: the second updates nothing and is refused.
-  const spent = await tx
+  // Conditional on still being unspent. A request that arrives while another is
+  // rotating the same token waits for that row lock, then updates nothing: it
+  // lost the race rather than presenting a stolen copy, so it is inside the
+  // grace window by definition and gets a session of its own.
+  //
+  // So how many rows this touches does not change the answer, and is not read.
+  await tx
     .update(refreshTokens)
     .set({ usedAt: new Date() })
     .where(and(eq(refreshTokens.tokenId, existing.tokenId), isNull(refreshTokens.usedAt)))
-    .returning({ tokenId: refreshTokens.tokenId })
-
-  if (spent.length === 0) return null
 
   return issueSession(tx, existing.userId, existing.familyId)
 }

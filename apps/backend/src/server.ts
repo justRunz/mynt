@@ -1,48 +1,31 @@
-import cookieParser from 'cookie-parser'
-import cors from 'cors'
-import express from 'express'
-
+import { createApp } from './app.js'
+import { closeDb } from './db/index.js'
 import { env } from './env.js'
-import { authenticate } from './middleware/authenticate.js'
-import { errorHandler } from './middleware/error-handler.js'
-import { authRoutes } from './modules/auth/routes.js'
-import { binderRoutes } from './modules/binders/routes.js'
-import { catalogRoutes } from './modules/catalog/routes.js'
-import { collectionRoutes } from './modules/collection/routes.js'
 
-const app = express()
+const server = createApp().listen(env.port, env.host, () => {
+  console.log(`API sur http://${env.host}:${env.port}`)
+})
 
 /**
- * Cross-origin only exists in development, where the app is on 5173 and this is
- * on 3001. In production both sit behind one domain -- Express serves the built
- * front end next to /api -- so there is no cross-origin request to permit, and
- * none of this runs.
+ * Leaving without dropping anyone mid-request.
  *
- * credentials is on for the refresh cookie the auth step brings; today the token travels in an
- * Authorization header, which does not need it.
+ * A deploy stops the old container with SIGTERM and, ten seconds later by
+ * Docker's default, SIGKILL. In order: stop accepting connections and let the
+ * requests in flight finish, then close the pool -- after, because those
+ * requests still need it -- then exit.
+ *
+ * The timer is for a client that holds a connection open and never finishes.
+ * Shorter than Docker's ten seconds so the exit is still this process's own,
+ * and unref'd so that it is not itself the thing keeping the process alive.
  */
-app.use(cors({ origin: env.appUrl, credentials: true }))
-app.use(express.json())
+function shutdown(): void {
+  server.close(() => {
+    void closeDb().then(() => process.exit(0))
+  })
+  setTimeout(() => process.exit(1), 8_000).unref()
+}
 
-// The refresh token arrives as a cookie and nowhere else, so it has to be parsed
-// before any route can look for it.
-app.use(cookieParser())
-
-// Above the middleware on purpose, and the only thing that is: these are the
-// routes reached while holding no token, so requiring one would close the door
-// from the inside.
-app.use('/api/auth', authRoutes)
-
-// Everything below needs a signed-in caller. Mounted before the routes rather
-// than repeated inside each of them, so adding a route cannot forget it.
-app.use('/api', authenticate)
-
-app.use('/api/catalog', catalogRoutes)
-app.use('/api/collection', collectionRoutes)
-app.use('/api/binders', binderRoutes)
-
-app.use(errorHandler)
-
-app.listen(env.port, () => {
-  console.log(`API sur http://localhost:${env.port}`)
-})
+// SIGTERM is Docker's; SIGINT is Ctrl-C in a terminal. Once each: a second
+// Ctrl-C from somebody who has stopped waiting ends the process on the spot.
+process.once('SIGTERM', shutdown)
+process.once('SIGINT', shutdown)

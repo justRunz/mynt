@@ -23,8 +23,8 @@
     "db:reset": "dbmate --wait drop && dbmate up"
   },
   "devDependencies": {
-    "@node-rs/argon2": "^2.2.0",
-    "dbmate": "^2.35.1",
+    "@node-rs/argon2": "^2.2.2",
+    "dbmate": "^2.38.1",
     "typescript": "catalog:"
   }
 }

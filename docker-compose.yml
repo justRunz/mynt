@@ -2,6 +2,11 @@
 #
 # Both are development only. In production the database is Dokploy's and the mail
 # goes to a real relay; nothing in this file is deployed.
+#
+# Every port is bound to 127.0.0.1. A bare 'HOST:CONTAINER' mapping listens on all
+# interfaces, which on a café's wifi meant anyone on the network could log into
+# Postgres as its superuser with the password written below, or read password
+# reset links out of Mailpit.
 
 services:
   db:
@@ -19,7 +24,7 @@ services:
       POSTGRES_PASSWORD: mynt
       POSTGRES_DB: mynt
     ports:
-      - '5433:5432'
+      - '127.0.0.1:5433:5432'
     volumes:
       # /var/lib/postgresql, not /var/lib/postgresql/data. The 18 image moved
       # PGDATA to /var/lib/postgresql/18/docker and declares the parent as its
@@ -52,8 +57,8 @@ services:
     restart: unless-stopped
     ports:
       # 1025 is where the API sends; 8025 is the inbox to read in a browser.
-      - '1025:1025'
-      - '8025:8025'
+      - '127.0.0.1:1025:1025'
+      - '127.0.0.1:8025:8025'
     environment:
       MP_MAX_MESSAGES: 500
       MP_SMTP_AUTH_ACCEPT_ANY: 1

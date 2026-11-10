@@ -20,6 +20,15 @@ if (!connectionString) {
  */
 const pool = new pg.Pool({ connectionString })
 
+// An idle connection that Postgres drops -- a restart, a failover, a proxy's
+// idle timeout -- is reported here, on the pool, because no query was waiting
+// on it. With no listener that is an unhandled 'error' event, and Node ends the
+// process for it. The pool has already discarded the connection and opens
+// another on the next query, so there is nothing to do but say it happened.
+pool.on('error', (error) => {
+  console.error('Idle database connection lost:', error.message)
+})
+
 /**
  * Deliberately not exported.
  *
@@ -86,7 +95,25 @@ export function dbQueryUnscoped<T>(run: (tx: Tx) => Promise<T>): Promise<T> {
   return db.transaction(run)
 }
 
-/** Lets a test process exit instead of waiting on an idle pool. */
+/**
+ * Whether the database answers, and nothing more.
+ *
+ * For the health route, which runs before anyone has signed in and so cannot go
+ * through either function above. It takes no query and hands back no rows: the
+ * one statement it can run is written here, which is what keeps it from being a
+ * third way to the tables.
+ */
+export async function dbIsReachable(): Promise<boolean> {
+  try {
+    await pool.query('select 1')
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Lets a process exit instead of waiting on an idle pool: a test run, or the
+ *  server on its way down. */
 export function closeDb(): Promise<void> {
   return pool.end()
 }
