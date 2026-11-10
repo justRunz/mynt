@@ -5,6 +5,7 @@
   },
   "common": {
     "loading": "Chargement…",
+    "saving": "Enregistrement…",
     "cancel": "Annuler",
     "signOut": "Se déconnecter",
     "retry": "Réessayer",
@@ -131,6 +132,7 @@
     "reset": "Réinitialiser les filtres"
   },
   "quickAdd": {
+    "saved": "Pièce ajoutée",
     "title": "Ajout rapide",
     "intro": "Le pays reste sélectionné après validation, pour enchaîner une pile de pièces sans repartir de zéro.",
     "country": "Pays",
@@ -235,6 +237,7 @@
     "dismiss": "Plus tard"
   },
   "editCoin": {
+    "saved": "Pièce modifiée",
     "title": "Modifier la pièce",
     "open": "Modifier {{country}} {{value}} {{year}}",
     "acquiredOn": "Date d’acquisition",

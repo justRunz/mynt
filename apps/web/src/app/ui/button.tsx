@@ -37,7 +37,34 @@ const variants: Record<Variant, string> = {
 export function Button({
   variant = 'primary',
   className = '',
+  loading = false,
+  disabled,
+  children,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-  return <button className={`${base} ${variants[variant]} ${className}`} {...props} />
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; loading?: boolean }) {
+  return (
+    <button
+      className={`${base} ${variants[variant]} ${className}`}
+      // Disabled while loading so a second press cannot send the request twice;
+      // aria-busy tells assistive tech why it went quiet.
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...props}
+    >
+      {loading && (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          className="size-4 shrink-0 animate-spin motion-reduce:animate-none"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        >
+          <path d="M8 2a6 6 0 1 1-6 6" />
+        </svg>
+      )}
+      {children}
+    </button>
+  )
 }
