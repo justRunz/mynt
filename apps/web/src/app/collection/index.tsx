@@ -24,6 +24,7 @@ import { formatFaceValue } from '@/app/lib/format'
 import { matchesSearch } from '@/app/lib/search'
 import { EditCoin } from './components/edit-coin'
 import { FiltersBar } from './components/filters-bar'
+import { ImportCoins } from './components/import-coins'
 import { QuickAdd } from './components/quick-add'
 import { useCollection, type CollectionEntry } from './hooks/use-collection'
 
@@ -70,16 +71,39 @@ function EmptyState({ title, body }: { title: string; body: string }) {
 
 export function CollectionPage() {
   const { t } = useTranslation()
+  const online = useIsOnline()
+  const [addOpen, setAddOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   return (
-    <AppShell title={t('collection.title')}>
+    <AppShell
+      title={t('collection.title')}
+      actions={
+        // Disabled rather than hidden, and disabled here rather than only on
+        // the submit inside: opening a form that cannot be sent is a dead end.
+        <div className="flex gap-3">
+          <Button variant="ghost" disabled={!online} onClick={() => setImportOpen(true)}>
+            {t('importCoins.open')}
+          </Button>
+          <Button disabled={!online} onClick={() => setAddOpen(true)}>
+            {t('quickAdd.open')}
+          </Button>
+        </div>
+      }
+    >
       <Collection />
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('quickAdd.title')}>
+        <QuickAdd />
+      </Modal>
+      <Modal open={importOpen} onClose={() => setImportOpen(false)} title={t('importCoins.title')}>
+        {/* Mounted only while open, so closing resets the file and the review. */}
+        {importOpen && <ImportCoins onDone={() => setImportOpen(false)} />}
+      </Modal>
     </AppShell>
   )
 }
 
 function Collection() {
   const { t } = useTranslation()
-  const online = useIsOnline()
   const { data, isPending, isError } = useCollection()
   const [filters, setFilters] = useQueryStates(FILTER_PARSERS, { urlKeys: FILTER_URL_KEYS })
   // Throttled: a search box writing to the URL on every keystroke would fight
@@ -88,7 +112,6 @@ function Collection() {
     'q',
     parseAsString.withDefault('').withOptions({ throttleMs: 300 }),
   )
-  const [addOpen, setAddOpen] = useState(false)
   const [editing, setEditing] = useState<CollectionEntry | null>(null)
 
   const entries = useMemo(() => data ?? [], [data])
@@ -99,6 +122,22 @@ function Collection() {
     const codes = [...new Set(entries.map((e) => e.countryCode))]
     const collator = countryCollator()
     return codes.sort((a, b) => collator.compare(countryName(a), countryName(b)))
+  }, [entries])
+
+  const stats = useMemo(() => {
+    const seen = new Set<string>()
+    let duplicates = 0
+    for (const e of entries) {
+      const key = `${e.countryCode}|${e.faceValueCents}|${e.year}`
+      if (seen.has(key)) duplicates++
+      else seen.add(key)
+    }
+    return {
+      coins: entries.length,
+      countries: new Set(entries.map((e) => e.countryCode)).size,
+      unfiled: entries.filter((e) => e.location === null).length,
+      duplicates,
+    }
   }, [entries])
 
   const years = useMemo(
@@ -139,6 +178,19 @@ function Collection() {
 
   return (
     <div className="flex flex-col gap-6">
+      {entries.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile value={stats.coins} label={t('collection.stats.coins')} />
+          <StatTile value={stats.countries} label={t('collection.stats.countries')} />
+          <StatTile
+            value={stats.unfiled}
+            label={t('collection.stats.unfiled')}
+            onClick={() => void setFilters({ filing: 'UNFILED' })}
+          />
+          <StatTile value={stats.duplicates} label={t('collection.stats.duplicates')} />
+        </div>
+      )}
+
       <FiltersBar
         filters={filters}
         onChange={(next) => void setFilters(next)}
@@ -146,17 +198,7 @@ function Collection() {
         onSearchChange={(next) => void setSearch(next)}
         countryCodes={countryCodes}
         years={years}
-      >
-        {/* Disabled rather than hidden, and disabled here rather than only on
-            the submit inside: opening a form that cannot be sent is a dead end. */}
-        <Button disabled={!online} onClick={() => setAddOpen(true)}>
-          {t('quickAdd.open')}
-        </Button>
-      </FiltersBar>
-
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t('quickAdd.title')}>
-        <QuickAdd />
-      </Modal>
+      />
 
       <EditCoin coin={editing} onClose={() => setEditing(null)} />
 
@@ -177,6 +219,70 @@ function Collection() {
   )
 }
 
+function StatTile({
+  value,
+  label,
+  onClick,
+}: {
+  value: number
+  label: string
+  onClick?: () => void
+}) {
+  const body = (
+    <>
+      <div className="text-2xl tnum">{value}</div>
+      <div className="text-sm text-muted">{label}</div>
+    </>
+  )
+  return onClick ? (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-xl bg-card p-4 text-left hover:bg-hover"
+    >
+      {body}
+    </button>
+  ) : (
+    <div className="rounded-xl bg-card p-4">{body}</div>
+  )
+}
+
+function EditButton({
+  entry,
+  onEdit,
+}: {
+  entry: CollectionEntry
+  onEdit: (entry: CollectionEntry) => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <button
+      type="button"
+      onClick={() => onEdit(entry)}
+      aria-label={t('editCoin.open', {
+        country: countryName(entry.countryCode),
+        value: formatFaceValue(entry.faceValueCents),
+        year: entry.year,
+      })}
+      className="ml-auto flex size-9 shrink-0 items-center justify-center rounded-md
+                 text-muted hover:bg-hover hover:text-ink"
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 16 16"
+        className="size-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M11.2 2.3l2.5 2.5-8 8-3.2.7.7-3.2z" />
+      </svg>
+    </button>
+  )
+}
+
 function CollectionTable({
   entries,
   onEdit,
@@ -187,7 +293,41 @@ function CollectionTable({
   const { t } = useTranslation()
 
   return (
-    <div className="overflow-x-auto">
+    <>
+    <ul className="flex flex-col gap-3 sm:hidden">
+      {entries.map((entry) => (
+        <li key={entry.id} className="flex items-start gap-3 rounded-xl bg-card p-4">
+          <div className="flex min-w-0 flex-col gap-1">
+            <div>
+              <span aria-hidden>{countryFlag(entry.countryCode)}</span>{' '}
+              {countryName(entry.countryCode)}
+            </div>
+            <div className="text-base">
+              <span
+                aria-hidden
+                className={`mr-2 inline-block size-2 rounded-full align-middle ${
+                  METAL_DOT[metalFamily(entry.faceValueCents as FaceValueCents)]
+                }`}
+              />
+              {formatFaceValue(entry.faceValueCents)} · {entry.year}
+              {entry.grade && ` · ${t(`grade.short.${entry.grade}`)}`}
+            </div>
+            <div className="text-sm text-muted">
+              {entry.location
+                ? t('collection.slot', {
+                    binder: entry.location.binderName,
+                    page: entry.location.pageNumber,
+                    row: entry.location.row,
+                    column: entry.location.column,
+                  })
+                : t('collection.unfiled')}
+            </div>
+          </div>
+          <EditButton entry={entry} onEdit={onEdit} />
+        </li>
+      ))}
+    </ul>
+    <div className="hidden overflow-x-auto sm:block">
       <table className="w-full border-collapse text-base">
         <thead>
           <tr className="border-b border-rule text-left text-sm font-[450] text-muted">
@@ -244,35 +384,13 @@ function CollectionTable({
                 )}
               </td>
               <td className="py-3 text-right">
-                <button
-                  type="button"
-                  onClick={() => onEdit(entry)}
-                  aria-label={t('editCoin.open', {
-                    country: countryName(entry.countryCode),
-                    value: formatFaceValue(entry.faceValueCents),
-                    year: entry.year,
-                  })}
-                  className="ml-auto flex size-9 items-center justify-center rounded-md
-                             text-muted hover:bg-hover hover:text-ink"
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 16 16"
-                    className="size-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M11.2 2.3l2.5 2.5-8 8-3.2.7.7-3.2z" />
-                  </svg>
-                </button>
+                <EditButton entry={entry} onEdit={onEdit} />
               </td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+    </>
   )
 }

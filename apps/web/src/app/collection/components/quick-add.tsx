@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import {
   GRADES,
   findCoinTypeId,
@@ -14,8 +15,8 @@ import { useIsOnline } from '@/app/hooks/use-is-online'
 import { catalogQueries } from '@/app/lib/catalog'
 import { countryFlag, countryName } from '@/app/lib/countries'
 import { formatFaceValue } from '@/app/lib/format'
-import type { TranslationKey } from '@/app/i18n/types'
 import { Button } from '@/app/ui/button'
+import { modalError, MODAL_TOASTER } from '@/app/ui/toast'
 import { CountryCombobox } from './country-combobox'
 import { FaceValuePicker } from './face-value-picker'
 import { isSlotTaken } from '@/app/binders/hooks/use-binders'
@@ -54,8 +55,6 @@ export function QuickAdd() {
   const [year, setYear] = useState('')
   const [grade, setGrade] = useState<Grade | ''>('')
   const [destination, setDestination] = useState<SlotDestination | null>(null)
-  const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
-  const [notInCatalog, setNotInCatalog] = useState<string | null>(null)
   const [recent, setRecent] = useState<RecentAdd[]>([])
 
   const firstValueRef = useRef<HTMLInputElement>(null)
@@ -68,20 +67,18 @@ export function QuickAdd() {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
-    setErrorKey(null)
-    setNotInCatalog(null)
 
-    if (!countryCode) return setErrorKey('quickAdd.errors.countryRequired')
-    if (faceValue === null) return setErrorKey('quickAdd.errors.faceValueRequired')
+    if (!countryCode) return modalError(t('quickAdd.errors.countryRequired'))
+    if (faceValue === null) return modalError(t('quickAdd.errors.faceValueRequired'))
 
     const parsedYear = Number(year)
     if (!/^\d{4}$/.test(year) || parsedYear < 1999 || parsedYear > CURRENT_YEAR) {
-      return setErrorKey('quickAdd.errors.yearRequired')
+      return modalError(t('quickAdd.errors.yearRequired'))
     }
 
     const coinTypeId = findCoinTypeId(index, countryCode, faceValue, parsedYear)
     if (coinTypeId === null) {
-      return setNotInCatalog(
+      return modalError(
         t('quickAdd.errors.notInCatalog', {
           country: countryName(countryCode),
           value: formatFaceValue(faceValue),
@@ -90,7 +87,7 @@ export function QuickAdd() {
       )
     }
 
-    addCoin.mutate(
+    const saving = addCoin.mutateAsync(
       { coinTypeId, grade: grade || null, destination },
       {
         onSuccess: () => {
@@ -120,15 +117,20 @@ export function QuickAdd() {
           setDestination(null)
           firstValueRef.current?.focus()
         },
-        onError: (error) =>
-          setErrorKey(
-            // A hole taken between choosing it and the write landing is worth
-            // its own message: "try again" would send the user back to the same
-            // occupied slot.
-            isSlotTaken(error) ? 'quickAdd.errors.slotTaken' : 'quickAdd.errors.save',
-          ),
       },
     )
+    // The modal stays open between coins, so the whole lifecycle -- saving,
+    // saved, failed -- is told in the modal's own toaster.
+    toast.promise(saving, {
+      toasterId: MODAL_TOASTER,
+      loading: t('common.saving'),
+      success: t('quickAdd.saved'),
+      error: (error: unknown) =>
+        // A hole taken between choosing it and the write landing is worth its
+        // own message: "try again" would send the user back to the same
+        // occupied slot.
+        t(isSlotTaken(error) ? 'quickAdd.errors.slotTaken' : 'quickAdd.errors.save'),
+    })
   }
 
   return (
@@ -183,21 +185,14 @@ export function QuickAdd() {
             </select>
           </div>
 
-          <Button type="submit" disabled={!online || addCoin.isPending}>
+          <Button
+            type="submit"
+            disabled={!online}
+            loading={addCoin.isPending && !addCoin.isPaused}
+          >
             {t('quickAdd.submit')}
           </Button>
         </div>
-
-        {errorKey && (
-          <p role="alert" className="text-sm text-danger">
-            {t(errorKey)}
-          </p>
-        )}
-        {notInCatalog && (
-          <p role="alert" className="max-w-prose text-sm text-danger">
-            {notInCatalog}
-          </p>
-        )}
       </form>
 
       {recent.length > 0 && (

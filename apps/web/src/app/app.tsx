@@ -6,6 +6,7 @@ import { AppRoutes } from './routes'
 import { StatusBar } from '@/app/components/status-bar'
 import { UpdatePrompt } from '@/app/components/update-prompt'
 import { persister, queryClient } from '@/app/lib/query-client'
+import { AppToaster } from '@/app/ui/app-toaster'
 
 /** The shape of what is cached, not the version of the app. */
 const CACHE_SHAPE = 'own-api-1'
@@ -42,6 +43,7 @@ export default function App() {
           cache anything. Being offline matters there too. */}
       <UpdatePrompt />
       <StatusBar />
+      <AppToaster />
       <BrowserRouter>
         {/* Screen state -- which binder page, which filters -- lives in the
             query string rather than in component state, so a reload, a

@@ -4,6 +4,7 @@ import { dbQueryAs } from '../../db/index.js'
 import { requireUserId } from '../../middleware/authenticate.js'
 import {
   addCoinSchema,
+  bulkAddSchema,
   coinIdSchema,
   fileCoinSchema,
   movePairSchema,
@@ -29,6 +30,21 @@ export async function addCoin(req: Request, res: Response): Promise<void> {
   // route that accepts an owner is a route somebody will one day trust.
   const coinId = await dbQueryAs(userId, (tx) => service.addCoin(tx, userId, input))
   res.status(201).json({ coinId })
+}
+
+/**
+ * Many coins in one transaction: either the whole import lands or none of it,
+ * so a failure halfway never leaves a half-imported collection to untangle.
+ */
+export async function addCoins(req: Request, res: Response): Promise<void> {
+  const userId = requireUserId(req)
+  const { coins } = bulkAddSchema.parse(req.body)
+  await dbQueryAs(userId, async (tx) => {
+    for (const coin of coins) {
+      await service.addCoin(tx, userId, { ...coin, location: null })
+    }
+  })
+  res.status(201).json({ count: coins.length })
 }
 
 /**

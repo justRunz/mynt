@@ -80,3 +80,17 @@ export const mailLimit = rateLimit({
   limit: 3,
   keyGenerator: addressOrIp,
 })
+
+/**
+ * Analyses requested by one account.
+ *
+ * Every call is a paid request to an AI provider, so the cost of a loop in a
+ * script is real money. Keyed on the user rather than the address: the route
+ * sits behind authenticate, and a signed-in account is the thing that spends.
+ */
+export const importLimit = rateLimit({
+  ...common,
+  windowMs: 60 * MINUTE,
+  limit: 20,
+  keyGenerator: (req) => `user:${req.userId ?? ipKeyGenerator(req.ip ?? '')}`,
+})

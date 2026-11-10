@@ -169,3 +169,54 @@ export function useDeleteCoin() {
     onSuccess: refetch,
   })
 }
+
+// ---------------------------------------------------------------------------
+// Import
+// ---------------------------------------------------------------------------
+
+/** What the analysis read off a file. Everything is a guess until the user has
+ *  reviewed it, hence the nulls: the service says "unknown", never invents. */
+export interface ImportedItem {
+  countryCode: string | null
+  faceValueCents: number | null
+  year: number | null
+  quantity: number
+  variant: string | null
+  grade: string | null
+  note: string | null
+}
+
+export interface AnalyzeVariables {
+  mimeType: string
+  /** Base64 without the `data:` prefix. */
+  data: string
+}
+
+export function useImportAnalyze() {
+  return useMutation<ImportedItem[], Error, AnalyzeVariables>({
+    mutationFn: (input) =>
+      apiFetch<{ items: ImportedItem[] }>('/import/analyze', {
+        method: 'POST',
+        body: input,
+      }).then((result) => result.items),
+  })
+}
+
+export interface BulkCoin {
+  coinTypeId: number
+  grade: Grade | null
+}
+
+export function useAddCoins() {
+  const refetch = useRefetchCollection()
+  return useMutation<void, Error, BulkCoin[]>({
+    // One request and one refetch for the lot: N single adds would refetch the
+    // whole collection N times.
+    mutationFn: (coins) =>
+      apiFetch<{ count: number }>('/collection/bulk', {
+        method: 'POST',
+        body: { coins: coins.map((c) => ({ coinTypeId: c.coinTypeId, gradeCode: c.grade })) },
+      }).then(() => undefined),
+    onSuccess: refetch,
+  })
+}

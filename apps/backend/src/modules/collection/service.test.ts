@@ -274,3 +274,21 @@ describe('exchanging two coins', () => {
     expect([coin!.slotRow, coin!.slotColumn]).toEqual([1, 1])
   })
 })
+
+describe('adding in bulk', () => {
+  test('one bad coin in the batch leaves none of it behind', async () => {
+    // The loop the bulk route runs, in the transaction it runs it in.
+    const batch = [
+      { coinTypeId, gradeCode: null },
+      { coinTypeId: 2_000_000_000, gradeCode: null },
+    ]
+    expect(
+      await refused(() =>
+        dbQueryAs(ALICE, async (tx) => {
+          for (const coin of batch) await addCoin(tx, ALICE, { ...coin, location: null })
+        }),
+      ),
+    ).toBe('unknown_coin_type')
+    expect(await dbQueryAs(ALICE, (tx) => listCoins(tx))).toHaveLength(0)
+  })
+})

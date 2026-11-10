@@ -2,6 +2,9 @@ import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { AppToaster } from './app-toaster'
+import { MODAL_TOASTER } from './toast'
+
 interface Props {
   open: boolean
   onClose: () => void
@@ -67,6 +70,10 @@ export function Modal({ open, onClose, title, children }: Props) {
         </button>
       </div>
       <div className="max-h-[70vh] overflow-y-auto px-7 py-6">{children}</div>
+      {/* Inside the dialog so its toasts share the top layer and stay out of
+          the inert page; mounted only while open, so two closed modals never
+          both claim the id. */}
+      {open && <AppToaster id={MODAL_TOASTER} />}
     </dialog>
   )
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
 import { useTranslation } from 'react-i18next'
@@ -24,14 +24,55 @@ import {
 
 export function BindersPage() {
   const { t } = useTranslation()
+  const online = useIsOnline()
+  const binders = useBinders()
+  const [newBinderOpen, setNewBinderOpen] = useState(false)
+  const [newPageOpen, setNewPageOpen] = useState(false)
   return (
-    <AppShell title={t('binders.title')}>
-      <Binders />
+    <AppShell
+      title={t('binders.title')}
+      actions={
+        <>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={!online || !binders.data?.length}
+            onClick={() => setNewPageOpen(true)}
+          >
+            {t('binders.newPage')}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={!online}
+            onClick={() => setNewBinderOpen(true)}
+          >
+            {t('binders.newBinder')}
+          </Button>
+        </>
+      }
+    >
+      <Binders
+        newBinderOpen={newBinderOpen}
+        setNewBinderOpen={setNewBinderOpen}
+        newPageOpen={newPageOpen}
+        setNewPageOpen={setNewPageOpen}
+      />
     </AppShell>
   )
 }
 
-function Binders() {
+function Binders({
+  newBinderOpen,
+  setNewBinderOpen,
+  newPageOpen,
+  setNewPageOpen,
+}: {
+  newBinderOpen: boolean
+  setNewBinderOpen: (open: boolean) => void
+  newPageOpen: boolean
+  setNewPageOpen: (open: boolean) => void
+}) {
   const { t } = useTranslation()
   const online = useIsOnline()
   const binders = useBinders()
@@ -50,8 +91,7 @@ function Binders() {
   const [pageNumber, setPageNumber] = useQueryState('page', parseAsInteger)
   const [slot, setSlot] = useState<SelectedSlot | null>(null)
   const [errorKey, setErrorKey] = useState<TranslationKey | null>(null)
-  const [newBinderOpen, setNewBinderOpen] = useState(false)
-  const [newPageOpen, setNewPageOpen] = useState(false)
+  const tabs = useRef<(HTMLButtonElement | null)[]>([])
 
   const list = useMemo(() => binders.data ?? [], [binders.data])
   // Derived during render rather than synchronised in an effect: a selection
@@ -72,6 +112,14 @@ function Binders() {
         })),
     [entries, page?.id],
   )
+  const filledByPage = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const entry of entries) {
+      const id = entry.location?.pageId
+      if (id) counts.set(id, (counts.get(id) ?? 0) + 1)
+    }
+    return counts
+  }, [entries])
   const unfiled = useMemo(() => entries.filter((entry) => entry.location === null), [entries])
 
   const nextPageNumber = (binder?.pages.at(-1)?.number ?? 0) + 1
@@ -170,21 +218,50 @@ function Binders() {
             </option>
           ))}
         </Select>
-
-        {binder && binder.pages.length > 0 && (
-          <Select
-            label={t('binders.page')}
-            value={page?.number ?? ''}
-            onChange={(e) => void setPageNumber(Number(e.target.value))}
-          >
-            {binder.pages.map((p) => (
-              <option key={p.id} value={p.number}>
-                {t('binders.pageNumber', { number: p.number })}
-              </option>
-            ))}
-          </Select>
-        )}
       </div>
+
+      {binder && binder.pages.length > 0 && (
+        <div role="tablist" aria-label={t('binders.page')} className="flex flex-wrap gap-2">
+          {binder.pages.map((p, i) => {
+            const selected = p.id === page?.id
+            const go = (to: number) => {
+              const n = binder.pages.length
+              const j = (to + n) % n
+              const target = binder.pages[j]
+              if (target) void setPageNumber(target.number)
+              tabs.current[j]?.focus()
+            }
+            return (
+              <button
+                key={p.id}
+                ref={(el) => {
+                  tabs.current[i] = el
+                }}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => void setPageNumber(p.number)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowRight') go(i + 1)
+                  else if (e.key === 'ArrowLeft') go(i - 1)
+                  else return
+                  e.preventDefault()
+                }}
+                className={`h-9 rounded-md px-3 text-sm tnum ${
+                  selected ? 'bg-accent-wash text-accent' : 'text-muted hover:bg-hover hover:text-ink'
+                }`}
+              >
+                {t('binders.pageTab', {
+                  number: p.number,
+                  filled: filledByPage.get(p.id) ?? 0,
+                  total: p.rowCount * p.columnCount,
+                })}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {page ? (
         <SlotGrid
@@ -204,31 +281,6 @@ function Binders() {
           onAction={() => setNewPageOpen(true)}
         />
       )}
-
-      {/* Adding a page is dropped from this row when there is no page yet: the
-          empty state above already carries that action, and offering it twice
-          would be the clutter this row exists to remove. Creating a binder
-          always stays, or a binder with no pages would be a dead end. */}
-      <div className="flex flex-wrap gap-3 border-t border-rule pt-6">
-        {page && (
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={!online}
-            onClick={() => setNewPageOpen(true)}
-          >
-            {t('binders.newPage')}
-          </Button>
-        )}
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={!online}
-          onClick={() => setNewBinderOpen(true)}
-        >
-          {t('binders.newBinder')}
-        </Button>
-      </div>
 
       {errorKey && !slot && (
         <p role="alert" className="text-sm text-danger">

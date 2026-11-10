@@ -5,6 +5,7 @@
   },
   "common": {
     "loading": "Chargement…",
+    "saving": "Enregistrement…",
     "cancel": "Annuler",
     "signOut": "Se déconnecter",
     "retry": "Réessayer",
@@ -15,7 +16,9 @@
     "collection": "Collection",
     "completeness": "Complétude",
     "binders": "Classeurs",
-    "openMenu": "Ouvrir le menu"
+    "openMenu": "Ouvrir le menu",
+    "collapse": "Replier la barre latérale",
+    "expand": "Déplier la barre latérale"
   },
   "auth": {
     "fields": {
@@ -105,7 +108,13 @@
       "actions": "Actions"
     },
     "unfiled": "Au bocal",
-    "slot": "{{binder}} · p. {{page}} · L{{row}} C{{column}}"
+    "slot": "{{binder}} · p. {{page}} · L{{row}} C{{column}}",
+    "stats": {
+      "coins": "Pièces",
+      "countries": "Pays",
+      "unfiled": "Non classées",
+      "duplicates": "Doublons"
+    }
   },
   "filters": {
     "country": "Pays",
@@ -123,6 +132,7 @@
     "reset": "Réinitialiser les filtres"
   },
   "quickAdd": {
+    "saved": "Pièce ajoutée",
     "title": "Ajout rapide",
     "intro": "Le pays reste sélectionné après validation, pour enchaîner une pile de pièces sans repartir de zéro.",
     "country": "Pays",
@@ -151,6 +161,41 @@
     },
     "open": "Ajouter une pièce"
   },
+  "importCoins": {
+    "open": "Importer",
+    "title": "Importer des pièces",
+    "drop": "Déposez un fichier ici ou cliquez pour le choisir",
+    "types": "Photo (JPEG, PNG, WebP, HEIC), PDF, CSV, TXT ou Excel (.xlsx). 10 Mo maximum.",
+    "privacy": "Le fichier est envoyé à un service d’IA externe pour être analysé. Ne déposez rien de confidentiel.",
+    "analyze": "Analyser",
+    "analyzing": "Analyse en cours…",
+    "found_one": "{{count}} pièce trouvée",
+    "found_other": "{{count}} pièces trouvées",
+    "none": "Aucune pièce trouvée dans ce fichier",
+    "restart": "Recommencer",
+    "review": "Vérifiez et corrigez les lignes avant d’ajouter. Les pièces hors catalogue sont décochées tant qu’elles ne correspondent pas à une pièce du catalogue.",
+    "include": "Inclure cette ligne",
+    "quantity": "Quantité",
+    "countryNone": "Pays…",
+    "faceValueNone": "Valeur…",
+    "inCatalog": "Dans le catalogue",
+    "outOfCatalog": "Hors catalogue",
+    "submit_one": "Ajouter {{count}} pièce",
+    "submit_other": "Ajouter {{count}} pièces",
+    "added_one": "{{count}} pièce ajoutée",
+    "added_other": "{{count}} pièces ajoutées",
+    "errors": {
+      "tooLarge": "Ce fichier dépasse 10 Mo.",
+      "wrongType": "Ce type de fichier n’est pas pris en charge.",
+      "unreadable": "Impossible de lire ce fichier.",
+      "unavailable": "L’import par IA n’est pas disponible pour le moment.",
+      "failed": "L’analyse a échoué. Réessayez avec un autre fichier.",
+      "busy": "L’IA est surchargée en ce moment. Réessayez dans un instant.",
+      "rateLimited": "Trop de demandes. Réessayez dans quelques minutes.",
+      "generic": "L’import a échoué. Réessayez.",
+      "save": "L’ajout a échoué. Réessayez."
+    }
+  },
   "completeness": {
     "title": "Complétude",
     "country": "Pays",
@@ -168,7 +213,8 @@
       "missing": "{{country}}, {{value}}, {{year}} : manquante",
       "notMinted": "{{country}}, {{value}}, {{year}} : jamais frappée"
     },
-    "empty": "Aucun type au catalogue pour ce pays."
+    "empty": "Aucun type au catalogue pour ce pays.",
+    "progressBar": "Progression de la collection"
   },
   "binders": {
     "title": "Classeurs",
@@ -213,7 +259,8 @@
       "overFilled": "Sur la ligne {{row}}, colonne {{column}}, occupée par {{coin}}. Poser ici échangera les deux pièces.",
       "dropped": "Pièce posée ligne {{row}}, colonne {{column}}.",
       "cancelled": "Déplacement annulé, la pièce reste à sa place."
-    }
+    },
+    "pageTab": "Page {{number}} · {{filled}}/{{total}}"
   },
   "status": {
     "offline": "Hors ligne",
@@ -225,6 +272,7 @@
     "dismiss": "Plus tard"
   },
   "editCoin": {
+    "saved": "Pièce modifiée",
     "title": "Modifier la pièce",
     "open": "Modifier {{country}} {{value}} {{year}}",
     "acquiredOn": "Date d’acquisition",
